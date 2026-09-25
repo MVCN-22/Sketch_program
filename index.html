@@ -1,0 +1,1779 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Rebar Sketch Studio</title>
+<meta name="description" content="Reinforcement sketches of concrete cross-sections in the browser. Export PNG, true-scale PDF, SVG and DXF.">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect x='3' y='3' width='26' height='26' rx='2' fill='%23e3e7ea' stroke='%231c2126' stroke-width='2'/%3E%3Crect x='7.5' y='7.5' width='17' height='17' rx='3' fill='none' stroke='%231b5fa8' stroke-width='2'/%3E%3Ccircle cx='10.5' cy='21.5' r='2' fill='%231c2126'/%3E%3Ccircle cx='21.5' cy='21.5' r='2' fill='%231c2126'/%3E%3Ccircle cx='16' cy='21.5' r='2' fill='%231c2126'/%3E%3Ccircle cx='10.5' cy='10.5' r='1.5' fill='%231c2126'/%3E%3Ccircle cx='21.5' cy='10.5' r='1.5' fill='%231c2126'/%3E%3C/svg%3E">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+<!-- Geometry library for custom sections (offsets, clipping). Standard sections work without it. -->
+<script src="https://cdn.jsdelivr.net/npm/jsts@2.12.1/dist/jsts.min.js"></script>
+<style>
+:root {
+  --panel: #f2f4f5;
+  --panel-2: #e7ebee;
+  --ink: #1c2126;
+  --muted: #5b6670;
+  --rule: #cdd4da;
+  --accent: #1b5fa8;
+  --accent-ink: #ffffff;
+  --paper: #ffffff;
+  --grid-minor: #e6eef4;
+  --grid-major: #cddbe6;
+  --ok: #2d6a3e;
+  --warn: #8a5300;
+  --err: #b3261e;
+  --font: "IBM Plex Sans", "Segoe UI", system-ui, -apple-system, Roboto, Arial, sans-serif;
+}
+* { box-sizing: border-box; }
+html, body { height: 100%; margin: 0; }
+body { font: 14px/1.45 var(--font); color: var(--ink); background: var(--panel); display: flex; flex-direction: column; }
+button, input, select, textarea { font: inherit; color: inherit; }
+:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+
+/* header */
+.bar { display: flex; align-items: center; gap: 14px; flex-wrap: wrap; padding: 8px 14px; background: var(--ink); color: #e9eef2; }
+.brand { display: flex; align-items: center; gap: 9px; font-weight: 600; font-size: 15px; letter-spacing: .01em; margin-right: 6px; }
+.brand svg { width: 22px; height: 22px; }
+.seg { display: inline-flex; border: 1px solid #56616b; border-radius: 7px; overflow: hidden; }
+.seg button { background: transparent; border: 0; color: #c9d2d9; padding: 5px 14px; cursor: pointer; }
+.seg button[aria-pressed="true"] { background: #e9eef2; color: var(--ink); font-weight: 500; }
+.spacer { flex: 1; }
+.bar .grp { display: flex; gap: 6px; align-items: center; }
+.bar .grp span { color: #9aa6b0; margin-right: 2px; }
+.bar button.b { background: #2c343b; color: #e9eef2; border: 1px solid #47525c; border-radius: 6px; padding: 5px 11px; cursor: pointer; }
+.bar button.b:hover { background: #38424b; }
+.bar button.b.primary { background: var(--accent); border-color: var(--accent); }
+.bar button.b.primary:hover { background: #2169b8; }
+
+/* layout */
+main { flex: 1; display: grid; grid-template-columns: minmax(360px, 440px) 1fr; min-height: 0; }
+aside { display: flex; flex-direction: column; min-height: 0; border-right: 1px solid var(--rule); background: var(--panel); }
+.tabs { display: flex; gap: 2px; padding: 10px 12px 0; border-bottom: 1px solid var(--rule); }
+.tabs button { background: none; border: 0; border-bottom: 2px solid transparent; padding: 7px 10px 8px; cursor: pointer; color: var(--muted); }
+.tabs button[aria-selected="true"] { color: var(--ink); border-bottom-color: var(--accent); font-weight: 500; }
+.body { overflow: auto; padding: 14px 16px 40px; flex: 1; }
+
+/* forms */
+.row { display: grid; grid-template-columns: 1fr 150px; gap: 10px; align-items: center; padding: 3px 0; }
+.row label { color: var(--ink); }
+.row.wide { grid-template-columns: 1fr; }
+.row.check { grid-template-columns: auto 1fr; gap: 8px; }
+input[type=text], select, textarea { width: 100%; background: #fff; border: 1px solid var(--rule); border-radius: 5px; padding: 5px 7px; }
+input[type=text]:hover, select:hover, textarea:hover { border-color: #aab5be; }
+textarea { font-family: ui-monospace, "Cascadia Mono", Consolas, "Liberation Mono", monospace; font-size: 13px; resize: vertical; line-height: 1.5; }
+input[type=checkbox] { width: 16px; height: 16px; accent-color: var(--accent); margin: 0; }
+.hint { color: var(--muted); font-size: 12.5px; margin: 6px 0 10px; max-width: 62ch; }
+h3 { font-size: 13.5px; font-weight: 600; margin: 16px 0 6px; }
+fieldset.layers { border: 0; padding: 0; margin: 12px 0 6px; }
+fieldset.layers legend { font-weight: 600; font-size: 13.5px; padding: 0; margin-bottom: 4px; }
+.lgrid { display: grid; gap: 4px 5px; align-items: center; }
+.lgrid .h { color: var(--muted); font-size: 12px; }
+.lgrid input, .lgrid select { padding: 4px 6px; }
+.x { width: 28px; height: 28px; border: 1px solid var(--rule); background: #fff; border-radius: 5px; cursor: pointer; color: var(--muted); }
+.x:hover { color: var(--err); border-color: var(--err); }
+.add { margin-top: 6px; background: none; border: 1px dashed #9fb0bf; border-radius: 5px; padding: 4px 10px; cursor: pointer; color: var(--accent); }
+.add:hover { background: #fff; }
+.btn { background: #fff; border: 1px solid var(--rule); border-radius: 6px; padding: 5px 11px; cursor: pointer; }
+.btn:hover:not(:disabled) { border-color: var(--accent); color: var(--accent); }
+.btn:disabled { opacity: .45; cursor: default; }
+.toolbar { display: flex; gap: 6px; flex-wrap: wrap; align-items: center; margin-bottom: 10px; }
+.toolbar select { width: auto; flex: 1 1 auto; min-width: 0; }
+.toolbar .btn { padding: 5px 9px; flex: none; }
+.toolbar.items-bar { flex-wrap: nowrap; }
+.sectype { display: flex; gap: 8px; align-items: center; margin-bottom: 10px; }
+.sectype select { flex: 1; }
+
+/* reinforcement list */
+ol.items { list-style: none; margin: 0 0 10px; padding: 0; border: 1px solid var(--rule); border-radius: 6px; background: #fff; max-height: 260px; overflow: auto; }
+ol.items li + li { border-top: 1px solid #edf0f2; }
+ol.items button { display: grid; grid-template-columns: 26px 92px 1fr; gap: 6px; width: 100%; text-align: left; background: none; border: 0; padding: 6px 8px; cursor: pointer; }
+ol.items button:hover { background: #f4f7fa; }
+ol.items button[aria-pressed="true"] { background: #e3edf8; box-shadow: inset 3px 0 0 var(--accent); }
+ol.items .no { color: var(--muted); font-variant-numeric: tabular-nums; }
+ol.items .sum { color: var(--muted); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.empty { padding: 14px; color: var(--muted); }
+.itemhead { font-weight: 600; margin: 14px 0 2px; }
+
+/* stage */
+.stage { position: relative; min-height: 0; background: var(--paper); display: flex; flex-direction: column; }
+#view { flex: 1; width: 100%; min-height: 0; display: block; cursor: grab; touch-action: none; user-select: none; }
+#view.drag { cursor: grabbing; }
+.zoom { position: absolute; top: 12px; right: 12px; display: flex; gap: 4px; }
+.zoom button { width: 34px; height: 30px; border: 1px solid var(--rule); background: rgba(255,255,255,.92); border-radius: 6px; cursor: pointer; font-size: 15px; }
+.zoom button.fit { width: auto; padding: 0 10px; font-size: 13px; }
+.zoom button:hover { border-color: var(--accent); color: var(--accent); }
+.status { border-top: 1px solid var(--rule); background: #fbfcfc; padding: 8px 14px; font-size: 13px; min-height: 38px; max-height: 30vh; overflow: auto; }
+.status .ok { color: var(--ok); }
+.status .warn { color: var(--warn); }
+.status .err { color: var(--err); font-weight: 500; }
+.status p { margin: 2px 0; white-space: pre-wrap; }
+.stale #dwg { opacity: .35; }
+.toast { position: fixed; left: 50%; bottom: 22px; transform: translateX(-50%); background: var(--ink); color: #fff; padding: 8px 14px; border-radius: 7px; opacity: 0; transition: opacity .2s; pointer-events: none; z-index: 10; }
+.toast.show { opacity: 1; }
+
+dialog { border: 1px solid var(--rule); border-radius: 10px; max-width: 640px; padding: 22px 26px; color: var(--ink); }
+dialog::backdrop { background: rgba(20,25,30,.35); }
+dialog h2 { margin: 0 0 8px; font-size: 18px; }
+dialog h4 { margin: 16px 0 4px; font-size: 14px; }
+dialog p, dialog li { max-width: 68ch; }
+dialog ul { padding-left: 20px; margin: 4px 0; }
+dialog code { background: var(--panel-2); padding: 1px 4px; border-radius: 3px; font-size: 13px; }
+
+@media (max-width: 900px) {
+  html, body { height: auto; }
+  main { display: flex; flex-direction: column; }
+  .stage { order: -1; height: 62vh; border-bottom: 1px solid var(--rule); }
+  aside { border-right: 0; }
+  .body { overflow: visible; }
+  .row { grid-template-columns: 1fr 130px; }
+}
+@media (prefers-reduced-motion: reduce) { .toast { transition: none; } }
+</style>
+</head>
+<body>
+<header class="bar">
+  <div class="brand">
+    <svg viewBox="0 0 32 32" aria-hidden="true"><rect x="3" y="3" width="26" height="26" rx="2" fill="#e3e7ea"/><rect x="7.5" y="7.5" width="17" height="17" rx="3" fill="none" stroke="#1b5fa8" stroke-width="2"/><circle cx="10.5" cy="21.5" r="2" fill="#1c2126"/><circle cx="16" cy="21.5" r="2" fill="#1c2126"/><circle cx="21.5" cy="21.5" r="2" fill="#1c2126"/><circle cx="10.5" cy="10.5" r="1.5" fill="#1c2126"/><circle cx="21.5" cy="10.5" r="1.5" fill="#1c2126"/></svg>
+    Rebar Sketch Studio
+  </div>
+  <div class="seg" role="group" aria-label="Section kind">
+    <button type="button" data-mode="standard">Standard</button>
+    <button type="button" data-mode="custom">Custom</button>
+  </div>
+  <div class="spacer"></div>
+  <div class="grp">
+    <button type="button" class="b" id="bOpen">Open…</button>
+    <button type="button" class="b" id="bSave">Save project</button>
+    <button type="button" class="b" id="bShare">Copy link</button>
+  </div>
+  <div class="grp">
+    <span>Export</span>
+    <button type="button" class="b primary" data-exp="png">PNG</button>
+    <button type="button" class="b primary" data-exp="pdf">PDF</button>
+    <button type="button" class="b primary" data-exp="svg">SVG</button>
+    <button type="button" class="b primary" data-exp="dxf">DXF</button>
+  </div>
+  <button type="button" class="b" id="bHelp">Guide</button>
+</header>
+
+<main>
+  <aside>
+    <nav class="tabs" role="tablist" id="tabs"></nav>
+    <div class="body" id="body"></div>
+  </aside>
+  <section class="stage" id="stage">
+    <svg id="view" xmlns="http://www.w3.org/2000/svg" preserveAspectRatio="xMidYMid meet" aria-label="Section preview">
+      <defs>
+        <pattern id="gMinor" patternUnits="userSpaceOnUse" width="100" height="100">
+          <path d="M100 0 L0 0 0 100" fill="none" stroke="var(--grid-minor)" stroke-width="1" vector-effect="non-scaling-stroke"/>
+        </pattern>
+        <pattern id="gMajor" patternUnits="userSpaceOnUse" width="500" height="500">
+          <rect width="500" height="500" fill="url(#gMinor)"/>
+          <path d="M500 0 L0 0 0 500" fill="none" stroke="var(--grid-major)" stroke-width="1" vector-effect="non-scaling-stroke"/>
+        </pattern>
+      </defs>
+      <rect x="-1000000" y="-1000000" width="2000000" height="2000000" fill="url(#gMajor)"/>
+      <g id="dwg" font-family="Helvetica, Arial, 'Liberation Sans', sans-serif" style="white-space: pre"></g>
+    </svg>
+    <div class="zoom">
+      <button type="button" class="fit" id="zFit" title="Fit the drawing">Fit</button>
+      <button type="button" id="zIn" title="Zoom in" aria-label="Zoom in">+</button>
+      <button type="button" id="zOut" title="Zoom out" aria-label="Zoom out">−</button>
+    </div>
+    <div class="status" id="status" aria-live="polite"></div>
+  </section>
+</main>
+
+<dialog id="guide">
+  <h2>Guide</h2>
+  <p>Everything is in millimetres, with the origin at the bottom left. The preview updates as you type; scroll to zoom and drag to pan. The grid shows 1 cm and 5 cm on paper at the drawing scale.</p>
+  <h4>Standard sections</h4>
+  <p>Pick a type and fill in the fields. Layer tables take one row per layer, from the outer face inwards. <em>Edit as custom</em> copies the section, reinforcement included, into the custom editor as a starting point.</p>
+  <h4>Custom sections</h4>
+  <ul>
+    <li><b>Outline</b>: one vertex per line, <code>x, y</code>. Add an angle for an arc to the next vertex (<code>0, 300, 180</code> is a half circle), and <code>brk</code> to draw the next edge as a break line. Pasting from Excel works.</li>
+    <li><b>Openings</b>: <code>rect x y w h</code>, <code>circle cx cy D</code> or <code>poly x1 y1 x2 y2 …</code>.</li>
+    <li><b>Layer</b>: bars parallel to a face. Bottom and top give horizontal layers, left and right vertical ones. With a blank offset, layers from the same face stack inwards at the minimum spacing.</li>
+    <li><b>Perimeter</b>: bars around the outline or the openings, with a bar in every corner.</li>
+    <li><b>Link</b>: follows the outline, the part inside a rectangle or polygon, or runs around an opening. Links are numbered in list order; bars with <em>Inside link no.</em> stay inside that link.</li>
+    <li><b>Row, circle pattern, single bar, line bar, dimension, text</b>: free placement.</li>
+  </ul>
+  <h4>Saving and sharing</h4>
+  <p>Your work is kept in this browser automatically. <em>Save project</em> downloads a .json file that <em>Open…</em> reads back. <em>Copy link</em> puts the whole section into a link you can send to a colleague.</p>
+  <h4>Checks</h4>
+  <p>The status bar shows A<sub>s</sub>, A<sub>c</sub> and ρ, and warns about overlapping bars and clear spacing below max(Ø, d<sub>g</sub> + 5 mm, 20 mm). It is a sketching aid, not a design check.</p>
+  <p style="margin-top:18px"><button type="button" class="btn" onclick="this.closest('dialog').close()">Close</button></p>
+</dialog>
+<input type="file" id="fileIn" accept=".json,application/json" hidden>
+<div class="toast" id="toast" role="status"></div>
+
+<script id="engine">
+"use strict";
+/* =========================================================================
+   Engine: sections, geometry and exporters (no DOM needed)
+   ========================================================================= */
+class UserError extends Error {}
+const MM2PT = 72 / 25.4, CAP = 0.72;
+
+const fmt = v => (v === null || v === undefined) ? "" :
+  (typeof v === "boolean") ? v : (typeof v === "number") ? String(Math.round(v * 1e6) / 1e6) : String(v);
+const fmt0 = v => String(Math.round(v));
+function fnum(v, what = "value") {
+  if (typeof v === "number" && isFinite(v)) return v;
+  const t = String(v ?? "").trim().replace(",", ".");
+  const x = Number(t);
+  if (t === "" || !isFinite(x)) throw new UserError(`'${String(v ?? "")}' is not a number (${what})`);
+  return x;
+}
+const onum = (v, what) => (v === null || v === undefined || String(v).trim() === "") ? null : fnum(v, what);
+const inum = (v, what) => (v === null || v === undefined || String(v).trim() === "") ? 0 : Math.round(fnum(v, what));
+const truthy = v => v === true || v === "true" || v === 1 || v === "1";
+const clone = o => JSON.parse(JSON.stringify(o));
+const dist = (a, b) => Math.hypot(a[0] - b[0], a[1] - b[1]);
+const v3 = verts => verts.map(p => [p[0], p[1], p.length > 2 ? p[2] : 0]);
+
+function arcPoints(p0, p1, bulge) {
+  if (Math.abs(bulge) < 1e-12) return [p1];
+  const [x0, y0] = p0, [x1, y1] = p1;
+  const th = 4 * Math.atan(bulge), ch = Math.hypot(x1 - x0, y1 - y0);
+  if (ch < 1e-12) return [p1];
+  const n = Math.max(4, Math.ceil(Math.abs(th * 180 / Math.PI) / 2));
+  const r = ch / (2 * Math.sin(th / 2));
+  const ux = (x1 - x0) / ch, uy = (y1 - y0) / ch, dmc = r * Math.cos(th / 2);
+  const cx = (x0 + x1) / 2 - uy * dmc, cy = (y0 + y1) / 2 + ux * dmc;
+  const a0 = Math.atan2(y0 - cy, x0 - cx), rr = Math.abs(r), out = [];
+  for (let i = 1; i <= n; i++) out.push([cx + rr * Math.cos(a0 + th * i / n), cy + rr * Math.sin(a0 + th * i / n)]);
+  return out;
+}
+function expand(verts, closed) {
+  const pts = [[verts[0][0], verts[0][1]]], m = verts.length;
+  for (let i = 0; i < (closed ? m : m - 1); i++) {
+    const [x, y, b] = verts[i], nv = verts[(i + 1) % m];
+    pts.push(...arcPoints([x, y], [nv[0], nv[1]], b || 0));
+  }
+  if (closed && pts.length > 1 && dist(pts[0], pts[pts.length - 1]) < 1e-9) pts.pop();
+  return pts;
+}
+function roundedRect(x0, y0, x1, y1, [rbl, rbr, rtr, rtl]) {
+  const B = Math.tan(Math.PI / 8);
+  return [[x0 + rbl, y0, 0], [x1 - rbr, y0, B], [x1, y0 + rbr, 0], [x1, y1 - rtr, B],
+          [x1 - rtr, y1, 0], [x0 + rtl, y1, B], [x0, y1 - rtl, 0], [x0, y0 + rbl, B]];
+}
+function zigzag(p0, p1, amp) {
+  const L = dist(p0, p1), ux = (p1[0] - p0[0]) / L, uy = (p1[1] - p0[1]) / L, nx = -uy, ny = ux;
+  const P = (t, o) => [p0[0] + ux * L * t + nx * o, p0[1] + uy * L * t + ny * o];
+  return [P(.35, 0), P(.45, amp), P(.55, -amp), P(.65, 0)];
+}
+function spread(a, b, n) {
+  if (n === 1) return [(a + b) / 2];
+  const o = []; for (let i = 0; i < n; i++) o.push(a + (b - a) * i / (n - 1)); return o;
+}
+const minClear = (d, dg) => Math.max(d, dg + 5, 20);
+const slug = s => String(s).replace(/[^A-Za-z0-9_-]+/g, "_").replace(/^_+|_+$/g, "") || "section";
+function signedArea(pts) {
+  let a = 0;
+  for (let i = 0; i < pts.length; i++) { const p = pts[i], q = pts[(i + 1) % pts.length]; a += p[0] * q[1] - q[0] * p[1]; }
+  return a / 2;
+}
+
+/* Helvetica widths (1/1000 em) for text alignment in PDF and label layout */
+const HELV = (() => {
+  const w = "278,278,355,556,556,889,667,191,333,333,389,584,278,333,278,278,556,556,556,556,556,556,556,556,556,556,278,278,584,584,584,556,1015,667,667,722,722,667,611,778,722,278,500,667,556,833,722,778,667,778,722,667,611,722,667,944,667,667,611,278,278,278,469,556,333,556,556,500,556,556,278,556,556,222,222,500,222,833,556,556,556,556,333,500,278,556,500,722,500,500,500,334,260,334,584".split(",").map(Number);
+  const m = {}; for (let c = 32; c < 127; c++) m[String.fromCharCode(c)] = w[c - 32];
+  Object.assign(m, { "Ø": 778, "ø": 611, "×": 584, "°": 400, "²": 333, "³": 333, "–": 556, "—": 1000, "±": 584, "µ": 556, "Æ": 1000, "Å": 667, "æ": 889, "å": 556, "Ä": 667, "Ö": 778, "Ü": 722, "ä": 556, "ö": 556, "ü": 556, "ß": 611, "é": 556 });
+  return m;
+})();
+const helvW = s => { let w = 0; for (const ch of s) w += HELV[ch] ?? 556; return w; };
+
+function textPlace(t, s) {
+  const hm = t.h * s;
+  let ha = t.ha, va = t.va;
+  if (((t.rot % 360) + 360) % 360 === 90) {       // alignment refers to the rotated box
+    ha = { bottom: "left", center: "center", top: "right" }[t.va];
+    va = { right: "bottom", center: "center", left: "top" }[t.ha];
+  }
+  const dv = { bottom: 0, center: -hm / 2, top: -hm }[va];
+  const a = t.rot * Math.PI / 180, size = hm / CAP;
+  return { bx: t.x - Math.sin(a) * dv, by: t.y + Math.cos(a) * dv, ha, a, size, hm, w: helvW(t.txt) * size / 1000 };
+}
+function textCorners(t, s) {
+  const q = textPlace(t, s);
+  const u0 = -q.w * { left: 0, center: .5, right: 1 }[q.ha], c = Math.cos(q.a), sn = Math.sin(q.a);
+  return [[u0, -.25 * q.hm], [u0 + q.w, -.25 * q.hm], [u0 + q.w, q.hm * 1.05], [u0, q.hm * 1.05]]
+    .map(([u, v]) => [q.bx + u * c - v * sn, q.by + u * sn + v * c]);
+}
+
+/* ------------------------------------------------------------------ Drawing */
+class Drawing {
+  constructor(title, st) { this.title = title; this.st = st; this.items = []; this.labels = []; this.warnings = []; }
+  outline(rings) { this.items.push({ k: "outline", rings: rings.map(v3) }); }
+  steel(verts, d, closed = false, layer = "LINKS") { this.items.push({ k: "steel", verts: v3(verts), d, closed, layer }); }
+  bar(x, y, d) { this.items.push({ k: "bar", x, y, d }); }
+  dim(p1, p2, o, pos, text = null, force = false) { if (this.st.show_dims || force) this.items.push({ k: "dim", p1, p2, o, pos, text }); }
+  text(x, y, txt, ha = "left", va = "bottom", rot = 0, h = null) { this.items.push({ k: "text", x, y, txt, ha, va, rot, h: h || this.st.text_h }); }
+  label(anchor, text, side = "right") { if (this.st.show_labels && (side === "left" || side === "right")) this.labels.push({ anchor, text, side }); }
+  warn(m) { this.warnings.push(m); }
+
+  geomBounds() {
+    const xs = [], ys = [];
+    for (const it of this.items) {
+      if (it.k === "outline") for (const [x, y] of expand(it.rings[0], true)) { xs.push(x); ys.push(y); }
+      else if (it.k === "steel") for (const [x, y] of expand(it.verts, it.closed)) { xs.push(x); ys.push(y); }
+      else if (it.k === "bar") { xs.push(it.x - it.d / 2, it.x + it.d / 2); ys.push(it.y - it.d / 2, it.y + it.d / 2); }
+    }
+    return [Math.min(...xs), Math.min(...ys), Math.max(...xs), Math.max(...ys)];
+  }
+  finalize(subtitle = "") {
+    const s = this.st.scale, th = this.st.text_h * s;
+    let [x0, y0, x1, y1] = this.geomBounds();
+    const gap = 12 * s, clearDim = (this.st.text_h + 3) * s;
+    let low = y0;
+    for (const it of this.items) if (it.k === "dim" && it.o === "v") {
+      if (it.pos < x0) x0 = Math.min(x0, it.pos - clearDim); else if (it.pos > x1) x1 = Math.max(x1, it.pos + clearDim);
+    }
+    for (const side of ["right", "left"]) {
+      const labs = this.labels.filter(l => l.side === side).sort((a, b) => a.anchor[1] - b.anchor[1]);
+      if (!labs.length) continue;
+      const want = labs.map(l => l.anchor[1]), pos = [...want];
+      for (let i = 1; i < pos.length; i++) pos[i] = Math.max(pos[i], pos[i - 1] + 1.7 * th);
+      const shift = want.reduce((a, w, i) => a + w - pos[i], 0) / pos.length;
+      for (let i = 0; i < pos.length; i++) pos[i] += shift;
+      const sg = side === "right" ? 1 : -1, xt = side === "right" ? x1 + gap : x0 - gap;
+      labs.forEach((l, i) => {
+        this.items.push({ k: "line", pts: [l.anchor, [xt - sg * 3 * s, pos[i]], [xt - sg * 0.8 * s, pos[i]]] });
+        this.items.push({ k: "text", x: xt, y: pos[i], txt: l.text, ha: sg > 0 ? "left" : "right", va: "center", rot: 0, h: this.st.text_h });
+      });
+      low = Math.min(low, pos[0] - th);
+    }
+    for (const it of this.items) if (it.k === "dim" && it.o === "h") low = Math.min(low, it.pos - 2 * s);
+    const yt = low - 6 * s, xc = (x0 + x1) / 2;
+    this.items.push({ k: "text", x: xc, y: yt, txt: this.title, ha: "center", va: "top", rot: 0, h: this.st.text_h * 1.4 });
+    this.items.push({ k: "text", x: xc, y: yt - 6 * s, txt: `1:${fmt(this.st.scale)}    ${subtitle}`.trim(), ha: "center", va: "top", rot: 0, h: this.st.text_h });
+  }
+  bounds() {
+    const s = this.st.scale, xs = [], ys = [];
+    const P = (x, y) => { xs.push(x); ys.push(y); };
+    for (const it of this.items) {
+      if (it.k === "outline") it.rings.forEach(r => expand(r, true).forEach(([x, y]) => P(x, y)));
+      else if (it.k === "steel") expand(it.verts, it.closed).forEach(([x, y]) => { P(x - it.d / 2, y - it.d / 2); P(x + it.d / 2, y + it.d / 2); });
+      else if (it.k === "bar") { P(it.x - it.d, it.y - it.d); P(it.x + it.d, it.y + it.d); }
+      else if (it.k === "line") it.pts.forEach(([x, y]) => P(x, y));
+      else if (it.k === "text") textCorners(it, s).forEach(([x, y]) => P(x, y));
+      else if (it.k === "dim") {
+        P(...it.p1); P(...it.p2);
+        const m = (2.5 + this.st.text_h + 1.0) * s;
+        if (it.o === "h") { ys.push(it.pos - m, it.pos + m); }
+        else {
+          xs.push(it.pos - m, it.pos + m);
+        }
+      }
+    }
+    const pad = 5 * s;
+    return [Math.min(...xs) - pad, Math.min(...ys) - pad, Math.max(...xs) + pad, Math.max(...ys) + pad];
+  }
+  concreteArea() {
+    const o = this.items.find(i => i.k === "outline");
+    if (!o) return null;
+    const rings = o.rings.map(r => expand(r, true));
+    return Math.abs(signedArea(rings[0])) - rings.slice(1).reduce((a, r) => a + Math.abs(signedArea(r)), 0);
+  }
+  summary() {
+    const by = new Map();
+    for (const it of this.items) if (it.k === "bar") by.set(it.d, (by.get(it.d) || 0) + 1);
+    let As = 0; for (const [d, n] of by) As += n * Math.PI * d * d / 4;
+    const parts = [...by.entries()].sort((a, b) => b[0] - a[0]).map(([d, n]) => `${n}Ø${fmt(d)}`);
+    let txt = "Bars cut by the section: " + (parts.length ? parts.join(" + ") : "none") + `     A_s = ${(As / 100).toFixed(2)} cm²`;
+    const Ac = this.concreteArea();
+    if (Ac) txt += `     A_c = ${(Ac / 100).toFixed(0)} cm²     ρ = ${(100 * As / Ac).toFixed(2)} %`;
+    return txt;
+  }
+}
+
+/* --------------------------------------------------------- standard sections */
+const linkTxt = (dl, s, kind = "link") => `${kind} Ø${fmt(dl)}` + (s ? `/${fmt(s)}` : "");
+
+function addCage(dr, xi0, yi0, xi1, yi1, dl, top, bottom, sides, mandrel, hooks, hookLen, dg, linkText) {
+  const rMan = (mandrel || 4 * dl) / 2;
+  const rinB = bottom.length ? Math.max(rMan, bottom[0][1] / 2) : rMan;
+  const rinT = top.length ? Math.max(rMan, top[0][1] / 2) : rMan;
+  const rcB = rinB + dl / 2, rcT = rinT + dl / 2, h2 = dl / 2;
+  if (xi1 - xi0 < rinB + rinT || yi1 - yi0 < rinB + rinT) throw new UserError("section too small for this cover / link");
+  dr.steel(roundedRect(xi0 - h2, yi0 - h2, xi1 + h2, yi1 + h2, [rcB, rcB, rcT, rcT]), dl, true);
+  if (hooks) {
+    const L = hookLen || Math.max(5 * dl, 50), k = Math.SQRT1_2, b45 = Math.tan(Math.PI / 16);
+    const cx = xi0 + rinT, cy = yi1 - rinT;
+    const ea = [cx - rcT * k, cy - rcT * k];
+    dr.steel([[cx - rcT, cy, b45], [ea[0], ea[1], 0], [ea[0] + L * k, ea[1] - L * k, 0]], dl);
+    const eb = [cx + rcT * k, cy + rcT * k];
+    dr.steel([[cx, cy + rcT, -b45], [eb[0], eb[1], 0], [eb[0] + L * k, eb[1] - L * k, 0]], dl);
+  }
+  const corner = (xf, yf, sx, sy, rIn, rb) => { const k = (rIn - rb) * Math.SQRT1_2; return [xf + sx * (rIn - k), yf + sy * (rIn - k)]; };
+  const layers = (lays, face, rIn) => {
+    const sy = face === "bottom" ? 1 : -1, yface = face === "bottom" ? yi0 : yi1;
+    let first = null, yPrev = null, dPrev = null;
+    lays.forEach(([n, d], i) => {
+      let xl, xr, y;
+      if (i === 0) { [xl, y] = corner(xi0, yface, 1, sy, rIn, d / 2); [xr] = corner(xi1, yface, -1, sy, rIn, d / 2); first = [xl, xr, y]; }
+      else {
+        y = yPrev + sy * (dPrev / 2 + minClear(Math.max(d, dPrev), dg) + d / 2);
+        xl = Math.max(first[0], xi0 + d / 2); xr = Math.min(first[1], xi1 - d / 2);
+      }
+      const xs = spread(xl, xr, n);
+      xs.forEach(x => dr.bar(x, y, d));
+      if (n > 1) {
+        const clear = (xr - xl) / (n - 1) - d;
+        if (clear < minClear(d, dg) - 0.5) dr.warn(`${face} layer ${i + 1}: clear spacing ${fmt0(clear)} mm < ${fmt0(minClear(d, dg))} mm`);
+      }
+      dr.label([xs[xs.length - 1], y], `${n}Ø${fmt(d)}`);
+      yPrev = y; dPrev = d;
+    });
+    return first;
+  };
+  const fb = layers(bottom, "bottom", rinB), ft = layers(top, "top", rinT);
+  if (sides.length && fb && ft) {
+    let prev = null;
+    sides.forEach(([n, d], j) => {
+      let xl, xr;
+      if (!prev) { xl = xi0 + d / 2; xr = xi1 - d / 2; }
+      else { const g = prev[2] / 2 + minClear(Math.max(d, prev[2]), dg) + d / 2; xl = prev[0] + g; xr = prev[1] - g; }
+      const ys = spread(fb[2], ft[2], n + 2).slice(1, -1);
+      ys.forEach(y => { dr.bar(xl, y, d); dr.bar(xr, y, d); });
+      const clear = (ft[2] - fb[2]) / (n + 1) - d;
+      if (clear < minClear(d, dg) - 0.5) dr.warn(`side layer ${j + 1}: clear spacing ${fmt0(clear)} mm`);
+      dr.label([xr, ys[Math.floor(ys.length / 2)]], `${2 * n}Ø${fmt(d)} (sides)`);
+      prev = [xl, xr, d];
+    });
+  }
+  dr.label([xi1 + dl / 2, yi0 + 0.42 * (yi1 - yi0)], linkText);
+}
+
+const meshText = m => `Ø${fmt(m.d)}` + (m.s ? `/${fmt(m.s)}` : "") + (m.note ? ` ${m.note}` : "");
+const customState = (name, cover, dg, outline, openings, items) =>
+  ({ name, cover: fmt(cover), dg: fmt(dg), auto_dims: true, outline, openings, items });
+function cageItems(bottom, top, sides, link) {
+  const items = [];
+  for (const [n, d] of bottom) items.push(newItem("Layer", { face: "bottom", kind: "dots", d, dist: "count", n, link }));
+  for (const [n, d] of top) items.push(newItem("Layer", { face: "top", kind: "dots", d, dist: "count", n, link }));
+  for (const [n, d] of sides) {
+    items.push(newItem("Layer", { face: "left", d, n, skip_ends: true, link, label: "none" }));
+    items.push(newItem("Layer", { face: "right", d, n, skip_ends: true, link, ltext: `${2 * n}Ø${fmt(d)} (sides)` }));
+  }
+  return items;
+}
+
+function rectSection(p) {
+  return {
+    build(st) {
+      const dr = new Drawing(p.name, st), s = st.scale, { b, h, cover: c, link_d: dl } = p;
+      if (b <= 0 || h <= 0) throw new UserError("b and h must be positive");
+      dr.outline([[[0, 0], [b, 0], [b, h], [0, h]]]);
+      addCage(dr, c + dl, c + dl, b - c - dl, h - c - dl, dl, p.top, p.bottom, p.sides, p.mandrel, p.hooks, p.hook_len, p.dg, linkTxt(dl, p.link_s));
+      dr.dim([0, 0], [b, 0], "h", -8 * s); dr.dim([0, 0], [0, h], "v", -8 * s);
+      dr.finalize(`c_nom = ${fmt(c)} mm`);
+      return dr;
+    },
+    toCustom() {
+      const items = [newItem("Link", { region: "outline", d: p.link_d, s: p.link_s, mandrel: p.mandrel, hooks: p.hooks, hook_len: p.hook_len }),
+        ...cageItems(p.bottom, p.top, p.sides, 1)];
+      const b = fmt(p.b), h = fmt(p.h);
+      return customState(p.name, p.cover, p.dg, `0, 0\n${b}, 0\n${b}, ${h}\n0, ${h}`, "", items);
+    }
+  };
+}
+
+function flangedSection(p) {
+  const geo = () => {
+    const { b_w: bw, h, b_f: bf, h_f: hf } = p;
+    if (Math.min(bw, h, bf, hf) <= 0 || bf < bw || hf >= h) throw new UserError("check b_w, h, b_f, h_f (b_f ≥ b_w, h_f < h)");
+    const wx0 = { both: (bf - bw) / 2, right: 0, left: bf - bw }[p.flange];
+    return [wx0, wx0 + bw, h - hf];
+  };
+  return {
+    build(st) {
+      const dr = new Drawing(p.name, st), s = st.scale;
+      const { b_w: bw, h, b_f: bf, h_f: hf, cover: c, link_d: dl } = p;
+      const [wx0, wx1, yf] = geo();
+      const brkR = wx1 < bf && p.breaks, brkL = wx0 > 0 && p.breaks, amp = Math.min(0.2 * hf, 3 * s);
+      const pts = [[wx0, 0], [wx1, 0], [wx1, yf]];
+      if (wx1 < bf) { pts.push([bf, yf]); if (brkR) pts.push(...zigzag([bf, yf], [bf, h], amp)); }
+      pts.push([bf, h], [0, h]);
+      if (wx0 > 0) { if (brkL) pts.push(...zigzag([0, h], [0, yf], amp)); pts.push([0, yf]); }
+      pts.push([wx0, yf]);
+      dr.outline([pts]);
+      const ft = p.flange_top, fb = p.flange_bot, dT = ft ? ft.d : 0, dB = fb ? fb.d : 0;
+      const xa = brkL ? 0 : c, xb = brkR ? bf : bf - c;
+      for (const [lay, y] of [[ft, h - c - dT / 2], [fb, yf + c + dB / 2]]) if (lay) {
+        dr.steel([[xa, y], [xb, y]], lay.d, false, "BARS");
+        dr.label([xb - 0.04 * (xb - xa), y], meshText(lay) + (lay.note ? "" : " (transv.)"));
+      }
+      if (p.flange_long) {
+        const [dd, sp] = p.flange_long, xs = [];
+        if (wx1 < bf) { let x = wx1 + sp / 2; const lim = brkR ? bf - sp / 4 : bf - c - dd / 2; while (x <= lim) { xs.push(x); x += sp; } }
+        if (wx0 > 0) { let x = wx0 - sp / 2; const lim = brkL ? sp / 4 : c + dd / 2; while (x >= lim) { xs.push(x); x -= sp; } }
+        for (const y of [h - c - dT - dd / 2, yf + c + dB + dd / 2]) {
+          xs.forEach(x => dr.bar(x, y, dd));
+          if (xs.length) dr.label([Math.max(...xs), y], `Ø${fmt(dd)}/${fmt(sp)} (long.)`);
+        }
+      }
+      addCage(dr, wx0 + c + dl, c + dl, wx1 - c - dl, h - c - dT - dl, dl, p.top, p.bottom, p.sides, p.mandrel, p.hooks, p.hook_len, p.dg, linkTxt(dl, p.link_s));
+      dr.dim([wx0, 0], [wx1, 0], "h", -8 * s); dr.dim([0, h], [bf, h], "h", h + 8 * s);
+      dr.dim([0, yf], [0, h], "v", -8 * s); dr.dim([wx0, 0], [0, h], "v", -16 * s);
+      dr.finalize(`c_nom = ${fmt(c)} mm`);
+      return dr;
+    },
+    toCustom() {
+      const { h, b_f: bf, cover: c } = p;
+      const [wx0, wx1, yf] = geo();
+      const brkR = wx1 < bf && p.breaks, brkL = wx0 > 0 && p.breaks;
+      const P = [[wx0, 0, false], [wx1, 0, false], [wx1, yf, false]];
+      if (wx1 < bf) P.push([bf, yf, brkR]);
+      P.push([bf, h, false], [0, h, brkL]);
+      if (wx0 > 0) P.push([0, yf, false]);
+      P.push([wx0, yf, false]);
+      const clean = [];
+      for (const q of P) if (!clean.length || dist(clean[clean.length - 1], q) > 1e-9) clean.push(q);
+      const outline = clean.map(([x, y, b]) => `${fmt(x)}, ${fmt(y)}` + (b ? ", 0, brk" : "")).join("\n");
+      const ft = p.flange_top, fb = p.flange_bot, dT = ft ? ft.d : 0, dB = fb ? fb.d : 0;
+      const items = [newItem("Link", { region: "rectangle", x0: wx0, y0: 0, x1: wx1, y1: h - dT, d: p.link_d, s: p.link_s, mandrel: p.mandrel, hooks: p.hooks, hook_len: p.hook_len }),
+        ...cageItems(p.bottom, p.top, p.sides, 1)];
+      if (ft) items.push(newItem("Layer", { face: "top", kind: "line", d: ft.d, link: 0, dist: ft.s ? "spacing (exact)" : "count", s: ft.s || 200, note: ft.note || "(transv.)" }));
+      if (fb) items.push(newItem("Layer", { face: "bottom", kind: "line", d: fb.d, link: 0, offset: yf + c + fb.d / 2, dist: fb.s ? "spacing (exact)" : "count", s: fb.s || 200, note: fb.note || "(transv.)" }));
+      if (p.flange_long) {
+        const [dd, sp] = p.flange_long, rng = [];
+        if (wx0 > 0) rng.push(`0:${fmt(wx0 - c)}`);
+        if (wx1 < bf) rng.push(`${fmt(wx1 + c)}:${fmt(bf)}`);
+        for (const [face, off] of [["top", c + dT + dd / 2], ["bottom", yf + c + dB + dd / 2]])
+          items.push(newItem("Layer", { face, kind: "dots", d: dd, link: 0, offset: off, dist: "spacing (exact)", s: sp, ranges: rng.join("; "), note: "(long.)" }));
+      }
+      return customState(p.name, c, p.dg, outline, "", items);
+    }
+  };
+}
+
+function circularSection(p) {
+  const radii = () => {
+    const R = p.D / 2, out = []; let prev = null;
+    for (const [n, d] of p.rings) {
+      const Rb = prev === null ? R - p.cover - p.link_d - d / 2 : prev[0] - prev[1] / 2 - minClear(Math.max(d, prev[1]), p.dg) - d / 2;
+      if (Rb <= d / 2) throw new UserError("bar rings do not fit in the section");
+      out.push([n, d, Rb]); prev = [Rb, d];
+    }
+    return out;
+  };
+  return {
+    build(st) {
+      const dr = new Drawing(p.name, st), s = st.scale, { D, cover: c, link_d: dl } = p;
+      if (D <= 0) throw new UserError("D must be positive");
+      const R = D / 2, cx = R, cy = R;
+      dr.outline([[[cx - R, cy, 1], [cx + R, cy, 1]]]);
+      const rl = R - c - dl / 2;
+      dr.steel([[cx - rl, cy, 1], [cx + rl, cy, 1]], dl, true);
+      for (const [n, d, Rb] of radii()) {
+        for (let k = 0; k < n; k++) { const a = 2 * Math.PI * k / n; dr.bar(cx + Rb * Math.cos(a), cy + Rb * Math.sin(a), d); }
+        if (n > 1) { const clear = 2 * Rb * Math.sin(Math.PI / n) - d; if (clear < minClear(d, p.dg) - 0.5) dr.warn(`ring ${n}Ø${fmt(d)}: clear spacing ${fmt0(clear)} mm`); }
+        dr.label([cx + Rb, cy], `${n}Ø${fmt(d)}`);
+      }
+      const a = -40 * Math.PI / 180;
+      dr.label([cx + rl * Math.cos(a), cy + rl * Math.sin(a)], linkTxt(dl, p.link_s, p.spiral ? "spiral" : "hoop"));
+      dr.dim([0, cy], [D, cy], "h", -8 * s, `Ø${fmt(D)}`);
+      dr.finalize(`c_nom = ${fmt(c)} mm`);
+      return dr;
+    },
+    toCustom() {
+      const R = p.D / 2;
+      const items = [newItem("Link", { region: "outline", d: p.link_d, s: p.link_s, hooks: false, name: p.spiral ? "spiral" : "hoop" })];
+      for (const [n, d, Rb] of radii()) items.push(newItem("Circle pattern", { cx: R, cy: R, r: Math.round(Rb * 10) / 10, n, d }));
+      return customState(p.name, p.cover, p.dg, `0, ${fmt(R)}, 180\n${fmt(p.D)}, ${fmt(R)}, 180`, "", items);
+    }
+  };
+}
+
+function panelSection(p) {
+  return {
+    build(st) {
+      const dr = new Drawing(p.name, st), s = st.scale, { length: L, t, cover: c } = p;
+      if (L <= 0 || t <= 0) throw new UserError("thickness and length must be positive");
+      const T = p.vertical ? (u, v) => [v, u] : (u, v) => [u, v];
+      const amp = Math.min(0.2 * t, 3 * s);
+      const loc = [[0, 0], [L, 0]];
+      if (p.breaks) loc.push(...zigzag([L, 0], [L, t], amp));
+      loc.push([L, t], [0, t]);
+      if (p.breaks) loc.push(...zigzag([0, t], [0, 0], amp));
+      dr.outline([loc.map(q => T(q[0], q[1]))]);
+      for (const [face, lays] of [[1, p.face1], [2, p.face2]]) {
+        let off = c;
+        const side = p.vertical ? (face === 1 ? "left" : "right") : "right";
+        for (const lay of lays) {
+          const v = face === 1 ? off + lay.d / 2 : t - off - lay.d / 2;
+          let ua;
+          if (lay.kind === "line") { dr.steel([T(0, v), T(L, v)], lay.d, false, "BARS"); ua = 0.96 * L; }
+          else {
+            if (!lay.s || lay.s <= 0) throw new UserError("dot layers need a spacing s");
+            const n = Math.max(1, Math.floor(L / lay.s)), u0 = (L - (n - 1) * lay.s) / 2;
+            const us = Array.from({ length: n }, (_, i) => u0 + i * lay.s);
+            us.forEach(u => dr.bar(...T(u, v), lay.d));
+            ua = us[us.length - 1];
+            if (lay.s - lay.d < minClear(lay.d, p.dg) - 0.5) dr.warn(`face ${face} ${meshText(lay)}: clear spacing too small`);
+          }
+          dr.label(T(ua, v), meshText(lay), side);
+          off += lay.d;
+        }
+      }
+      if (2 * c + [...p.face1, ...p.face2].reduce((a, l) => a + l.d, 0) > t) dr.warn("layers + covers exceed the thickness");
+      if (p.vertical) dr.dim([0, 0], [t, 0], "h", -8 * s); else dr.dim([0, 0], [0, t], "v", -8 * s);
+      dr.finalize(`c_nom = ${fmt(c)} mm`);
+      return dr;
+    },
+    toCustom() {
+      const L = fmt(p.length), t = fmt(p.t);
+      let outline, faces;
+      if (p.vertical) { outline = `0, 0, 0, brk\n${t}, 0\n${t}, ${L}, 0, brk\n0, ${L}`; faces = ["left", "right"]; }
+      else { outline = `0, 0\n${L}, 0, 0, brk\n${L}, ${t}\n0, ${t}, 0, brk`; faces = ["bottom", "top"]; }
+      if (!p.breaks) outline = outline.replaceAll(", 0, brk", "");
+      const items = [];
+      [p.face1, p.face2].forEach((lays, i) => {
+        for (const lay of lays) items.push(newItem("Layer", { face: faces[i], kind: lay.kind, d: lay.d, link: 0, dist: lay.s ? "spacing (exact)" : "count", s: lay.s || 200, n: 1, note: lay.note, label: faces[i] === "left" ? "left" : "right" }));
+      });
+      return customState(p.name, p.cover, p.dg, outline, "", items);
+    }
+  };
+}
+
+function barsRows(rows) {
+  const out = [];
+  for (const r of rows || []) {
+    if (!r.some(c => String(c ?? "").trim())) continue;
+    const n = inum(r[0], "n"), d = fnum(r[1], "Ø");
+    if (n > 0) out.push([n, d]);
+  }
+  return out;
+}
+function meshRows(rows) {
+  const out = [];
+  for (const r0 of rows || []) {
+    const r = [...r0, "", "", "", ""];
+    if (!String(r[0]).trim()) continue;
+    out.push({ d: fnum(r[0], "Ø"), s: onum(r[1], "s"), kind: r[2] || "dots", note: r[3] || "" });
+  }
+  return out;
+}
+function stdSection(t, v) {
+  const F = k => fnum(v[k], k), O = k => onum(v[k], k);
+  const common = { name: v.name || t, cover: F("cover"), dg: F("dg") };
+  if (t.startsWith("Rect"))
+    return rectSection({ ...common, b: F("b"), h: F("h"), link_d: F("link_d"), link_s: O("link_s"), bottom: barsRows(v.bottom), top: barsRows(v.top), sides: barsRows(v.sides), hooks: truthy(v.hooks), hook_len: O("hook_len"), mandrel: O("mandrel") });
+  if (t === "T-beam" || t === "L-beam") {
+    const ft = O("ft_d") ? { d: O("ft_d"), s: O("ft_s"), kind: "line", note: "" } : null;
+    const fb = O("fb_d") ? { d: O("fb_d"), s: O("fb_s"), kind: "line", note: "" } : null;
+    const fl = O("fl_d") && O("fl_s") ? [O("fl_d"), O("fl_s")] : null;
+    return flangedSection({ ...common, b_w: F("b_w"), h: F("h"), b_f: F("b_f"), h_f: F("h_f"), flange: t === "T-beam" ? "both" : (v.flange || "right"),
+      link_d: F("link_d"), link_s: O("link_s"), bottom: barsRows(v.bottom), top: barsRows(v.top), sides: barsRows(v.sides),
+      flange_top: ft, flange_bot: fb, flange_long: fl, breaks: truthy(v.breaks), hooks: truthy(v.hooks), hook_len: O("hook_len"), mandrel: O("mandrel") });
+  }
+  if (t.startsWith("Circ"))
+    return circularSection({ ...common, D: F("D"), rings: barsRows(v.rings), link_d: F("link_d"), link_s: O("link_s"), spiral: truthy(v.spiral) });
+  if (t === "Slab" || t === "Wall")
+    return panelSection({ ...common, t: F("t"), length: F("length"), face1: meshRows(v.face1), face2: meshRows(v.face2), breaks: truthy(v.breaks), vertical: t === "Wall" && v.view === "vertical section" });
+  throw new UserError(`unknown section type ${t}`);
+}
+
+/* ------------------------------------------------------------ custom engine */
+let _GF = null;
+function gf() {
+  if (!_GF) {
+    if (typeof jsts === "undefined") throw new UserError("the geometry library did not load (check the internet connection and reload) - custom sections need it");
+    _GF = new jsts.geom.GeometryFactory();
+  }
+  return _GF;
+}
+const C = (x, y) => new jsts.geom.Coordinate(x, y);
+const ringOf = pts => gf().createLinearRing([...pts.map(p => C(p[0], p[1])), C(pts[0][0], pts[0][1])]);
+const polyOf = (shell, holes = []) => gf().createPolygon(ringOf(shell), holes.map(ringOf));
+const lineOf = pts => gf().createLineString(pts.map(p => C(p[0], p[1])));
+function buf(g, d, join = "round") {
+  const BP = jsts.operation.buffer.BufferParameters, p = new BP();
+  p.setJoinStyle(join === "mitre" ? BP.JOIN_MITRE : BP.JOIN_ROUND);
+  p.setMitreLimit(10); p.setQuadrantSegments(16);
+  return jsts.operation.buffer.BufferOp.bufferOp(g, d, p);
+}
+function polysOf(g) {
+  if (!g || g.isEmpty()) return [];
+  const t = g.getGeometryType();
+  if (t === "Polygon") return [g];
+  if (t === "MultiPolygon" || t === "GeometryCollection") {
+    const out = []; for (let i = 0; i < g.getNumGeometries(); i++) out.push(...polysOf(g.getGeometryN(i))); return out;
+  }
+  return [];
+}
+function largest(g) { const ps = polysOf(g); return ps.length ? ps.reduce((a, b) => b.getArea() > a.getArea() ? b : a) : null; }
+const env = g => { const e = g.getEnvelopeInternal(); return [e.getMinX(), e.getMinY(), e.getMaxX(), e.getMaxY()]; };
+const ringPts = ring => ring.getCoordinates().map(c => [c.x, c.y]).slice(0, -1);
+const ringCCW = ring => { const p = ringPts(ring); if (signedArea(p) < 0) p.reverse(); return p; };
+
+function splitNums(s) {
+  s = s.trim();
+  const toks = (s.includes(";") || s.includes("\t")) ? s.split(/[;\t]+/) : s.split(/[,\s]+/);
+  return toks.filter(t => t.trim()).map(t => fnum(t));
+}
+function parseOutline(text) {
+  const verts = [], brk = [];
+  for (const raw of String(text || "").split(/\r?\n/)) {
+    let ln = raw.split("#")[0].trim();
+    if (!ln) continue;
+    const flag = /\b(brk|break)\b/i.test(ln);
+    ln = ln.replace(/\b(brk|break)\b/ig, "").replace(/^[\s,;]+|[\s,;]+$/g, "");
+    const nums = splitNums(ln);
+    if (nums.length < 2) throw new UserError(`outline line '${raw.trim()}': need at least x, y`);
+    const arc = nums.length > 2 ? nums[2] : 0;
+    if (Math.abs(arc) >= 360) throw new UserError(`outline line '${raw.trim()}': arc angle must be below 360°`);
+    verts.push([nums[0], nums[1], Math.tan(arc * Math.PI / 180 / 4)]); brk.push(flag);
+  }
+  if (verts.length < 2) throw new UserError("the outline needs at least 2 vertices (3 without arcs)");
+  return [verts, brk];
+}
+function parseOpenings(text) {
+  const out = [];
+  for (const raw of String(text || "").split(/\r?\n/)) {
+    const ln = raw.split("#")[0].trim();
+    if (!ln) continue;
+    const i = ln.search(/\s/), kw = (i < 0 ? ln : ln.slice(0, i)).toLowerCase(), rest = i < 0 ? "" : ln.slice(i);
+    const nums = rest.trim() ? splitNums(rest) : [];
+    if (kw.startsWith("rect")) {
+      if (nums.length < 4) throw new UserError(`'${ln}': rect x y w h`);
+      const [x, y, w, h] = nums; out.push([[x, y, 0], [x + w, y, 0], [x + w, y + h, 0], [x, y + h, 0]]);
+    } else if (kw.startsWith("circ")) {
+      if (nums.length < 3) throw new UserError(`'${ln}': circle cx cy D`);
+      const [cx, cy, D] = nums; out.push([[cx - D / 2, cy, 1], [cx + D / 2, cy, 1]]);
+    } else if (kw.startsWith("poly")) {
+      if (nums.length < 6 || nums.length % 2) throw new UserError(`'${ln}': poly x1 y1 x2 y2 x3 y3 ...`);
+      const r = []; for (let k = 0; k < nums.length; k += 2) r.push([nums[k], nums[k + 1], 0]); out.push(r);
+    } else throw new UserError(`unknown opening '${kw}' (use rect, circle or poly)`);
+  }
+  return out;
+}
+function parsePoints(text) {
+  const pts = [];
+  for (let chunk of String(text || "").split(/[;\n]+/)) {
+    chunk = chunk.trim(); if (!chunk) continue;
+    const nums = chunk.split(/[,\s]+/).filter(Boolean).map(t => fnum(t));
+    if (nums.length !== 2) throw new UserError(`point '${chunk}' needs x, y`);
+    pts.push(nums);
+  }
+  return pts;
+}
+function parseRanges(text) {
+  const out = [];
+  for (let chunk of String(text || "").split(/[;\n]+/)) {
+    chunk = chunk.trim(); if (!chunk) continue;
+    const i = chunk.indexOf(":");
+    if (i < 0) throw new UserError(`range '${chunk}' must look like from:to`);
+    const a = fnum(chunk.slice(0, i)), b = fnum(chunk.slice(i + 1));
+    out.push([Math.min(a, b), Math.max(a, b)]);
+  }
+  return out;
+}
+function distribute(a, b, it) {
+  const mode = it.dist || "count", skip = truthy(it.skip_ends), L = b - a;
+  if (mode === "count") {
+    const n = inum(it.n, "n");
+    if (n < 1) return [];
+    return skip ? spread(a, b, n + 2).slice(1, -1) : spread(a, b, n);
+  }
+  const s = fnum(it.s, "spacing");
+  if (s <= 0) throw new UserError("spacing must be positive");
+  let pts;
+  if (L < 1e-6) pts = [a];
+  else if (mode.startsWith("spacing")) { const m = Math.floor(L / s + 1e-9), st = a + (L - m * s) / 2; pts = Array.from({ length: m + 1 }, (_, i) => st + i * s); }
+  else { const m = Math.max(1, Math.ceil(L / s - 1e-9)); pts = Array.from({ length: m + 1 }, (_, i) => a + L * i / m); }
+  return skip ? pts.slice(1, -1) : pts;
+}
+function segments(g, horiz) {
+  const segs = [];
+  const walk = gg => {
+    if (!gg || gg.isEmpty()) return;
+    const t = gg.getGeometryType();
+    if (t === "LineString" || t === "LinearRing") {
+      const cs = gg.getCoordinates().map(c => horiz ? c.x : c.y);
+      const lo = Math.min(...cs), hi = Math.max(...cs);
+      if (hi - lo > 1e-6) segs.push([lo, hi]);
+    } else if (t.startsWith("Multi") || t === "GeometryCollection") {
+      for (let i = 0; i < gg.getNumGeometries(); i++) walk(gg.getGeometryN(i));
+    }
+  };
+  walk(g);
+  return segs.sort((a, b) => a[0] - b[0]);
+}
+function applyRanges(segs, ranges) {
+  if (!ranges.length) return segs;
+  const out = [];
+  for (const [a, b] of segs) for (const [r0, r1] of ranges) { const lo = Math.max(a, r0), hi = Math.min(b, r1); if (hi - lo > 1e-6) out.push([lo, hi]); }
+  return out.sort((x, y) => x[0] - y[0]);
+}
+function ringCorners(raw, minTurn = 20) {
+  const pts = raw.filter((p, i) => dist(p, raw[(i - 1 + raw.length) % raw.length]) > 1e-6), n = pts.length, out = [];
+  for (let i = 0; i < n; i++) {
+    const p0 = pts[(i - 1 + n) % n], p1 = pts[i], p2 = pts[(i + 1) % n];
+    const a1 = Math.atan2(p1[1] - p0[1], p1[0] - p0[0]), a2 = Math.atan2(p2[1] - p1[1], p2[0] - p1[0]);
+    let turn = ((a2 - a1 + Math.PI) % (2 * Math.PI) + 2 * Math.PI) % (2 * Math.PI) - Math.PI;
+    if (Math.abs(turn * 180 / Math.PI) > minTurn) out.push(p1);
+  }
+  return out;
+}
+function dedupeCyclic(ts, L, tol) {
+  const out = [];
+  for (const t of ts) if (!out.length || t - out[out.length - 1] > tol) out.push(t);
+  if (out.length > 1 && out[0] + L - out[out.length - 1] < tol) out.pop();
+  return out;
+}
+function largestRemainder(weights, total) {
+  if (total <= 0 || !weights.length) return weights.map(() => 0);
+  const S = weights.reduce((a, b) => a + b, 0), raw = weights.map(w => w / S * total), base = raw.map(Math.floor);
+  let rest = total - base.reduce((a, b) => a + b, 0);
+  [...raw.keys()].sort((i, j) => (raw[j] - base[j]) - (raw[i] - base[i])).slice(0, rest).forEach(i => base[i]++);
+  return base;
+}
+function ringPositions(ts, Lr, it, dr, idx) {
+  const dm = it.dist || "max spacing";
+  if (ts.length) {
+    const m = ts.length;
+    const gaps = m === 1 ? [Lr] : ts.map((t, i) => (((ts[(i + 1) % m] - t) % Lr) + Lr) % Lr || Lr);
+    let alloc;
+    if (dm === "count") {
+      const extra = inum(it.n, "n") - m;
+      if (extra < 0) dr.warn(`item ${idx}: n is smaller than the number of corners (${m})`);
+      alloc = largestRemainder(gaps, Math.max(0, extra));
+    } else {
+      const s = fnum(it.s, "spacing");
+      if (s <= 0) throw new UserError("spacing must be positive");
+      alloc = gaps.map(g => Math.max(0, Math.ceil(g / s - 1e-9) - 1));
+    }
+    const out = [];
+    ts.forEach((t0, i) => { out.push(t0); for (let j = 1; j <= alloc[i]; j++) out.push(t0 + gaps[i] * j / (alloc[i] + 1)); });
+    return out.map(t => t % Lr);
+  }
+  let n;
+  if (dm === "count") n = inum(it.n, "n");
+  else {
+    const s = fnum(it.s, "spacing");
+    if (s <= 0) throw new UserError("spacing must be positive");
+    n = dm.startsWith("spacing") ? Math.max(1, Math.round(Lr / s)) : Math.max(1, Math.ceil(Lr / s - 1e-9));
+  }
+  return Array.from({ length: Math.max(0, n) }, (_, i) => Lr * i / n);
+}
+function itemLabel(dr, it, pts, auto) {
+  const side = it.label || "right";
+  if (side === "none" || !pts.length) return;
+  let txt = String(it.ltext || "").trim() || auto;
+  const note = String(it.note || "").trim();
+  if (note) txt += " " + note;
+  const p = side === "right" ? pts.reduce((a, b) => (b[0] > a[0] || (b[0] === a[0] && b[1] > a[1])) ? b : a)
+                             : pts.reduce((a, b) => (b[0] < a[0] || (b[0] === a[0] && b[1] > a[1])) ? b : a);
+  dr.label(p, txt, side);
+}
+function baseRegion(dr, links, k, P, cover, idx) {
+  if (k && links.has(k)) return links.get(k);
+  if (k) dr.warn(`item ${idx}: link ${k} does not exist - bars placed at cover instead`);
+  return buf(P, -cover, "mitre");
+}
+function linkHooks(dr, pts, rc, d, L) {
+  const n = pts.length; let best = null;
+  for (let i = 0; i < n; i++) {
+    const p0 = pts[(i - 1 + n) % n], p1 = pts[i], p2 = pts[(i + 1) % n];
+    const l1 = dist(p0, p1), l2 = dist(p1, p2);
+    if (l1 < 1e-9 || l2 < 1e-9) continue;
+    const u1 = [(p1[0] - p0[0]) / l1, (p1[1] - p0[1]) / l1], u2 = [(p2[0] - p1[0]) / l2, (p2[1] - p1[1]) / l2];
+    const turn = Math.atan2(u1[0] * u2[1] - u1[1] * u2[0], u1[0] * u2[0] + u1[1] * u2[1]);
+    if (turn < 60 * Math.PI / 180) continue;                // real corners only
+    const score = -p1[0] + p1[1];
+    if (!best || score > best[0]) best = [score, p1, u1, u2, turn];
+  }
+  if (!best) return;
+  const [, V, u1, u2, turn] = best, phi = Math.PI - turn;
+  let bx = u2[0] - u1[0], by = u2[1] - u1[1]; const bl = Math.hypot(bx, by); bx /= bl; by /= bl;
+  const dd = rc / Math.sin(phi / 2), cx = V[0] + bx * dd, cy = V[1] + by * dd, px = -by, py = bx;
+  for (const sg of [1, -1]) { const sx = cx + sg * rc * px, sy = cy + sg * rc * py; dr.steel([[sx, sy], [sx + L * bx, sy + L * by]], d); }
+}
+function buildLink(dr, P, holes, it, cover, rBar, k) {
+  const d = fnum(it.d, "link Ø");
+  let c = onum(it.cover, "cover"); if (c === null) c = cover;
+  const man = onum(it.mandrel, "mandrel"), rIn = Math.max((man || 4 * d) / 2, rBar), rc = rIn + d / 2;
+  const region = it.region || "outline";
+  let Cr, inner;
+  if (region === "around opening") {
+    const j = inum(it.opening, "opening");
+    if (j < 1 || j > holes.length) throw new UserError(`opening ${j} does not exist`);
+    const C0 = largest(buf(polyOf(expand(holes[j - 1], true)), c + d / 2, "mitre"));
+    Cr = largest(buf(buf(C0, -rc, "mitre"), rc, "round")) || C0;
+    dr.steel(ringCCW(Cr.getExteriorRing()), d, true);
+    inner = buf(P, -cover, "mitre").difference(buf(Cr, d / 2));
+  } else {
+    let A;
+    if (region === "rectangle") {
+      const x0 = fnum(it.x0, "x0"), y0 = fnum(it.y0, "y0"), x1 = fnum(it.x1, "x1"), y1 = fnum(it.y1, "y1");
+      A = P.intersection(polyOf([[Math.min(x0, x1), Math.min(y0, y1)], [Math.max(x0, x1), Math.min(y0, y1)], [Math.max(x0, x1), Math.max(y0, y1)], [Math.min(x0, x1), Math.max(y0, y1)]]));
+    } else if (region === "polygon") {
+      const pts = parsePoints(it.points);
+      if (pts.length < 3) throw new UserError("polygon region needs 3 or more points");
+      A = P.intersection(polyOf(pts).buffer(0));
+    } else A = P;
+    A = largest(A);
+    if (!A) throw new UserError("region does not overlap the section");
+    A = gf().createPolygon(A.getExteriorRing(), []);
+    const C0 = largest(buf(A, -(c + d / 2), "mitre"));
+    if (!C0) throw new UserError("region too small for this cover");
+    Cr = largest(buf(buf(C0, -rc, "mitre"), rc, "round"));
+    if (!Cr) { Cr = C0; dr.warn(`link ${k}: too small to round the corners`); }
+    dr.steel(ringCCW(Cr.getExteriorRing()), d, true);
+    inner = buf(Cr, -d / 2);
+    if (it.hooks === undefined || truthy(it.hooks)) linkHooks(dr, ringCCW(C0.getExteriorRing()), rc, d, onum(it.hook_len, "hook length") || Math.max(5 * d, 50));
+  }
+  const ring = ringPts(Cr.getExteriorRing());
+  const xs = ring.map(p => p[0]), ys = ring.map(p => p[1]);
+  const mx = Math.max(...xs), mn = Math.min(...xs), target = Math.min(...ys) + 0.42 * (Math.max(...ys) - Math.min(...ys));
+  const pick = arr => arr.reduce((a, b) => Math.abs(b[1] - target) < Math.abs(a[1] - target) ? b : a);
+  const side = it.label || "right";
+  if (side !== "none") {
+    let txt = String(it.ltext || "").trim() || linkTxt(d, onum(it.s, "spacing"), it.name || "link");
+    if (String(it.note || "").trim()) txt += " " + String(it.note).trim();
+    dr.label(side === "right" ? pick(ring.filter(p => p[0] >= mx - 1)) : pick(ring.filter(p => p[0] <= mn + 1)), txt, side);
+  }
+  return inner;
+}
+function layerItem(dr, it, idx, P, links, cover, dg, stacks) {
+  const face = it.face || "bottom", kind = it.kind || "dots", d = fnum(it.d, "Ø"), k = inum(it.link, "link");
+  const R0 = baseRegion(dr, links, k, P, cover, idx), Rb = buf(R0, -d / 2);
+  if (Rb.isEmpty()) throw new UserError("no room for bars of this diameter");
+  const horiz = face === "bottom" || face === "top", sgn = (face === "bottom" || face === "left") ? 1 : -1;
+  const [minx, miny, maxx, maxy] = env(P), off = onum(it.offset, "offset"), key = face + "|" + k;
+  let pos;
+  if (off === null) {
+    if (stacks.has(key)) {
+      const [pp, pd, pk] = stacks.get(key);
+      const gap = (kind === "dots" && pk === "dots") ? minClear(Math.max(d, pd), dg) : 0;
+      pos = pp + sgn * (pd / 2 + gap + d / 2);
+    } else { const [bx0, by0, bx1, by1] = env(Rb); pos = { bottom: by0, top: by1, left: bx0, right: bx1 }[face]; }
+  } else pos = { bottom: miny + off, top: maxy - off, left: minx + off, right: maxx - off }[face];
+  stacks.set(key, [pos, d, kind]);
+  const R = kind === "dots" ? Rb : R0, pe = pos + sgn * 1e-3;
+  const line = horiz ? lineOf([[minx - 1, pe], [maxx + 1, pe]]) : lineOf([[pe, miny - 1], [pe, maxy + 1]]);
+  const segs = applyRanges(segments(R.intersection(line), horiz), parseRanges(it.ranges));
+  if (!segs.length) throw new UserError(`layer at ${horiz ? "y" : "x"} = ${fmt0(pos)} lies outside the available area`);
+  const P2 = u => horiz ? [u, pos] : [pos, u], dm = it.dist || "count";
+  if (kind === "line") {
+    segs.forEach(([a, b]) => dr.steel([P2(a), P2(b)], d, false, "BARS"));
+    const [a, b] = segs[segs.length - 1], s = dm !== "count" ? onum(it.s, "spacing") : null;
+    itemLabel(dr, it, [P2(b - 0.04 * (b - a)), P2(segs[0][0] + 0.04 * (b - a))], `Ø${fmt(d)}` + (s ? `/${fmt(s)}` : ""));
+  } else {
+    const us = [];
+    segs.forEach(([a, b]) => us.push(...distribute(a, b, it)));
+    us.forEach(u => dr.bar(...P2(u), d));
+    itemLabel(dr, it, us.map(P2), dm.startsWith("spacing") ? `Ø${fmt(d)}/${fmt(fnum(it.s))}` : `${us.length}Ø${fmt(d)}`);
+  }
+}
+function perimeterItem(dr, it, idx, P, links, cover) {
+  const d = fnum(it.d, "Ø"), k = inum(it.link, "link");
+  const R = buf(baseRegion(dr, links, k, P, cover, idx), -d / 2), which = it.ring || "outer", cand = [];
+  for (const g of polysOf(R)) {
+    if (which !== "openings") cand.push([g.getExteriorRing(), "outer"]);
+    if (which !== "outer") for (let i = 0; i < g.getNumInteriorRing(); i++) cand.push([g.getInteriorRingN(i), "hole"]);
+  }
+  if (!cand.length) throw new UserError("nothing to place along" + (which === "openings" ? " (no opening inside this region)" : ""));
+  const src = { outer: ringCorners(ringPts(P.getExteriorRing())), hole: [] };
+  for (let i = 0; i < P.getNumInteriorRing(); i++) src.hole.push(...ringCorners(ringPts(P.getInteriorRingN(i))));
+  const placed = [];
+  for (const [ring, typ] of cand) {
+    const Lr = ring.getLength(), lil = new jsts.linearref.LengthIndexedLine(ring);
+    let ts = [];
+    if (it.corners === undefined || truthy(it.corners)) {
+      const same = cand.filter(c => c[1] === typ).map(c => c[0]);
+      for (const V of src[typ]) {
+        const pv = gf().createPoint(C(V[0], V[1])), dv = ring.distance(pv);
+        if (same.every(r => dv <= r.distance(pv) + 1e-6)) ts.push(lil.project(C(V[0], V[1])));
+      }
+      ts = dedupeCyclic(ts.sort((a, b) => a - b), Lr, 1.5 * d);
+    }
+    for (const t of ringPositions(ts, Lr, it, dr, idx)) { const q = lil.extractPoint(t); placed.push([q.x, q.y]); }
+  }
+  placed.forEach(([x, y]) => dr.bar(x, y, d));
+  itemLabel(dr, it, placed, `${placed.length}Ø${fmt(d)}`);
+}
+function clashCheck(dr, dg) {
+  const bars = dr.items.filter(i => i.k === "bar");
+  const over = [], tight = [];
+  for (let i = 0; i < bars.length; i++) for (let j = i + 1; j < bars.length; j++) {
+    const a = bars[i], b = bars[j], cl = Math.hypot(b.x - a.x, b.y - a.y) - (a.d + b.d) / 2;
+    if (cl < -0.5) over.push(a); else if (cl < minClear(Math.max(a.d, b.d), dg) - 0.5) tight.push([a, cl]);
+  }
+  if (over.length) dr.warn(`${over.length} pair(s) of bars overlap, e.g. near (${fmt0(over[0].x)}, ${fmt0(over[0].y)})`);
+  if (tight.length) dr.warn(`${tight.length} pair(s) of bars closer than the minimum clear spacing, e.g. ${fmt0(tight[0][1])} mm near (${fmt0(tight[0][0].x)}, ${fmt0(tight[0][0].y)})`);
+}
+function buildCustom(cs, st) {
+  const dr = new Drawing(cs.name || "Custom section", st), s = st.scale;
+  const cover = fnum(cs.cover, "cover"), dg = fnum(cs.dg ?? 16, "d_g");
+  const [verts, brk] = parseOutline(cs.outline), holes = parseOpenings(cs.openings);
+  const shell = expand(verts, true);
+  if (shell.length < 3) throw new UserError("the outline needs at least 3 vertices (or arcs)");
+  let P = polyOf(shell, holes.map(h => expand(h, true)));
+  if (!P.isValid()) {
+    P = P.buffer(0);
+    dr.warn("outline/openings were not a valid polygon (self-intersection or an opening crossing the edge) - repaired automatically, please check");
+  }
+  P = largest(P);
+  if (!P || P.getArea() <= 0) throw new UserError("the outline encloses no area");
+  const ext = [], m = verts.length;
+  verts.forEach(([x, y, b], i) => {
+    ext.push([x, y, b]);
+    if (brk[i] && Math.abs(b) < 1e-12) {
+      const nv = verts[(i + 1) % m], L = Math.hypot(nv[0] - x, nv[1] - y);
+      if (L > 1e-9) zigzag([x, y], [nv[0], nv[1]], Math.min(0.2 * L, 3 * s)).forEach(q => ext.push([q[0], q[1], 0]));
+    }
+  });
+  dr.outline([ext, ...holes]);
+  const items = cs.items || [], maxr = new Map();
+  for (const it of items) if ((it.type === "Layer" || it.type === "Perimeter") && (it.kind || "dots") === "dots") {
+    try { const kk = inum(it.link); maxr.set(kk, Math.max(maxr.get(kk) || 0, fnum(it.d) / 2)); } catch (e) { /* reported later */ }
+  }
+  const links = new Map(); let nlink = 0;
+  items.forEach((it, i) => {
+    if (it.type !== "Link") return;
+    nlink++;
+    try { links.set(nlink, buildLink(dr, P, holes, it, cover, maxr.get(nlink) || 0, nlink)); }
+    catch (e) { if (e instanceof UserError) dr.warn(`item ${i + 1} (Link ${nlink}) skipped: ${e.message}`); else throw e; }
+  });
+  const stacks = new Map();
+  items.forEach((it, i) => {
+    const idx = i + 1, t = it.type;
+    try {
+      if (t === "Layer") layerItem(dr, it, idx, P, links, cover, dg, stacks);
+      else if (t === "Perimeter") perimeterItem(dr, it, idx, P, links, cover);
+      else if (t === "Circle pattern") {
+        const cx = fnum(it.cx, "cx"), cy = fnum(it.cy, "cy"), r = fnum(it.r, "radius"), d = fnum(it.d, "Ø"), n = inum(it.n, "n");
+        const a0 = fnum(it.start ?? 0, "start"), sw = fnum(it.sweep ?? 360, "sweep");
+        const angs = n > 0 ? (Math.abs(sw) >= 360 - 1e-9 ? Array.from({ length: n }, (_, j) => a0 + 360 * j / n) : spread(a0, a0 + sw, n)) : [];
+        const pts = angs.map(a => [cx + r * Math.cos(a * Math.PI / 180), cy + r * Math.sin(a * Math.PI / 180)]);
+        pts.forEach(([x, y]) => dr.bar(x, y, d));
+        itemLabel(dr, it, pts, `${pts.length}Ø${fmt(d)}`);
+      } else if (t === "Row") {
+        const x1 = fnum(it.x1, "x1"), y1 = fnum(it.y1, "y1"), x2 = fnum(it.x2, "x2"), y2 = fnum(it.y2, "y2"), d = fnum(it.d, "Ø");
+        const L = Math.hypot(x2 - x1, y2 - y1);
+        const pts = distribute(0, L, it).map(u => L > 0 ? [x1 + (x2 - x1) * u / L, y1 + (y2 - y1) * u / L] : [x1, y1]);
+        pts.forEach(([x, y]) => dr.bar(x, y, d));
+        itemLabel(dr, it, pts, (it.dist || "count").startsWith("spacing") ? `Ø${fmt(d)}/${fmt(fnum(it.s))}` : `${pts.length}Ø${fmt(d)}`);
+      } else if (t === "Single bar") {
+        const x = fnum(it.x, "x"), y = fnum(it.y, "y"), d = fnum(it.d, "Ø");
+        dr.bar(x, y, d); itemLabel(dr, it, [[x, y]], `Ø${fmt(d)}`);
+      } else if (t === "Line bar") {
+        const pts = parsePoints(it.points), closed = truthy(it.closed);
+        if (pts.length < (closed ? 3 : 2)) throw new UserError("not enough points");
+        const d = fnum(it.d, "Ø"), sp = onum(it.s, "spacing");
+        dr.steel(pts, d, closed, "BARS"); itemLabel(dr, it, pts, `Ø${fmt(d)}` + (sp ? `/${fmt(sp)}` : ""));
+      } else if (t === "Dimension") {
+        dr.dim([fnum(it.x1, "x1"), fnum(it.y1, "y1")], [fnum(it.x2, "x2"), fnum(it.y2, "y2")], it.orient || "h", fnum(it.pos, "position"), String(it.dtext || "").trim() || null, true);
+      } else if (t === "Text") {
+        dr.text(fnum(it.x, "x"), fnum(it.y, "y"), String(it.text || ""), "left", "bottom", 0, fnum(it.size ?? 2.5, "size"));
+      }
+    } catch (e) { if (e instanceof UserError) dr.warn(`item ${idx} (${t}) skipped: ${e.message}`); else throw e; }
+  });
+  if (cs.auto_dims === undefined || truthy(cs.auto_dims)) {
+    const [minx, miny, maxx, maxy] = env(P);
+    dr.dim([minx, miny], [maxx, miny], "h", miny - 8 * s);
+    dr.dim([minx, miny], [minx, maxy], "v", minx - 8 * s);
+  }
+  clashCheck(dr, dg);
+  dr.finalize(`c_nom = ${fmt(cover)} mm`);
+  return dr;
+}
+
+/* ------------------------------------------------------------ render list */
+function primitives(dr) {
+  const st = dr.st, s = st.scale, out = [], thin = st.thin_lw * s;
+  const L = (a, b, w = thin) => out.push({ t: "path", verts: v3([a, b]), closed: false, w, color: "ink", layer: "DIMS", z: 4 });
+  for (const it of dr.items) {
+    if (it.k === "outline") out.push({ t: "area", rings: it.rings, layer: "CONCRETE", z: 1 });
+    else if (it.k === "steel") out.push({ t: "path", verts: it.verts, closed: it.closed, w: it.d, color: "steel", layer: it.layer, z: 2 });
+    else if (it.k === "bar") out.push({ t: "disc", x: it.x, y: it.y, r: it.d / 2, layer: "BARS", z: 3 });
+    else if (it.k === "line") out.push({ t: "path", verts: v3(it.pts), closed: false, w: thin, color: "ink", layer: "TEXT", z: 4 });
+    else if (it.k === "text") out.push({ t: "text", ...it, layer: "TEXT", z: 5 });
+    else if (it.k === "dim") {
+      const { p1, p2, o, pos } = it, gap = s, over = 1.5 * s, tk = s;
+      if (o === "h") {
+        for (const [x, y] of [p1, p2]) { const sg = pos > y ? 1 : -1; L([x, y + sg * gap], [x, pos + sg * over]); }
+        L([p1[0], pos], [p2[0], pos]);
+        for (const x of [p1[0], p2[0]]) L([x - tk, pos - tk], [x + tk, pos + tk], thin * 2.5);
+        out.push({ t: "text", x: (p1[0] + p2[0]) / 2, y: pos + 0.8 * s, txt: it.text || fmt0(Math.abs(p2[0] - p1[0])), ha: "center", va: "bottom", rot: 0, h: st.text_h, layer: "DIMS", z: 5 });
+      } else {
+        for (const [x, y] of [p1, p2]) { const sg = pos > x ? 1 : -1; L([x + sg * gap, y], [pos + sg * over, y]); }
+        L([pos, p1[1]], [pos, p2[1]]);
+        for (const y of [p1[1], p2[1]]) L([pos - tk, y - tk], [pos + tk, y + tk], thin * 2.5);
+        out.push({ t: "text", x: pos - 0.8 * s, y: (p1[1] + p2[1]) / 2, txt: it.text || fmt0(Math.abs(p2[1] - p1[1])), ha: "right", va: "center", rot: 90, h: st.text_h, layer: "DIMS", z: 5 });
+      }
+    }
+  }
+  return out.map((p, i) => [p, i]).sort((a, b) => a[0].z - b[0].z || a[1] - b[1]).map(a => a[0]);
+}
+
+/* ------------------------------------------------------------------ SVG */
+const N2 = v => String(Math.round(v * 100) / 100);
+const escXml = s => String(s).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
+const pathD = (pts, closed) => "M" + pts.map(([x, y]) => `${N2(x)} ${N2(-y)}`).join("L") + (closed ? "Z" : "");
+function svgBody(dr, prims) {
+  const st = dr.st, s = st.scale; let o = "";
+  for (const p of prims) {
+    if (p.t === "area") o += `<path d="${p.rings.map(r => pathD(expand(r, true), true)).join("")}" fill="${escXml(st.concrete_fill)}" fill-rule="evenodd" stroke="#000" stroke-width="${N2(st.outline_lw * s)}" stroke-linejoin="miter"/>`;
+    else if (p.t === "path") o += `<path d="${pathD(expand(p.verts, p.closed), p.closed)}" fill="none" stroke="${p.color === "steel" ? escXml(st.steel) : "#000"}" stroke-width="${N2(p.w)}" stroke-linejoin="round" stroke-linecap="butt"/>`;
+    else if (p.t === "disc") o += `<circle cx="${N2(p.x)}" cy="${N2(-p.y)}" r="${N2(p.r)}" fill="${escXml(st.steel)}"/>`;
+    else if (p.t === "text") {
+      const q = textPlace(p, s), anchor = { left: "start", center: "middle", right: "end" }[q.ha];
+      o += `<text x="${N2(q.bx)}" y="${N2(-q.by)}" font-size="${N2(q.size)}" text-anchor="${anchor}" fill="#000"${p.rot ? ` transform="rotate(${-p.rot} ${N2(q.bx)} ${N2(-q.by)})"` : ""}>${escXml(p.txt).replace(/ {2,}/g, m => "\u00A0".repeat(m.length))}</text>`;
+    }
+  }
+  return o;
+}
+function exportSVG(dr) {
+  const [x0, y0, x1, y1] = dr.bounds(), s = dr.st.scale, W = x1 - x0, H = y1 - y0;
+  return `<?xml version="1.0" encoding="UTF-8"?>\n<svg xmlns="http://www.w3.org/2000/svg" width="${N2(W / s)}mm" height="${N2(H / s)}mm" viewBox="${N2(x0)} ${N2(-y1)} ${N2(W)} ${N2(H)}">` +
+    `<title>${escXml(dr.title)}</title><rect x="${N2(x0)}" y="${N2(-y1)}" width="${N2(W)}" height="${N2(H)}" fill="#fff"/>` +
+    `<g font-family="Helvetica, Arial, sans-serif" xml:space="preserve">${svgBody(dr, primitives(dr))}</g></svg>\n`;
+}
+
+/* ------------------------------------------------------------------ PDF */
+function colorRGB(col) {
+  let c = String(col || "").trim();
+  if (typeof document !== "undefined") {
+    const cx = colorRGB._ctx || (colorRGB._ctx = document.createElement("canvas").getContext("2d"));
+    cx.fillStyle = "#000"; cx.fillStyle = c; c = cx.fillStyle;
+    const m = c.match(/rgba?\(([^)]+)\)/);
+    if (m) return m[1].split(",").slice(0, 3).map(v => (+v / 255));
+  }
+  let h = c.replace("#", "");
+  if (h.length === 3) h = h.split("").map(ch => ch + ch).join("");
+  if (!/^[0-9a-f]{6}$/i.test(h)) return [0, 0, 0];
+  return [0, 2, 4].map(i => parseInt(h.slice(i, i + 2), 16) / 255);
+}
+const WINANSI = { "€": 128, "–": 150, "—": 151, "‘": 145, "’": 146, "“": 147, "”": 148, "•": 149 };
+function pdfStr(s) {
+  let o = "";
+  for (const ch of s) {
+    let c = ch.codePointAt(0);
+    if (WINANSI[ch]) c = WINANSI[ch]; else if (c > 255) c = 63;
+    if (ch === "(" || ch === ")" || ch === "\\") o += "\\" + ch;
+    else if (c < 32 || c > 126) o += "\\" + c.toString(8).padStart(3, "0");
+    else o += String.fromCharCode(c);
+  }
+  return o;
+}
+function exportPDF(dr) {
+  const st = dr.st, s = st.scale, [x0, y0, x1, y1] = dr.bounds(), k = MM2PT / s;
+  const W = (x1 - x0) * k, H = (y1 - y0) * k, F = v => v.toFixed(2);
+  const X = x => F((x - x0) * k), Y = y => F((y - y0) * k), rgb = c => colorRGB(c).map(v => v.toFixed(3)).join(" ");
+  const poly = (pts, closed) => pts.map(([x, y], i) => `${X(x)} ${Y(y)} ${i ? "l" : "m"}`).join("\n") + (closed ? "\nh" : "");
+  let c = "1 1 1 rg 0 0 " + F(W) + " " + F(H) + " re f\n";
+  for (const p of primitives(dr)) {
+    if (p.t === "area") c += `${rgb(st.concrete_fill)} rg 0 0 0 RG ${F(st.outline_lw * s * k)} w 0 j\n${p.rings.map(r => poly(expand(r, true), true)).join("\n")}\nB*\n`;
+    else if (p.t === "path") c += `${p.color === "steel" ? rgb(st.steel) : "0 0 0"} RG ${F(p.w * k)} w 0 J 1 j\n${poly(expand(p.verts, p.closed), p.closed)}\nS\n`;
+    else if (p.t === "disc") {
+      const r = p.r, m = 0.5523 * r, cx = p.x, cy = p.y;
+      c += `${rgb(st.steel)} rg\n${X(cx + r)} ${Y(cy)} m\n${X(cx + r)} ${Y(cy + m)} ${X(cx + m)} ${Y(cy + r)} ${X(cx)} ${Y(cy + r)} c\n${X(cx - m)} ${Y(cy + r)} ${X(cx - r)} ${Y(cy + m)} ${X(cx - r)} ${Y(cy)} c\n${X(cx - r)} ${Y(cy - m)} ${X(cx - m)} ${Y(cy - r)} ${X(cx)} ${Y(cy - r)} c\n${X(cx + m)} ${Y(cy - r)} ${X(cx + r)} ${Y(cy - m)} ${X(cx + r)} ${Y(cy)} c\nf\n`;
+    } else if (p.t === "text") {
+      const q = textPlace(p, s), u0 = -q.w * { left: 0, center: .5, right: 1 }[q.ha], ca = Math.cos(q.a), sa = Math.sin(q.a);
+      const sx = q.bx + u0 * ca, sy = q.by + u0 * sa;
+      c += `0 0 0 rg BT /F1 ${F(q.size * k)} Tf ${ca.toFixed(4)} ${sa.toFixed(4)} ${(-sa).toFixed(4)} ${ca.toFixed(4)} ${X(sx)} ${Y(sy)} Tm (${pdfStr(p.txt)}) Tj ET\n`;
+    }
+  }
+  const objs = [null, "<< /Type /Catalog /Pages 2 0 R >>", "<< /Type /Pages /Kids [3 0 R] /Count 1 >>",
+    `<< /Type /Page /Parent 2 0 R /MediaBox [0 0 ${F(W)} ${F(H)}] /Resources << /Font << /F1 4 0 R >> >> /Contents 5 0 R >>`,
+    "<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica /Encoding /WinAnsiEncoding >>",
+    `<< /Length ${c.length} >>\nstream\n${c}\nendstream`,
+    `<< /Title (${pdfStr(dr.title)}) /Producer (Rebar Sketch Studio) >>`];
+  let out = "%PDF-1.4\n";
+  const offs = [];
+  for (let i = 1; i < objs.length; i++) { offs[i] = out.length; out += `${i} 0 obj\n${objs[i]}\nendobj\n`; }
+  const xref = out.length;
+  out += `xref\n0 ${objs.length}\n0000000000 65535 f \n` + offs.slice(1).map(o => String(o).padStart(10, "0") + " 00000 n \n").join("");
+  out += `trailer\n<< /Size ${objs.length} /Root 1 0 R /Info 6 0 R >>\nstartxref\n${xref}\n%%EOF\n`;
+  return out;
+}
+
+/* ------------------------------------------------------------------ DXF (R12) */
+function dxfText(s) {
+  let o = "";
+  for (const ch of s) {
+    const c = ch.codePointAt(0);
+    if (ch === "Ø" || ch === "ø") o += "%%c"; else if (ch === "°") o += "%%d"; else if (ch === "±") o += "%%p";
+    else if (c > 126 || c < 32) o += "\\U+" + c.toString(16).toUpperCase().padStart(4, "0");
+    else o += ch;
+  }
+  return o;
+}
+function exportDXF(dr) {
+  const st = dr.st, s = st.scale, L = [];
+  const g = (code, val) => L.push(String(code), String(val));
+  const F = v => (Math.round(v * 1e4) / 1e4).toString();
+  const layers = [["CONCRETE", 7], ["LINKS", 1], ["BARS", 1], ["TEXT", 7], ["DIMS", 8]];
+  g(0, "SECTION"); g(2, "HEADER"); g(9, "$ACADVER"); g(1, "AC1009"); g(9, "$INSUNITS"); g(70, 4); g(0, "ENDSEC");
+  g(0, "SECTION"); g(2, "TABLES");
+  g(0, "TABLE"); g(2, "LTYPE"); g(70, 1); g(0, "LTYPE"); g(2, "CONTINUOUS"); g(70, 0); g(3, "Solid line"); g(72, 65); g(73, 0); g(40, "0.0"); g(0, "ENDTAB");
+  g(0, "TABLE"); g(2, "LAYER"); g(70, layers.length);
+  for (const [n, col] of layers) { g(0, "LAYER"); g(2, n); g(70, 0); g(62, col); g(6, "CONTINUOUS"); }
+  g(0, "ENDTAB"); g(0, "ENDSEC");
+  g(0, "SECTION"); g(2, "ENTITIES");
+  const pline = (layer, verts, closed, w) => {
+    g(0, "POLYLINE"); g(8, layer); g(66, 1); g(10, "0.0"); g(20, "0.0"); g(30, "0.0"); g(70, closed ? 1 : 0);
+    if (w > 0) { g(40, F(w)); g(41, F(w)); }
+    for (const [x, y, b] of verts) { g(0, "VERTEX"); g(8, layer); g(10, F(x)); g(20, F(y)); g(30, "0.0"); if (b) g(42, F(b)); }
+    g(0, "SEQEND"); g(8, layer);
+  };
+  for (const p of primitives(dr)) {
+    if (p.t === "area") p.rings.forEach(r => pline("CONCRETE", r, true, 0));
+    else if (p.t === "path") pline(p.layer, p.verts, p.closed, p.color === "steel" ? p.w : 0);
+    else if (p.t === "disc") { const r = p.r; pline("BARS", [[p.x - r / 2, p.y, 1], [p.x + r / 2, p.y, 1]], true, r); }
+    else if (p.t === "text") {
+      const q = textPlace(p, s), hj = { left: 0, center: 1, right: 2 }[q.ha];
+      g(0, "TEXT"); g(8, p.layer); g(10, F(q.bx)); g(20, F(q.by)); g(30, "0.0"); g(40, F(q.hm)); g(1, dxfText(p.txt));
+      if (p.rot) g(50, F(p.rot));
+      if (hj) { g(72, hj); g(11, F(q.bx)); g(21, F(q.by)); g(31, "0.0"); }
+    }
+  }
+  g(0, "ENDSEC"); g(0, "EOF");
+  return L.join("\r\n") + "\r\n";
+}
+
+/* ------------------------------------------------------------------ specs */
+const BARS_COLS = [["n", "3.2em", null, "2"], ["Ø", "3.8em", null, "16"]];
+const MESH_COLS = [["Ø", "3.4em", null, "10"], ["s", "3.8em", null, "200"], ["kind", "5.2em", ["dots", "line"], "dots"], ["note", "1fr", null, ""]];
+const LINK_F = [["link_d", "Link Ø", "float", "10"], ["link_s", "Link spacing (for the label, blank = none)", "optfloat", "150"],
+  ["mandrel", "Link mandrel Ø (blank = 4Ø)", "optfloat", ""], ["hooks", "Draw 135° hooks", "bool", true],
+  ["hook_len", "Hook tail (blank = max(5Ø, 50))", "optfloat", ""]];
+const FLANGE_F = [["ft_d", "Flange top transverse Ø (blank = none)", "optfloat", "12"], ["ft_s", "Flange top transverse spacing", "optfloat", "200"],
+  ["fb_d", "Flange bottom transverse Ø (blank = none)", "optfloat", "10"], ["fb_s", "Flange bottom transverse spacing", "optfloat", "200"],
+  ["fl_d", "Flange longitudinal Ø in outstands (blank = none)", "optfloat", "10"], ["fl_s", "Flange longitudinal spacing", "optfloat", "200"],
+  ["breaks", "Break lines at the flange ends", "bool", true]];
+const DG_F = ["dg", "Max. aggregate size d_g (spacing check)", "float", "16"];
+const STD_SPECS = {
+  "Rectangle (beam / column)": [["name", "Name", "str", "Beam B1"], ["b", "Width b", "float", "300"], ["h", "Height h", "float", "600"],
+    ["cover", "Cover to link c_nom", "float", "35"], ...LINK_F,
+    ["bottom", "Bottom layers, outer to inner", "bars", [["4", "25"], ["2", "20"]]],
+    ["top", "Top layers, outer to inner", "bars", [["2", "16"]]],
+    ["sides", "Side layers: bars per face, outer to inner", "bars", [["1", "12"]]], DG_F],
+  "T-beam": [["name", "Name", "str", "T-beam TB1"], ["b_w", "Web width b_w", "float", "300"], ["h", "Total height h", "float", "700"],
+    ["b_f", "Flange width b_f", "float", "1200"], ["h_f", "Flange thickness h_f", "float", "200"],
+    ["cover", "Cover to outermost bar c_nom", "float", "35"], ...LINK_F,
+    ["bottom", "Web bottom layers, outer to inner", "bars", [["4", "25"]]], ["top", "Web top layers, outer to inner", "bars", [["2", "12"]]],
+    ["sides", "Web side layers: bars per face", "bars", []], ...FLANGE_F, DG_F],
+  "L-beam": [["name", "Name", "str", "L-beam LB1"], ["flange", "Flange sticks out to the", "choice", "right", ["right", "left"]],
+    ["b_w", "Web width b_w", "float", "300"], ["h", "Total height h", "float", "600"], ["b_f", "Flange width b_f (incl. web)", "float", "800"],
+    ["h_f", "Flange thickness h_f", "float", "180"], ["cover", "Cover to outermost bar c_nom", "float", "35"], ...LINK_F,
+    ["bottom", "Web bottom layers, outer to inner", "bars", [["3", "20"]]], ["top", "Web top layers, outer to inner", "bars", [["2", "12"]]],
+    ["sides", "Web side layers: bars per face", "bars", []], ...FLANGE_F, DG_F],
+  "Circular (column / pile)": [["name", "Name", "str", "Pile P1"], ["D", "Diameter D", "float", "600"],
+    ["cover", "Cover to hoop / spiral c_nom", "float", "75"], ["link_d", "Hoop / spiral Ø", "float", "10"],
+    ["link_s", "Pitch (for the label, blank = none)", "optfloat", "150"], ["spiral", "Spiral (unticked = hoops)", "bool", true],
+    ["rings", "Bar rings, outer to inner", "bars", [["8", "20"]]], DG_F],
+  "Slab": [["name", "Name", "str", "Slab S1"], ["t", "Thickness t", "float", "250"], ["length", "Length of strip shown", "float", "1000"],
+    ["cover", "Cover to outermost bar c_nom", "float", "30"],
+    ["face1", "Bottom layers, outer to inner", "mesh", [["12", "150", "dots", "(main)"], ["10", "250", "line", ""]]],
+    ["face2", "Top layers, outer to inner", "mesh", [["10", "200", "dots", ""], ["10", "250", "line", ""]]],
+    ["breaks", "Break lines at the ends", "bool", true], DG_F],
+  "Wall": [["name", "Name", "str", "Wall W1"], ["view", "View", "choice", "vertical section", ["vertical section", "plan section"]],
+    ["t", "Thickness t", "float", "300"], ["length", "Length of strip shown", "float", "1000"], ["cover", "Cover to outermost bar c_nom", "float", "35"],
+    ["face1", "Face 1 layers (left / bottom), outer to inner", "mesh", [["10", "200", "dots", "(hor.)"], ["12", "150", "line", "(vert.)"]]],
+    ["face2", "Face 2 layers (right / top), outer to inner", "mesh", [["10", "200", "dots", "(hor.)"], ["12", "150", "line", "(vert.)"]]],
+    ["breaks", "Break lines at the ends", "bool", true], DG_F],
+};
+const LABEL_F = [["note", "Note (added to the label)", "str", ""], ["ltext", "Label text (blank = automatic)", "str", ""],
+  ["label", "Label side", "choice", "right", ["right", "left", "none"]]];
+const DIST_CHOICES = ["count", "spacing (exact)", "max spacing"];
+const ITEM_SPECS = {
+  "Layer": [["face", "Parallel to face", "choice", "bottom", ["bottom", "top", "left", "right"]],
+    ["kind", "Bars (dots = cut, line = in the plane)", "choice", "dots", ["dots", "line"]], ["d", "Bar Ø", "float", "20"],
+    ["dist", "Distribution", "choice", "count", DIST_CHOICES], ["n", "Number of bars n (per segment)", "int", "4"], ["s", "Spacing s", "float", "150"],
+    ["skip_ends", "Skip the end bars (intermediate bars only)", "bool", false],
+    ["offset", "Offset from face to bar centre (blank = stack automatically)", "optfloat", ""],
+    ["link", "Inside link no. (0 = none)", "int", "1"], ["ranges", "Only within ranges along the layer, e.g. 0:450; 750:1200", "str", ""], ...LABEL_F],
+  "Perimeter": [["ring", "Along", "choice", "outer", ["outer", "openings", "all"]], ["d", "Bar Ø", "float", "16"],
+    ["dist", "Distribution", "choice", "max spacing", DIST_CHOICES], ["n", "Number of bars n (per ring)", "int", "8"], ["s", "Spacing s", "float", "150"],
+    ["corners", "Bar in every corner", "bool", true], ["link", "Inside link no. (0 = none)", "int", "1"], ...LABEL_F],
+  "Circle pattern": [["cx", "Centre x", "float", "300"], ["cy", "Centre y", "float", "300"], ["r", "Radius to bar centres", "float", "200"],
+    ["n", "Number of bars", "int", "8"], ["start", "Start angle [°]", "float", "0"], ["sweep", "Sweep [°] (360 = full circle)", "float", "360"],
+    ["d", "Bar Ø", "float", "20"], ...LABEL_F],
+  "Row": [["x1", "Start x", "float", "100"], ["y1", "Start y", "float", "100"], ["x2", "End x", "float", "500"], ["y2", "End y", "float", "100"],
+    ["d", "Bar Ø", "float", "16"], ["dist", "Distribution", "choice", "count", DIST_CHOICES], ["n", "Number of bars n", "int", "4"],
+    ["s", "Spacing s", "float", "150"], ["skip_ends", "Skip the end bars", "bool", false], ...LABEL_F],
+  "Single bar": [["x", "x", "float", "100"], ["y", "y", "float", "100"], ["d", "Bar Ø", "float", "16"], ...LABEL_F],
+  "Line bar": [["points", "Points x, y (one per line)", "text", "100, 100\n100, 400\n400, 400", 4], ["closed", "Closed", "bool", false],
+    ["d", "Bar Ø", "float", "12"], ["s", "Spacing (for the label, blank = none)", "optfloat", ""], ...LABEL_F],
+  "Link": [["region", "Follows", "choice", "outline", ["outline", "rectangle", "polygon", "around opening"]],
+    ["x0", "Rectangle x0", "float", "0"], ["y0", "Rectangle y0", "float", "0"], ["x1", "Rectangle x1", "float", "300"], ["y1", "Rectangle y1", "float", "600"],
+    ["points", "Polygon points x, y (one per line)", "text", "", 3], ["opening", "Opening no.", "int", "1"],
+    ["d", "Link Ø", "float", "10"], ["s", "Spacing (for the label)", "optfloat", "200"], ["cover", "Cover (blank = section cover)", "optfloat", ""],
+    ["mandrel", "Mandrel Ø (blank = 4Ø)", "optfloat", ""], ["hooks", "Draw 135° hooks", "bool", true],
+    ["hook_len", "Hook tail (blank = max(5Ø, 50))", "optfloat", ""],
+    ["name", "Label word", "choice", "link", ["link", "stirrup", "hoop", "spiral", "tie"]], ...LABEL_F],
+  "Dimension": [["x1", "Point 1 x", "float", "0"], ["y1", "Point 1 y", "float", "0"], ["x2", "Point 2 x", "float", "300"], ["y2", "Point 2 y", "float", "0"],
+    ["orient", "Direction", "choice", "h", ["h", "v"]], ["pos", "Dimension line at (y for h, x for v)", "float", "-150"], ["dtext", "Text (blank = measured length)", "str", ""]],
+  "Text": [["x", "x", "float", "0"], ["y", "y", "float", "0"], ["text", "Text", "str", "Note"], ["size", "Text height on paper [mm]", "float", "2.5"]],
+};
+const SP = ["spacing (exact)", "max spacing"];
+const DIST_SHOW = { n: ["dist", ["count"]], s: ["dist", SP] };
+const REG = ["outline", "rectangle", "polygon"];
+const SHOW_IF = {
+  "Layer": DIST_SHOW, "Perimeter": DIST_SHOW, "Row": DIST_SHOW,
+  "Link": { x0: ["region", ["rectangle"]], y0: ["region", ["rectangle"]], x1: ["region", ["rectangle"]], y1: ["region", ["rectangle"]],
+    points: ["region", ["polygon"]], opening: ["region", ["around opening"]], hooks: ["region", REG], hook_len: ["region", REG] },
+};
+const ITEM_HELP = {
+  "Layer": "A row of bars parallel to a face. It is cut to the section, or to the inside of a link, so it works for any shape. Bottom and top give horizontal layers, left and right vertical ones. With a blank offset, layers from the same face and link stack inwards.",
+  "Perimeter": "Bars around the outline or the openings, at cover or inside a link, with a bar in every corner if ticked.",
+  "Circle pattern": "Bars on a circle or an arc.",
+  "Row": "Bars on a straight line between two points.",
+  "Single bar": "One bar at a point.",
+  "Line bar": "A bar lying in the section plane: a U-bar, a cross-tie, a bent-up bar, or a link of your own shape (tick Closed).",
+  "Link": "A closed link at cover. It follows the outline, the part of the section inside a rectangle or polygon, or runs around an opening. Links are numbered 1, 2, … in list order.",
+  "Dimension": "A dimension line between two points.",
+  "Text": "Free text in the drawing.",
+};
+const CUSTOM_GEO_SPEC = [["name", "Name", "str", "Custom section"], ["cover", "Default cover c_nom", "float", "35"], DG_F,
+  ["auto_dims", "Overall dimensions", "bool", true],
+  ["outline", "Outline: one vertex per line, x, y [, arc°] [brk]", "text", "", 11],
+  ["openings", "Openings: rect x y w h, circle cx cy D or poly x1 y1 x2 y2 …", "text", "", 4]];
+const OUTLINE_HELP = "arc° is the angle of an arc to the next vertex: + counter-clockwise, − clockwise, 180 for a half circle. brk draws the edge to the next vertex as a break line. Separate values with commas or spaces; use ; or tabs if you write decimal commas. Lines starting with # are ignored.";
+const STYLE_SPEC = [["scale", "Drawing scale 1:", "float", "10"], ["text_h", "Text height on paper [mm]", "float", "2.5"],
+  ["dpi", "PNG resolution [dpi]", "int", "300"], ["concrete_fill", "Concrete fill colour", "str", "#eeeeee"],
+  ["steel", "Steel colour", "str", "#1a1a1a"], ["outline_lw", "Concrete outline width [mm on paper]", "float", "0.5"],
+  ["show_labels", "Show bar labels", "bool", true], ["show_dims", "Show automatic dimensions", "bool", true]];
+const TEMPLATES = {
+  "Rectangle": ["0, 0\n300, 0\n300, 600\n0, 600", ""],
+  "T-section": ["450, 0\n750, 0\n750, 500\n1200, 500\n1200, 700\n0, 700\n0, 500\n450, 500", ""],
+  "I-section (precast girder)": ["150, 0\n650, 0\n650, 150\n500, 250\n500, 850\n800, 950\n800, 1100\n0, 1100\n0, 950\n300, 850\n300, 250\n150, 150", "circle 400 550 100"],
+  "Hollow box (chamfered)": ["50, 0\n750, 0\n800, 50\n800, 950\n750, 1000\n50, 1000\n0, 950\n0, 50", "rect 220 220 360 560"],
+  "Trapezoid": ["0, 0\n600, 0\n500, 400\n100, 400", ""],
+  "U-section (trough)": ["0, 0\n1000, 0\n1000, 700\n800, 700\n800, 200\n200, 200\n200, 700\n0, 700", ""],
+  "Circle": ["0, 300, 180\n600, 300, 180", ""],
+  "Hollow circle": ["0, 500, 180\n1000, 500, 180", "circle 500 500 600"],
+  "Rectangle with rounded ends": ["150, 0\n850, 0, 180\n850, 300\n150, 300, 180", ""],
+  "Slab strip with breaks": ["0, 0\n1000, 0, 0, brk\n1000, 250\n0, 250, 0, brk", ""],
+};
+const specDefaults = spec => Object.fromEntries(spec.map(f => [f[0], clone(f[3])]));
+function newItem(t, kw = {}) {
+  const it = { type: t, ...specDefaults(ITEM_SPECS[t]) };
+  for (const [k, v] of Object.entries(kw)) it[k] = (typeof v === "boolean") ? v : fmt(v);
+  return it;
+}
+const defaultCustom = () => ({
+  name: "Hollow pier H1", cover: "40", dg: "16", auto_dims: true,
+  outline: TEMPLATES["Hollow box (chamfered)"][0], openings: TEMPLATES["Hollow box (chamfered)"][1],
+  items: [newItem("Link", { region: "outline", d: 12, s: 200 }),
+    newItem("Link", { region: "around opening", opening: 1, d: 10, s: 200, hooks: false }),
+    newItem("Perimeter", { ring: "outer", d: 20, dist: "max spacing", s: 150, link: 1 }),
+    newItem("Perimeter", { ring: "openings", d: 16, dist: "max spacing", s: 150, link: 2 })],
+});
+function makeStyle(v, isColor = () => true) {
+  for (const key of ["concrete_fill", "steel"]) if (!isColor(v[key])) throw new UserError(`'${v[key]}' is not a colour`);
+  const st = { scale: fnum(v.scale, "scale"), text_h: fnum(v.text_h, "text height"), dpi: inum(v.dpi, "dpi"),
+    concrete_fill: v.concrete_fill, steel: v.steel, outline_lw: fnum(v.outline_lw, "outline width"), thin_lw: 0.18,
+    show_labels: truthy(v.show_labels), show_dims: truthy(v.show_dims) };
+  if (st.scale <= 0 || st.text_h <= 0 || st.dpi <= 0) throw new UserError("scale, text height and dpi must be positive");
+  return st;
+}
+function itemSummary(it, linkNo) {
+  const g = k => it[k] ?? "", dm = g("dist") || "count";
+  const amount = dm === "count" ? `n = ${g("n")}` : `s = ${g("s")}`;
+  const lk = !["", "0"].includes(String(g("link")).trim()) ? `, in link ${g("link")}` : "";
+  switch (it.type) {
+    case "Layer": return `${g("face")}, ${g("kind")} Ø${g("d")}, ${amount}${lk}`;
+    case "Perimeter": return `${g("ring")}, Ø${g("d")}, ${amount}${lk}`;
+    case "Circle pattern": return `${g("n")}Ø${g("d")}, r = ${g("r")}`;
+    case "Row": return `Ø${g("d")} from (${g("x1")}, ${g("y1")}) to (${g("x2")}, ${g("y2")})`;
+    case "Single bar": return `Ø${g("d")} at (${g("x")}, ${g("y")})`;
+    case "Line bar": return `Ø${g("d")}` + (truthy(it.closed) ? ", closed" : "");
+    case "Link": return `no. ${linkNo}, ${g("region")}${g("region") === "around opening" ? " " + g("opening") : ""}, Ø${g("d")}`;
+    case "Dimension": return `${g("orient") === "h" ? "horizontal" : "vertical"}, ${g("dtext") || "measured"}`;
+    case "Text": return String(g("text"));
+  }
+  return "";
+}
+if (typeof module !== "undefined") module.exports = { stdSection, buildCustom, makeStyle, specDefaults, STD_SPECS, STYLE_SPEC, TEMPLATES, defaultCustom, newItem, exportSVG, exportPDF, exportDXF, primitives, UserError };
+</script>
+
+<script id="app">
+"use strict";
+/* =========================================================================
+   User interface
+   ========================================================================= */
+const $ = s => document.querySelector(s);
+const LS_KEY = "rebar-sketch-studio/v1";
+const STD_TYPES = Object.keys(STD_SPECS);
+let uid = 0;
+const isColor = c => { const o = new Option().style; o.color = ""; o.color = String(c || ""); return o.color !== ""; };
+
+function el(tag, attrs = {}, ...kids) {
+  const e = document.createElement(tag);
+  for (const [k, v] of Object.entries(attrs)) {
+    if (k === "class") e.className = v;
+    else if (k.startsWith("on")) e.addEventListener(k.slice(2), v);
+    else if (v === true) e.setAttribute(k, "");
+    else if (v !== false && v !== null && v !== undefined) e.setAttribute(k, v);
+  }
+  for (const kid of kids.flat()) if (kid !== null && kid !== undefined) e.append(kid);
+  return e;
+}
+
+/* ------------------------------------------------------------------ state */
+function defaultState() {
+  return { mode: "standard", stdType: STD_TYPES[0],
+    std: Object.fromEntries(STD_TYPES.map(t => [t, specDefaults(STD_SPECS[t])])),
+    custom: defaultCustom(), style: specDefaults(STYLE_SPEC),
+    tab: { standard: "section", custom: "geometry" }, sel: null };
+}
+function mergeState(data) {
+  const s = defaultState();
+  if (!data || typeof data !== "object") return s;
+  if (data.mode === "custom" || data.mode === "standard") s.mode = data.mode;
+  if (STD_TYPES.includes(data.stdType)) s.stdType = data.stdType;
+  for (const [t, vals] of Object.entries(data.std || {})) if (s.std[t] && vals && typeof vals === "object") Object.assign(s.std[t], vals);
+  if (data.custom && typeof data.custom === "object") {
+    const c = { ...specDefaults(CUSTOM_GEO_SPEC), ...data.custom };
+    c.items = (Array.isArray(c.items) ? c.items : []).filter(it => it && ITEM_SPECS[it.type]).map(it => ({ ...specDefaults(ITEM_SPECS[it.type]), ...it }));
+    s.custom = c;
+  }
+  Object.assign(s.style, data.style || {});
+  if (data.tab) Object.assign(s.tab, data.tab);
+  return s;
+}
+let state = defaultState();
+try { const raw = localStorage.getItem(LS_KEY); if (raw) state = mergeState(JSON.parse(raw)); } catch (e) { /* private mode etc. */ }
+state.sel = null;
+let saveJob = null;
+function persist() {
+  clearTimeout(saveJob);
+  saveJob = setTimeout(() => { try { localStorage.setItem(LS_KEY, JSON.stringify({ ...state, sel: null })); } catch (e) { /* ignore */ } }, 400);
+}
+
+/* ------------------------------------------------------------------ forms */
+function buildForm(host, spec, values, onChange, showIf = {}) {
+  const ctrls = new Set(Object.values(showIf).map(c => c[0]));
+  for (const f of spec) if (!(f[0] in values)) values[f[0]] = clone(f[3]);
+  const wrap = el("div", { class: "form" });
+  host.append(wrap);
+  const set = (k, v) => {
+    const changed = values[k] !== v;
+    values[k] = v;
+    if (ctrls.has(k) && changed) render();
+    onChange(k);
+  };
+  function field([key, label, kind, def, extra]) {
+    const id = "f" + (++uid), val = values[key];
+    if (["str", "float", "optfloat", "int"].includes(kind)) {
+      const inp = el("input", { type: "text", id, value: String(val ?? ""), inputmode: kind === "str" ? null : "decimal", autocomplete: "off", spellcheck: kind === "str" ? null : "false" });
+      inp.addEventListener("input", () => set(key, inp.value));
+      return el("div", { class: "row" + (kind === "str" && key !== "name" ? "" : "") }, el("label", { for: id }, label), inp);
+    }
+    if (kind === "choice") {
+      const sel = el("select", { id }, extra.map(o => el("option", { value: o, selected: o === val }, o)));
+      sel.addEventListener("change", () => set(key, sel.value));
+      return el("div", { class: "row" }, el("label", { for: id }, label), sel);
+    }
+    if (kind === "bool") {
+      const cb = el("input", { type: "checkbox", id, checked: truthy(val) });
+      cb.addEventListener("change", () => set(key, cb.checked));
+      return el("div", { class: "row check" }, cb, el("label", { for: id }, label));
+    }
+    if (kind === "text") {
+      const ta = el("textarea", { id, rows: extra || 5, spellcheck: "false" });
+      ta.value = String(val ?? "");
+      ta.addEventListener("input", () => set(key, ta.value));
+      return el("div", { class: "row wide" }, el("label", { for: id }, label), ta);
+    }
+    if (kind === "bars" || kind === "mesh") return layerTable(label, kind === "bars" ? BARS_COLS : MESH_COLS, val, () => onChange(key));
+    return document.createTextNode("");
+  }
+  function render() {
+    wrap.replaceChildren();
+    for (const f of spec) {
+      const c = showIf[f[0]];
+      if (c && !c[1].includes(values[c[0]])) continue;
+      wrap.append(field(f));
+    }
+  }
+  render();
+}
+function layerTable(label, cols, rows, onChange) {
+  const box = el("fieldset", { class: "layers" }, el("legend", {}, label));
+  const grid = el("div", { class: "lgrid", style: `grid-template-columns: ${cols.map(c => c[1]).join(" ")} 28px` });
+  const add = el("button", { type: "button", class: "add" }, "Add layer");
+  box.append(grid, add);
+  const render = () => {
+    grid.replaceChildren();
+    if (!rows.length) { grid.append(el("div", { class: "h", style: "grid-column: 1 / -1" }, "No layers.")); return; }
+    cols.forEach(c => grid.append(el("div", { class: "h" }, c[0])));
+    grid.append(el("div"));
+    rows.forEach((r, i) => {
+      while (r.length < cols.length) r.push(cols[r.length][3]);
+      cols.forEach((c, j) => {
+        const aria = `${label}, layer ${i + 1}, ${c[0]}`;
+        let w;
+        if (c[2]) { w = el("select", { "aria-label": aria }, c[2].map(o => el("option", { value: o, selected: o === r[j] }, o))); w.addEventListener("change", () => { r[j] = w.value; onChange(); }); }
+        else { w = el("input", { type: "text", value: r[j], "aria-label": aria, inputmode: c[0] === "note" ? null : "decimal", autocomplete: "off" }); w.addEventListener("input", () => { r[j] = w.value; onChange(); }); }
+        grid.append(w);
+      });
+      grid.append(el("button", { type: "button", class: "x", title: "Remove layer", "aria-label": `Remove layer ${i + 1}`, onclick: () => { rows.splice(i, 1); render(); onChange(); } }, "×"));
+    });
+  };
+  add.addEventListener("click", () => { rows.push(rows.length ? [...rows[rows.length - 1]] : cols.map(c => c[3])); render(); onChange(); });
+  render();
+  return box;
+}
+
+/* ------------------------------------------------------------------ panel */
+const TABS = { standard: [["section", "Section"], ["drawing", "Drawing"]], custom: [["geometry", "Geometry"], ["reinforcement", "Reinforcement"], ["drawing", "Drawing"]] };
+function changed() { persist(); schedule(); }
+function renderAll() {
+  document.querySelectorAll(".seg button").forEach(b => b.setAttribute("aria-pressed", String(b.dataset.mode === state.mode)));
+  const tabs = $("#tabs"); tabs.replaceChildren();
+  let cur = state.tab[state.mode];
+  if (!TABS[state.mode].some(t => t[0] === cur)) cur = state.tab[state.mode] = TABS[state.mode][0][0];
+  for (const [key, name] of TABS[state.mode]) {
+    tabs.append(el("button", { type: "button", role: "tab", "aria-selected": String(key === cur), onclick: () => { state.tab[state.mode] = key; persist(); renderAll(); } }, name));
+  }
+  const body = $("#body"); body.replaceChildren(); body.scrollTop = 0;
+  ({ section: renderStd, drawing: renderDrawingTab, geometry: renderGeo, reinforcement: renderReinf })[cur](body);
+  schedule();
+}
+function renderStd(body) {
+  const sel = el("select", { id: "stdType", "aria-label": "Section type" }, STD_TYPES.map(t => el("option", { value: t, selected: t === state.stdType }, t)));
+  sel.addEventListener("change", () => { state.stdType = sel.value; persist(); renderAll(); });
+  body.append(el("div", { class: "sectype" }, sel, el("button", { type: "button", class: "btn", onclick: stdToCustom, title: "Copy this section into the custom editor" }, "Edit as custom")));
+  buildForm(body, STD_SPECS[state.stdType], state.std[state.stdType], changed);
+}
+function renderDrawingTab(body) {
+  buildForm(body, STYLE_SPEC, state.style, changed);
+  body.append(el("p", { class: "hint" }, "The PDF and SVG are true to the drawing scale when printed at 100 %. The DXF is always 1 unit = 1 mm; text and dimension sizes follow the scale. Dimensions in the DXF are drawn as lines and text."));
+}
+function renderGeo(body) {
+  const tpl = el("select", { "aria-label": "Load a template shape" }, el("option", { value: "" }, "Load a template shape…"), Object.keys(TEMPLATES).map(n => el("option", { value: n }, n)));
+  tpl.addEventListener("change", () => {
+    const n = tpl.value; if (!n) return;
+    if (state.custom.items.length && !confirm("Replace the outline and openings? The reinforcement list is kept.")) { tpl.value = ""; return; }
+    [state.custom.outline, state.custom.openings] = TEMPLATES[n];
+    persist(); renderAll();
+  });
+  body.append(el("div", { class: "toolbar" }, tpl));
+  buildForm(body, CUSTOM_GEO_SPEC, state.custom, changed);
+  body.append(el("p", { class: "hint" }, OUTLINE_HELP));
+}
+function renderReinf(body) {
+  const items = state.custom.items;
+  const addSel = el("select", { "aria-label": "Add an item" }, el("option", { value: "" }, "Add item…"), Object.keys(ITEM_SPECS).map(t => el("option", { value: t }, t)));
+  addSel.addEventListener("change", () => {
+    const t = addSel.value; if (!t) return;
+    const it = newItem(t);
+    if ((t === "Layer" || t === "Perimeter") && !items.some(x => x.type === "Link")) it.link = "0";
+    const pos = state.sel === null ? items.length : state.sel + 1;
+    items.splice(pos, 0, it); state.sel = pos; persist(); renderAll();
+  });
+  const has = state.sel !== null && state.sel < items.length;
+  const act = (name, fn, aria) => el("button", { type: "button", class: "btn", disabled: !has, "aria-label": aria || null, title: aria || null, onclick: () => { fn(); persist(); renderAll(); } }, name);
+  body.append(el("div", { class: "toolbar items-bar" }, addSel,
+    act("Duplicate", () => { items.splice(state.sel + 1, 0, clone(items[state.sel])); state.sel++; }),
+    act("Delete", () => { items.splice(state.sel, 1); state.sel = items.length ? Math.min(state.sel, items.length - 1) : null; }),
+    act("Up", () => { if (state.sel > 0) { [items[state.sel - 1], items[state.sel]] = [items[state.sel], items[state.sel - 1]]; state.sel--; } }, "Move the item up"),
+    act("Down", () => { if (state.sel < items.length - 1) { [items[state.sel + 1], items[state.sel]] = [items[state.sel], items[state.sel + 1]]; state.sel++; } }, "Move the item down")));
+  const list = el("ol", { class: "items" });
+  let nlink = 0; const sums = [];
+  if (!items.length) list.append(el("li", { class: "empty" }, "No reinforcement yet. Use Add item to place links and bars."));
+  items.forEach((it, i) => {
+    const ln = it.type === "Link" ? ++nlink : null;
+    const sum = el("span", { class: "sum" }, itemSummary(it, ln)); sums[i] = [sum, ln];
+    list.append(el("li", {}, el("button", { type: "button", "aria-pressed": String(i === state.sel), onclick: () => { state.sel = i; renderAll(); } },
+      el("span", { class: "no" }, String(i + 1)), el("span", {}, it.type), sum)));
+  });
+  body.append(list);
+  if (has) {
+    const it = items[state.sel];
+    body.append(el("div", { class: "itemhead" }, `Item ${state.sel + 1}: ${it.type}`), el("p", { class: "hint" }, ITEM_HELP[it.type] || ""));
+    buildForm(body, ITEM_SPECS[it.type], it, () => { const [sp, ln] = sums[state.sel]; sp.textContent = itemSummary(it, ln); changed(); }, SHOW_IF[it.type] || {});
+    requestAnimationFrame(() => list.querySelector('[aria-pressed="true"]')?.scrollIntoView({ block: "nearest" }));
+  } else if (items.length) body.append(el("p", { class: "hint" }, "Select an item to edit it."));
+}
+function stdToCustom() {
+  let cs;
+  try { cs = stdSection(state.stdType, state.std[state.stdType]).toCustom(); }
+  catch (e) { toast(e instanceof UserError ? `Cannot copy: ${e.message}` : `Cannot copy: ${e}`); return; }
+  if (state.custom.items.length && !confirm("Replace the current custom section with this one?")) return;
+  state.custom = cs; state.mode = "custom"; state.tab.custom = "reinforcement"; state.sel = null;
+  persist(); renderAll();
+}
+
+/* ------------------------------------------------------------------ preview */
+const svg = $("#view"), dwg = $("#dwg"), stage = $("#stage");
+let vb = null, userView = false, current = null, job = null, lastBoundsKey = "";
+function setVB(v) { vb = v; svg.setAttribute("viewBox", `${v.x} ${v.y} ${v.w} ${v.h}`); }
+function fitView() {
+  if (!current) return;
+  const [x0, y0, x1, y1] = current.bounds();
+  const r = (svg.clientWidth || 800) / (svg.clientHeight || 600);
+  let w = (x1 - x0) * 1.06, h = (y1 - y0) * 1.06;
+  if (w / h < r) w = h * r; else h = w / r;
+  const cx = (x0 + x1) / 2, cy = -(y0 + y1) / 2;
+  setVB({ x: cx - w / 2, y: cy - h / 2, w, h });
+  userView = false;
+}
+function zoomAt(f, px, py) {
+  if (!vb) return;
+  if (px === undefined) { px = vb.x + vb.w / 2; py = vb.y + vb.h / 2; }
+  setVB({ x: px - (px - vb.x) * f, y: py - (py - vb.y) * f, w: vb.w * f, h: vb.h * f });
+  userView = true;
+}
+function toSvgPoint(e) { const p = svg.createSVGPoint(); p.x = e.clientX; p.y = e.clientY; return p.matrixTransform(svg.getScreenCTM().inverse()); }
+svg.addEventListener("wheel", e => { e.preventDefault(); const p = toSvgPoint(e); zoomAt(Math.exp(Math.max(-60, Math.min(60, e.deltaY)) * 0.004), p.x, p.y); }, { passive: false });
+let drag = null;
+svg.addEventListener("pointerdown", e => { if (!vb) return; drag = { x: e.clientX, y: e.clientY }; svg.setPointerCapture(e.pointerId); svg.classList.add("drag"); });
+svg.addEventListener("pointermove", e => {
+  if (!drag) return;
+  const k = vb.w / svg.clientWidth;
+  setVB({ ...vb, x: vb.x - (e.clientX - drag.x) * k, y: vb.y - (e.clientY - drag.y) * k });
+  drag = { x: e.clientX, y: e.clientY }; userView = true;
+});
+const endDrag = () => { drag = null; svg.classList.remove("drag"); };
+svg.addEventListener("pointerup", endDrag); svg.addEventListener("pointercancel", endDrag);
+$("#zFit").onclick = fitView; $("#zIn").onclick = () => zoomAt(1 / 1.3); $("#zOut").onclick = () => zoomAt(1.3);
+new ResizeObserver(() => { if (!userView) fitView(); else if (vb) { const r = svg.clientWidth / svg.clientHeight; setVB({ ...vb, h: vb.w / r }); } }).observe(svg);
+
+function setGrid(scale) {
+  const minor = 10 * scale, major = 50 * scale;
+  const pm = $("#gMinor"), pM = $("#gMajor");
+  pm.setAttribute("width", minor); pm.setAttribute("height", minor);
+  pm.querySelector("path").setAttribute("d", `M${minor} 0 L0 0 0 ${minor}`);
+  pM.setAttribute("width", major); pM.setAttribute("height", major);
+  pM.querySelector("rect").setAttribute("width", major); pM.querySelector("rect").setAttribute("height", major);
+  pM.querySelector("path").setAttribute("d", `M${major} 0 L0 0 0 ${major}`);
+}
+function buildDrawing() {
+  const st = makeStyle(state.style, isColor);
+  if (state.mode === "standard") return stdSection(state.stdType, state.std[state.stdType]).build(st);
+  return buildCustom(state.custom, st);
+}
+function schedule() { clearTimeout(job); job = setTimeout(redraw, 120); }
+function redraw() {
+  job = null;
+  const status = $("#status");
+  let dr;
+  try { dr = buildDrawing(); }
+  catch (e) {
+    const msg = e instanceof UserError ? e.message : `internal error (${e.name}): ${e.message}`;
+    if (!(e instanceof UserError)) console.error(e);
+    status.replaceChildren(el("p", { class: "err" }, `Cannot draw: ${msg}`));
+    stage.classList.add("stale");
+    return;
+  }
+  stage.classList.remove("stale");
+  current = dr;
+  setGrid(dr.st.scale);
+  dwg.innerHTML = svgBody(dr, primitives(dr));
+  const key = dr.bounds().map(v => Math.round(v)).join(",") + state.mode;
+  if (!userView || !vb) fitView();
+  lastBoundsKey = key;
+  status.replaceChildren(el("p", { class: "ok" }, dr.summary()), ...dr.warnings.map(w => el("p", { class: "warn" }, "⚠ " + w)));
+}
+
+/* ------------------------------------------------------------------ files */
+function download(name, data, type) {
+  const blob = data instanceof Blob ? data : new Blob([data], { type });
+  const a = el("a", { href: URL.createObjectURL(blob), download: name });
+  document.body.append(a); a.click(); a.remove();
+  setTimeout(() => URL.revokeObjectURL(a.href), 4000);
+}
+function toast(msg) { const t = $("#toast"); t.textContent = msg; t.classList.add("show"); clearTimeout(toast.j); toast.j = setTimeout(() => t.classList.remove("show"), 2600); }
+function renderPNG(dr) {
+  const st = dr.st, s = st.scale, [x0, y0, x1, y1] = dr.bounds();
+  let k = st.dpi / 25.4 / s;
+  const maxPx = 12000;
+  if ((x1 - x0) * k > maxPx || (y1 - y0) * k > maxPx) k = maxPx / Math.max(x1 - x0, y1 - y0);
+  const cv = document.createElement("canvas");
+  cv.width = Math.ceil((x1 - x0) * k); cv.height = Math.ceil((y1 - y0) * k);
+  const g = cv.getContext("2d"), X = x => (x - x0) * k, Y = y => (y1 - y) * k;
+  g.fillStyle = "#fff"; g.fillRect(0, 0, cv.width, cv.height);
+  const trace = (pts, closed) => { pts.forEach(([x, y], i) => i ? g.lineTo(X(x), Y(y)) : g.moveTo(X(x), Y(y))); if (closed) g.closePath(); };
+  for (const p of primitives(dr)) {
+    if (p.t === "area") {
+      g.beginPath(); p.rings.forEach(r => trace(expand(r, true), true));
+      g.fillStyle = st.concrete_fill; g.fill("evenodd");
+      g.lineWidth = st.outline_lw * s * k; g.strokeStyle = "#000"; g.lineJoin = "miter"; g.stroke();
+    } else if (p.t === "path") {
+      g.beginPath(); trace(expand(p.verts, p.closed), p.closed);
+      g.lineWidth = p.w * k; g.lineCap = "butt"; g.lineJoin = "round"; g.strokeStyle = p.color === "steel" ? st.steel : "#000"; g.stroke();
+    } else if (p.t === "disc") {
+      g.beginPath(); g.arc(X(p.x), Y(p.y), p.r * k, 0, 2 * Math.PI); g.fillStyle = st.steel; g.fill();
+    } else if (p.t === "text") {
+      const q = textPlace(p, s);
+      g.save(); g.translate(X(q.bx), Y(q.by)); g.rotate(-q.a);
+      g.font = `${q.size * k}px Helvetica, Arial, sans-serif`; g.textAlign = q.ha; g.textBaseline = "alphabetic"; g.fillStyle = "#000";
+      g.fillText(p.txt, 0, 0); g.restore();
+    }
+  }
+  return cv;
+}
+function exportAs(kind) {
+  if (job) { clearTimeout(job); redraw(); }
+  if (!current || stage.classList.contains("stale")) { toast("Fix the error shown below the drawing first."); return; }
+  const name = slug(current.title);
+  try {
+    if (kind === "svg") download(name + ".svg", exportSVG(current), "image/svg+xml");
+    else if (kind === "pdf") download(name + ".pdf", exportPDF(current), "application/pdf");
+    else if (kind === "dxf") download(name + ".dxf", exportDXF(current), "application/dxf");
+    else if (kind === "png") { renderPNG(current).toBlob(b => download(name + ".png", b)); }
+    toast(`Exported ${name}.${kind}`);
+  } catch (e) { console.error(e); toast(`Export failed: ${e.message}`); }
+}
+document.querySelectorAll("[data-exp]").forEach(b => b.addEventListener("click", () => exportAs(b.dataset.exp)));
+document.querySelectorAll(".seg button").forEach(b => b.addEventListener("click", () => { state.mode = b.dataset.mode; state.sel = null; userView = false; persist(); renderAll(); }));
+$("#bSave").onclick = () => {
+  const name = slug(state.mode === "custom" ? state.custom.name : state.std[state.stdType].name || "project");
+  download(name + ".json", JSON.stringify({ app: "rebar-sketch-studio", version: 1, ...state, sel: null }, null, 2), "application/json");
+  toast(`Saved ${name}.json`);
+};
+$("#bOpen").onclick = () => $("#fileIn").click();
+$("#fileIn").addEventListener("change", async e => {
+  const f = e.target.files[0]; e.target.value = "";
+  if (!f) return;
+  try { state = mergeState(JSON.parse(await f.text())); state.sel = null; userView = false; persist(); renderAll(); toast(`Opened ${f.name}`); }
+  catch (err) { toast(`Could not read ${f.name}: it is not a project file.`); }
+});
+const b64url = bytes => { let s = ""; bytes.forEach(b => s += String.fromCharCode(b)); return btoa(s).replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/, ""); };
+const unb64url = str => { const s = atob(str.replace(/-/g, "+").replace(/_/g, "/")); return Uint8Array.from(s, c => c.charCodeAt(0)); };
+async function packState() {
+  const json = JSON.stringify({ ...state, sel: null });
+  if ("CompressionStream" in window) {
+    const stream = new Blob([json]).stream().pipeThrough(new CompressionStream("deflate"));
+    return "z" + b64url(new Uint8Array(await new Response(stream).arrayBuffer()));
+  }
+  return "j" + b64url(new TextEncoder().encode(json));
+}
+async function unpackState(s) {
+  const bytes = unb64url(s.slice(1));
+  if (s[0] === "z") return JSON.parse(await new Response(new Blob([bytes]).stream().pipeThrough(new DecompressionStream("deflate"))).text());
+  return JSON.parse(new TextDecoder().decode(bytes));
+}
+$("#bShare").onclick = async () => {
+  const url = location.href.split("#")[0] + "#p=" + await packState();
+  try { await navigator.clipboard.writeText(url); toast("Link copied. Anyone who opens it sees this section."); }
+  catch (e) { prompt("Copy this link:", url); }
+};
+$("#bHelp").onclick = () => $("#guide").showModal();
+
+/* ------------------------------------------------------------------ start */
+(async () => {
+  if (location.hash.startsWith("#p=")) {
+    try { state = mergeState(await unpackState(location.hash.slice(3))); state.sel = null; persist(); toast("Opened the shared section."); }
+    catch (e) { toast("The shared link is damaged, so your last section was opened instead."); }
+    history.replaceState(null, "", location.pathname + location.search);
+  }
+  renderAll();
+})();
+</script>
+</body>
+</html>
