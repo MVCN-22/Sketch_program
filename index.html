@@ -77,6 +77,16 @@ fieldset.layers legend { font-weight: 600; font-size: 13.5px; padding: 0; margin
 .x:hover { color: var(--err); border-color: var(--err); }
 .add { margin-top: 6px; background: none; border: 1px dashed #9fb0bf; border-radius: 5px; padding: 4px 10px; cursor: pointer; color: var(--accent); }
 .add:hover { background: #fff; }
+.colorbox { position: relative; display: flex; gap: 6px; align-items: center; }
+.colorbox input[type=text] { min-width: 0; }
+.swatch { width: 30px; height: 29px; flex: none; border: 1px solid #9aa6b0; border-radius: 5px; cursor: pointer; box-shadow: inset 0 0 0 2px #fff; padding: 0; }
+.wheelpop { position: absolute; right: 0; top: calc(100% + 6px); z-index: 20; width: 206px; background: #fff; border: 1px solid var(--rule); border-radius: 10px; padding: 12px; box-shadow: 0 10px 28px rgba(20, 30, 40, .2); }
+.wheel { display: block; margin: 0 auto; width: 176px; height: 176px; cursor: crosshair; touch-action: none; }
+.vlabel { display: block; font-size: 12px; color: var(--muted); margin-top: 10px; }
+.vgrad { height: 8px; border-radius: 4px; margin-top: 4px; border: 1px solid var(--rule); }
+.vlabel input { display: block; width: 100%; margin-top: 2px; accent-color: var(--accent); }
+.swatches { display: grid; grid-template-columns: repeat(5, 1fr); gap: 6px; margin-top: 10px; }
+.swatches button { height: 22px; border: 1px solid #b8c1c8; border-radius: 4px; cursor: pointer; padding: 0; }
 .btn { background: #fff; border: 1px solid var(--rule); border-radius: 6px; padding: 5px 11px; cursor: pointer; }
 .btn:hover:not(:disabled) { border-color: var(--accent); color: var(--accent); }
 .btn:disabled { opacity: .45; cursor: default; }
@@ -317,6 +327,8 @@ class Drawing {
   text(x, y, txt, ha = "left", va = "bottom", rot = 0, h = null) { this.items.push({ k: "text", x, y, txt, ha, va, rot, h: h || this.st.text_h }); }
   label(anchor, text, side = "right") { if (this.st.show_labels && (side === "left" || side === "right")) this.labels.push({ anchor, text, side }); }
   warn(m) { this.warnings.push(m); }
+  nom(d) { return d / (this.st.dfac || 1); }          // drawn Ø -> nominal Ø
+  G(d) { return d * (this.st.dfac || 1); }            // nominal Ø -> drawn Ø
 
   geomBounds() {
     const xs = [], ys = [];
@@ -328,6 +340,7 @@ class Drawing {
     return [Math.min(...xs), Math.min(...ys), Math.max(...xs), Math.max(...ys)];
   }
   finalize(subtitle = "") {
+    if ((this.st.dfac || 1) !== 1) subtitle += `    bars drawn at outer Ø = ${fmt(this.st.dfac)} × nominal`;
     const s = this.st.scale, th = this.st.text_h * s;
     let [x0, y0, x1, y1] = this.geomBounds();
     const gap = 12 * s, clearDim = (this.st.text_h + 3) * s;
@@ -383,9 +396,9 @@ class Drawing {
   }
   summary() {
     const by = new Map();
-    for (const it of this.items) if (it.k === "bar") by.set(it.d, (by.get(it.d) || 0) + 1);
-    let As = 0; for (const [d, n] of by) As += n * Math.PI * d * d / 4;
-    const parts = [...by.entries()].sort((a, b) => b[0] - a[0]).map(([d, n]) => `${n}Ø${fmt(d)}`);
+    for (const it of this.items) if (it.k === "bar") { const dn = Math.round(this.nom(it.d) * 1e6) / 1e6; by.set(dn, (by.get(dn) || 0) + 1); }
+    let As = 0; for (const [dn, n] of by) As += n * Math.PI * dn * dn / 4;
+    const parts = [...by.entries()].sort((a, b) => b[0] - a[0]).map(([dn, n]) => `${n}Ø${fmt(dn)}`);
     let txt = "Bars cut by the section: " + (parts.length ? parts.join(" + ") : "none") + `     A_s = ${(As / 100).toFixed(2)} cm²`;
     const Ac = this.concreteArea();
     if (Ac) txt += `     A_c = ${(Ac / 100).toFixed(0)} cm²     ρ = ${(100 * As / Ac).toFixed(2)} %`;
@@ -397,14 +410,14 @@ class Drawing {
 const linkTxt = (dl, s, kind = "link") => `${kind} Ø${fmt(dl)}` + (s ? `/${fmt(s)}` : "");
 
 function addCage(dr, xi0, yi0, xi1, yi1, dl, top, bottom, sides, mandrel, hooks, hookLen, dg, linkText) {
-  const rMan = (mandrel || 4 * dl) / 2;
+  const rMan = (mandrel || 4 * dr.nom(dl)) / 2;
   const rinB = bottom.length ? Math.max(rMan, bottom[0][1] / 2) : rMan;
   const rinT = top.length ? Math.max(rMan, top[0][1] / 2) : rMan;
   const rcB = rinB + dl / 2, rcT = rinT + dl / 2, h2 = dl / 2;
   if (xi1 - xi0 < rinB + rinT || yi1 - yi0 < rinB + rinT) throw new UserError("section too small for this cover / link");
   dr.steel(roundedRect(xi0 - h2, yi0 - h2, xi1 + h2, yi1 + h2, [rcB, rcB, rcT, rcT]), dl, true);
   if (hooks) {
-    const L = hookLen || Math.max(5 * dl, 50), k = Math.SQRT1_2, b45 = Math.tan(Math.PI / 16);
+    const L = hookLen || Math.max(5 * dr.nom(dl), 50), k = Math.SQRT1_2, b45 = Math.tan(Math.PI / 16);
     const cx = xi0 + rinT, cy = yi1 - rinT;
     const ea = [cx - rcT * k, cy - rcT * k];
     dr.steel([[cx - rcT, cy, b45], [ea[0], ea[1], 0], [ea[0] + L * k, ea[1] - L * k, 0]], dl);
@@ -419,16 +432,16 @@ function addCage(dr, xi0, yi0, xi1, yi1, dl, top, bottom, sides, mandrel, hooks,
       let xl, xr, y;
       if (i === 0) { [xl, y] = corner(xi0, yface, 1, sy, rIn, d / 2); [xr] = corner(xi1, yface, -1, sy, rIn, d / 2); first = [xl, xr, y]; }
       else {
-        y = yPrev + sy * (dPrev / 2 + minClear(Math.max(d, dPrev), dg) + d / 2);
+        y = yPrev + sy * (dPrev / 2 + minClear(dr.nom(Math.max(d, dPrev)), dg) + d / 2);
         xl = Math.max(first[0], xi0 + d / 2); xr = Math.min(first[1], xi1 - d / 2);
       }
       const xs = spread(xl, xr, n);
       xs.forEach(x => dr.bar(x, y, d));
       if (n > 1) {
         const clear = (xr - xl) / (n - 1) - d;
-        if (clear < minClear(d, dg) - 0.5) dr.warn(`${face} layer ${i + 1}: clear spacing ${fmt0(clear)} mm < ${fmt0(minClear(d, dg))} mm`);
+        if (clear < minClear(dr.nom(d), dg) - 0.5) dr.warn(`${face} layer ${i + 1}: clear spacing ${fmt0(clear)} mm < ${fmt0(minClear(dr.nom(d), dg))} mm`);
       }
-      dr.label([xs[xs.length - 1], y], `${n}Ø${fmt(d)}`);
+      dr.label([xs[xs.length - 1], y], `${n}Ø${fmt(dr.nom(d))}`);
       yPrev = y; dPrev = d;
     });
     return first;
@@ -439,18 +452,20 @@ function addCage(dr, xi0, yi0, xi1, yi1, dl, top, bottom, sides, mandrel, hooks,
     sides.forEach(([n, d], j) => {
       let xl, xr;
       if (!prev) { xl = xi0 + d / 2; xr = xi1 - d / 2; }
-      else { const g = prev[2] / 2 + minClear(Math.max(d, prev[2]), dg) + d / 2; xl = prev[0] + g; xr = prev[1] - g; }
+      else { const g = prev[2] / 2 + minClear(dr.nom(Math.max(d, prev[2])), dg) + d / 2; xl = prev[0] + g; xr = prev[1] - g; }
       const ys = spread(fb[2], ft[2], n + 2).slice(1, -1);
       ys.forEach(y => { dr.bar(xl, y, d); dr.bar(xr, y, d); });
       const clear = (ft[2] - fb[2]) / (n + 1) - d;
-      if (clear < minClear(d, dg) - 0.5) dr.warn(`side layer ${j + 1}: clear spacing ${fmt0(clear)} mm`);
-      dr.label([xr, ys[Math.floor(ys.length / 2)]], `${2 * n}Ø${fmt(d)} (sides)`);
+      if (clear < minClear(dr.nom(d), dg) - 0.5) dr.warn(`side layer ${j + 1}: clear spacing ${fmt0(clear)} mm`);
+      dr.label([xr, ys[Math.floor(ys.length / 2)]], `${2 * n}Ø${fmt(dr.nom(d))} (sides)`);
       prev = [xl, xr, d];
     });
   }
   dr.label([xi1 + dl / 2, yi0 + 0.42 * (yi1 - yi0)], linkText);
 }
 
+const gD = (st, d) => d * (st.dfac || 1);
+const gRows = (st, rows) => rows.map(([n, d]) => [n, gD(st, d)]);
 const meshText = m => `Ø${fmt(m.d)}` + (m.s ? `/${fmt(m.s)}` : "") + (m.note ? ` ${m.note}` : "");
 const customState = (name, cover, dg, outline, openings, items) =>
   ({ name, cover: fmt(cover), dg: fmt(dg), auto_dims: true, outline, openings, items });
@@ -460,7 +475,7 @@ function cageItems(bottom, top, sides, link) {
   for (const [n, d] of top) items.push(newItem("Layer", { face: "top", kind: "dots", d, dist: "count", n, link }));
   for (const [n, d] of sides) {
     items.push(newItem("Layer", { face: "left", d, n, skip_ends: true, link, label: "none" }));
-    items.push(newItem("Layer", { face: "right", d, n, skip_ends: true, link, ltext: `${2 * n}Ø${fmt(d)} (sides)` }));
+    items.push(newItem("Layer", { face: "right", d, n, skip_ends: true, link, ltext: `${2 * n}Ø` + fmt(d) + " (sides)" }));
   }
   return items;
 }
@@ -468,10 +483,10 @@ function cageItems(bottom, top, sides, link) {
 function rectSection(p) {
   return {
     build(st) {
-      const dr = new Drawing(p.name, st), s = st.scale, { b, h, cover: c, link_d: dl } = p;
+      const dr = new Drawing(p.name, st), s = st.scale, { b, h, cover: c } = p, dl = gD(st, p.link_d);
       if (b <= 0 || h <= 0) throw new UserError("b and h must be positive");
       dr.outline([[[0, 0], [b, 0], [b, h], [0, h]]]);
-      addCage(dr, c + dl, c + dl, b - c - dl, h - c - dl, dl, p.top, p.bottom, p.sides, p.mandrel, p.hooks, p.hook_len, p.dg, linkTxt(dl, p.link_s));
+      addCage(dr, c + dl, c + dl, b - c - dl, h - c - dl, dl, gRows(st, p.top), gRows(st, p.bottom), gRows(st, p.sides), p.mandrel, p.hooks, p.hook_len, p.dg, linkTxt(p.link_d, p.link_s));
       dr.dim([0, 0], [b, 0], "h", -8 * s); dr.dim([0, 0], [0, h], "v", -8 * s);
       dr.finalize(`c_nom = ${fmt(c)} mm`);
       return dr;
@@ -495,7 +510,7 @@ function flangedSection(p) {
   return {
     build(st) {
       const dr = new Drawing(p.name, st), s = st.scale;
-      const { b_w: bw, h, b_f: bf, h_f: hf, cover: c, link_d: dl } = p;
+      const { b_w: bw, h, b_f: bf, h_f: hf, cover: c } = p, dl = gD(st, p.link_d);
       const [wx0, wx1, yf] = geo();
       const brkR = wx1 < bf && p.breaks, brkL = wx0 > 0 && p.breaks, amp = Math.min(0.2 * hf, 3 * s);
       const pts = [[wx0, 0], [wx1, 0], [wx1, yf]];
@@ -504,22 +519,22 @@ function flangedSection(p) {
       if (wx0 > 0) { if (brkL) pts.push(...zigzag([0, h], [0, yf], amp)); pts.push([0, yf]); }
       pts.push([wx0, yf]);
       dr.outline([pts]);
-      const ft = p.flange_top, fb = p.flange_bot, dT = ft ? ft.d : 0, dB = fb ? fb.d : 0;
+      const ft = p.flange_top, fb = p.flange_bot, dT = ft ? gD(st, ft.d) : 0, dB = fb ? gD(st, fb.d) : 0;
       const xa = brkL ? 0 : c, xb = brkR ? bf : bf - c;
       for (const [lay, y] of [[ft, h - c - dT / 2], [fb, yf + c + dB / 2]]) if (lay) {
-        dr.steel([[xa, y], [xb, y]], lay.d, false, "BARS");
+        dr.steel([[xa, y], [xb, y]], gD(st, lay.d), false, "BARS");
         dr.label([xb - 0.04 * (xb - xa), y], meshText(lay) + (lay.note ? "" : " (transv.)"));
       }
       if (p.flange_long) {
-        const [dd, sp] = p.flange_long, xs = [];
+        const [dn, sp] = p.flange_long, dd = gD(st, dn), xs = [];
         if (wx1 < bf) { let x = wx1 + sp / 2; const lim = brkR ? bf - sp / 4 : bf - c - dd / 2; while (x <= lim) { xs.push(x); x += sp; } }
         if (wx0 > 0) { let x = wx0 - sp / 2; const lim = brkL ? sp / 4 : c + dd / 2; while (x >= lim) { xs.push(x); x -= sp; } }
         for (const y of [h - c - dT - dd / 2, yf + c + dB + dd / 2]) {
           xs.forEach(x => dr.bar(x, y, dd));
-          if (xs.length) dr.label([Math.max(...xs), y], `Ø${fmt(dd)}/${fmt(sp)} (long.)`);
+          if (xs.length) dr.label([Math.max(...xs), y], `Ø${fmt(dn)}/${fmt(sp)} (long.)`);
         }
       }
-      addCage(dr, wx0 + c + dl, c + dl, wx1 - c - dl, h - c - dT - dl, dl, p.top, p.bottom, p.sides, p.mandrel, p.hooks, p.hook_len, p.dg, linkTxt(dl, p.link_s));
+      addCage(dr, wx0 + c + dl, c + dl, wx1 - c - dl, h - c - dT - dl, dl, gRows(st, p.top), gRows(st, p.bottom), gRows(st, p.sides), p.mandrel, p.hooks, p.hook_len, p.dg, linkTxt(p.link_d, p.link_s));
       dr.dim([wx0, 0], [wx1, 0], "h", -8 * s); dr.dim([0, h], [bf, h], "h", h + 8 * s);
       dr.dim([0, yf], [0, h], "v", -8 * s); dr.dim([wx0, 0], [0, h], "v", -16 * s);
       dr.finalize(`c_nom = ${fmt(c)} mm`);
@@ -555,30 +570,31 @@ function flangedSection(p) {
 }
 
 function circularSection(p) {
-  const radii = () => {
+  const radii = (f = 1) => {
     const R = p.D / 2, out = []; let prev = null;
-    for (const [n, d] of p.rings) {
-      const Rb = prev === null ? R - p.cover - p.link_d - d / 2 : prev[0] - prev[1] / 2 - minClear(Math.max(d, prev[1]), p.dg) - d / 2;
+    for (const [n, dn] of p.rings) {
+      const d = dn * f;
+      const Rb = prev === null ? R - p.cover - p.link_d * f - d / 2 : prev[0] - prev[1] / 2 - minClear(Math.max(dn, prev[2]), p.dg) - d / 2;
       if (Rb <= d / 2) throw new UserError("bar rings do not fit in the section");
-      out.push([n, d, Rb]); prev = [Rb, d];
+      out.push([n, d, Rb]); prev = [Rb, d, dn];
     }
     return out;
   };
   return {
     build(st) {
-      const dr = new Drawing(p.name, st), s = st.scale, { D, cover: c, link_d: dl } = p;
+      const dr = new Drawing(p.name, st), s = st.scale, { D, cover: c } = p, dl = gD(st, p.link_d);
       if (D <= 0) throw new UserError("D must be positive");
       const R = D / 2, cx = R, cy = R;
       dr.outline([[[cx - R, cy, 1], [cx + R, cy, 1]]]);
       const rl = R - c - dl / 2;
       dr.steel([[cx - rl, cy, 1], [cx + rl, cy, 1]], dl, true);
-      for (const [n, d, Rb] of radii()) {
+      for (const [n, d, Rb] of radii(st.dfac || 1)) {
         for (let k = 0; k < n; k++) { const a = 2 * Math.PI * k / n; dr.bar(cx + Rb * Math.cos(a), cy + Rb * Math.sin(a), d); }
-        if (n > 1) { const clear = 2 * Rb * Math.sin(Math.PI / n) - d; if (clear < minClear(d, p.dg) - 0.5) dr.warn(`ring ${n}Ø${fmt(d)}: clear spacing ${fmt0(clear)} mm`); }
-        dr.label([cx + Rb, cy], `${n}Ø${fmt(d)}`);
+        if (n > 1) { const clear = 2 * Rb * Math.sin(Math.PI / n) - d; if (clear < minClear(dr.nom(d), p.dg) - 0.5) dr.warn(`ring ${n}Ø${fmt(dr.nom(d))}: clear spacing ${fmt0(clear)} mm`); }
+        dr.label([cx + Rb, cy], `${n}Ø${fmt(dr.nom(d))}`);
       }
       const a = -40 * Math.PI / 180;
-      dr.label([cx + rl * Math.cos(a), cy + rl * Math.sin(a)], linkTxt(dl, p.link_s, p.spiral ? "spiral" : "hoop"));
+      dr.label([cx + rl * Math.cos(a), cy + rl * Math.sin(a)], linkTxt(p.link_d, p.link_s, p.spiral ? "spiral" : "hoop"));
       dr.dim([0, cy], [D, cy], "h", -8 * s, `Ø${fmt(D)}`);
       dr.finalize(`c_nom = ${fmt(c)} mm`);
       return dr;
@@ -607,7 +623,8 @@ function panelSection(p) {
       for (const [face, lays] of [[1, p.face1], [2, p.face2]]) {
         let off = c;
         const side = p.vertical ? (face === 1 ? "left" : "right") : "right";
-        for (const lay of lays) {
+        for (const lay0 of lays) {
+          const lay = { ...lay0, d: gD(st, lay0.d) };
           const v = face === 1 ? off + lay.d / 2 : t - off - lay.d / 2;
           let ua;
           if (lay.kind === "line") { dr.steel([T(0, v), T(L, v)], lay.d, false, "BARS"); ua = 0.96 * L; }
@@ -617,13 +634,13 @@ function panelSection(p) {
             const us = Array.from({ length: n }, (_, i) => u0 + i * lay.s);
             us.forEach(u => dr.bar(...T(u, v), lay.d));
             ua = us[us.length - 1];
-            if (lay.s - lay.d < minClear(lay.d, p.dg) - 0.5) dr.warn(`face ${face} ${meshText(lay)}: clear spacing too small`);
+            if (lay.s - lay.d < minClear(lay0.d, p.dg) - 0.5) dr.warn(`face ${face} ${meshText(lay0)}: clear spacing too small`);
           }
-          dr.label(T(ua, v), meshText(lay), side);
+          dr.label(T(ua, v), meshText(lay0), side);
           off += lay.d;
         }
       }
-      if (2 * c + [...p.face1, ...p.face2].reduce((a, l) => a + l.d, 0) > t) dr.warn("layers + covers exceed the thickness");
+      if (2 * c + [...p.face1, ...p.face2].reduce((a, l) => a + gD(st, l.d), 0) > t) dr.warn("layers + covers exceed the thickness");
       if (p.vertical) dr.dim([0, 0], [t, 0], "h", -8 * s); else dr.dim([0, 0], [0, t], "v", -8 * s);
       dr.finalize(`c_nom = ${fmt(c)} mm`);
       return dr;
@@ -898,9 +915,9 @@ function linkHooks(dr, pts, rc, d, L) {
   for (const sg of [1, -1]) { const sx = cx + sg * rc * px, sy = cy + sg * rc * py; dr.steel([[sx, sy], [sx + L * bx, sy + L * by]], d); }
 }
 function buildLink(dr, P, holes, it, cover, rBar, k) {
-  const d = fnum(it.d, "link Ø");
+  const dn = fnum(it.d, "link Ø"), d = dr.G(dn);
   let c = onum(it.cover, "cover"); if (c === null) c = cover;
-  const man = onum(it.mandrel, "mandrel"), rIn = Math.max((man || 4 * d) / 2, rBar), rc = rIn + d / 2;
+  const man = onum(it.mandrel, "mandrel"), rIn = Math.max((man || 4 * dn) / 2, rBar), rc = rIn + d / 2;
   const region = it.region || "outline";
   let Cr, inner;
   if (region === "around opening") {
@@ -929,7 +946,7 @@ function buildLink(dr, P, holes, it, cover, rBar, k) {
     if (!Cr) { Cr = C0; dr.warn(`link ${k}: too small to round the corners`); }
     dr.steel(ringCCW(Cr.getExteriorRing()), d, true);
     inner = buf(Cr, -d / 2);
-    if (it.hooks === undefined || truthy(it.hooks)) linkHooks(dr, ringCCW(C0.getExteriorRing()), rc, d, onum(it.hook_len, "hook length") || Math.max(5 * d, 50));
+    if (it.hooks === undefined || truthy(it.hooks)) linkHooks(dr, ringCCW(C0.getExteriorRing()), rc, d, onum(it.hook_len, "hook length") || Math.max(5 * dn, 50));
   }
   const ring = ringPts(Cr.getExteriorRing());
   const xs = ring.map(p => p[0]), ys = ring.map(p => p[1]);
@@ -937,14 +954,14 @@ function buildLink(dr, P, holes, it, cover, rBar, k) {
   const pick = arr => arr.reduce((a, b) => Math.abs(b[1] - target) < Math.abs(a[1] - target) ? b : a);
   const side = it.label || "right";
   if (side !== "none") {
-    let txt = String(it.ltext || "").trim() || linkTxt(d, onum(it.s, "spacing"), it.name || "link");
+    let txt = String(it.ltext || "").trim() || linkTxt(dn, onum(it.s, "spacing"), it.name || "link");
     if (String(it.note || "").trim()) txt += " " + String(it.note).trim();
     dr.label(side === "right" ? pick(ring.filter(p => p[0] >= mx - 1)) : pick(ring.filter(p => p[0] <= mn + 1)), txt, side);
   }
   return inner;
 }
 function layerItem(dr, it, idx, P, links, cover, dg, stacks) {
-  const face = it.face || "bottom", kind = it.kind || "dots", d = fnum(it.d, "Ø"), k = inum(it.link, "link");
+  const face = it.face || "bottom", kind = it.kind || "dots", d = dr.G(fnum(it.d, "Ø")), k = inum(it.link, "link");
   const R0 = baseRegion(dr, links, k, P, cover, idx), Rb = buf(R0, -d / 2);
   if (Rb.isEmpty()) throw new UserError("no room for bars of this diameter");
   const horiz = face === "bottom" || face === "top", sgn = (face === "bottom" || face === "left") ? 1 : -1;
@@ -953,7 +970,7 @@ function layerItem(dr, it, idx, P, links, cover, dg, stacks) {
   if (off === null) {
     if (stacks.has(key)) {
       const [pp, pd, pk] = stacks.get(key);
-      const gap = (kind === "dots" && pk === "dots") ? minClear(Math.max(d, pd), dg) : 0;
+      const gap = (kind === "dots" && pk === "dots") ? minClear(dr.nom(Math.max(d, pd)), dg) : 0;
       pos = pp + sgn * (pd / 2 + gap + d / 2);
     } else { const [bx0, by0, bx1, by1] = env(Rb); pos = { bottom: by0, top: by1, left: bx0, right: bx1 }[face]; }
   } else pos = { bottom: miny + off, top: maxy - off, left: minx + off, right: maxx - off }[face];
@@ -966,16 +983,16 @@ function layerItem(dr, it, idx, P, links, cover, dg, stacks) {
   if (kind === "line") {
     segs.forEach(([a, b]) => dr.steel([P2(a), P2(b)], d, false, "BARS"));
     const [a, b] = segs[segs.length - 1], s = dm !== "count" ? onum(it.s, "spacing") : null;
-    itemLabel(dr, it, [P2(b - 0.04 * (b - a)), P2(segs[0][0] + 0.04 * (b - a))], `Ø${fmt(d)}` + (s ? `/${fmt(s)}` : ""));
+    itemLabel(dr, it, [P2(b - 0.04 * (b - a)), P2(segs[0][0] + 0.04 * (b - a))], `Ø${fmt(dr.nom(d))}` + (s ? `/${fmt(s)}` : ""));
   } else {
     const us = [];
     segs.forEach(([a, b]) => us.push(...distribute(a, b, it)));
     us.forEach(u => dr.bar(...P2(u), d));
-    itemLabel(dr, it, us.map(P2), dm.startsWith("spacing") ? `Ø${fmt(d)}/${fmt(fnum(it.s))}` : `${us.length}Ø${fmt(d)}`);
+    itemLabel(dr, it, us.map(P2), dm.startsWith("spacing") ? `Ø${fmt(dr.nom(d))}/${fmt(fnum(it.s))}` : `${us.length}Ø${fmt(dr.nom(d))}`);
   }
 }
 function perimeterItem(dr, it, idx, P, links, cover) {
-  const d = fnum(it.d, "Ø"), k = inum(it.link, "link");
+  const d = dr.G(fnum(it.d, "Ø")), k = inum(it.link, "link");
   const R = buf(baseRegion(dr, links, k, P, cover, idx), -d / 2), which = it.ring || "outer", cand = [];
   for (const g of polysOf(R)) {
     if (which !== "openings") cand.push([g.getExteriorRing(), "outer"]);
@@ -999,14 +1016,14 @@ function perimeterItem(dr, it, idx, P, links, cover) {
     for (const t of ringPositions(ts, Lr, it, dr, idx)) { const q = lil.extractPoint(t); placed.push([q.x, q.y]); }
   }
   placed.forEach(([x, y]) => dr.bar(x, y, d));
-  itemLabel(dr, it, placed, `${placed.length}Ø${fmt(d)}`);
+  itemLabel(dr, it, placed, `${placed.length}Ø${fmt(dr.nom(d))}`);
 }
 function clashCheck(dr, dg) {
   const bars = dr.items.filter(i => i.k === "bar");
   const over = [], tight = [];
   for (let i = 0; i < bars.length; i++) for (let j = i + 1; j < bars.length; j++) {
     const a = bars[i], b = bars[j], cl = Math.hypot(b.x - a.x, b.y - a.y) - (a.d + b.d) / 2;
-    if (cl < -0.5) over.push(a); else if (cl < minClear(Math.max(a.d, b.d), dg) - 0.5) tight.push([a, cl]);
+    if (cl < -0.5) over.push(a); else if (cl < minClear(dr.nom(Math.max(a.d, b.d)), dg) - 0.5) tight.push([a, cl]);
   }
   if (over.length) dr.warn(`${over.length} pair(s) of bars overlap, e.g. near (${fmt0(over[0].x)}, ${fmt0(over[0].y)})`);
   if (tight.length) dr.warn(`${tight.length} pair(s) of bars closer than the minimum clear spacing, e.g. ${fmt0(tight[0][1])} mm near (${fmt0(tight[0][0].x)}, ${fmt0(tight[0][0].y)})`);
@@ -1035,7 +1052,7 @@ function buildCustom(cs, st) {
   dr.outline([ext, ...holes]);
   const items = cs.items || [], maxr = new Map();
   for (const it of items) if ((it.type === "Layer" || it.type === "Perimeter") && (it.kind || "dots") === "dots") {
-    try { const kk = inum(it.link); maxr.set(kk, Math.max(maxr.get(kk) || 0, fnum(it.d) / 2)); } catch (e) { /* reported later */ }
+    try { const kk = inum(it.link); maxr.set(kk, Math.max(maxr.get(kk) || 0, dr.G(fnum(it.d)) / 2)); } catch (e) { /* reported later */ }
   }
   const links = new Map(); let nlink = 0;
   items.forEach((it, i) => {
@@ -1051,26 +1068,26 @@ function buildCustom(cs, st) {
       if (t === "Layer") layerItem(dr, it, idx, P, links, cover, dg, stacks);
       else if (t === "Perimeter") perimeterItem(dr, it, idx, P, links, cover);
       else if (t === "Circle pattern") {
-        const cx = fnum(it.cx, "cx"), cy = fnum(it.cy, "cy"), r = fnum(it.r, "radius"), d = fnum(it.d, "Ø"), n = inum(it.n, "n");
+        const cx = fnum(it.cx, "cx"), cy = fnum(it.cy, "cy"), r = fnum(it.r, "radius"), d = dr.G(fnum(it.d, "Ø")), n = inum(it.n, "n");
         const a0 = fnum(it.start ?? 0, "start"), sw = fnum(it.sweep ?? 360, "sweep");
         const angs = n > 0 ? (Math.abs(sw) >= 360 - 1e-9 ? Array.from({ length: n }, (_, j) => a0 + 360 * j / n) : spread(a0, a0 + sw, n)) : [];
         const pts = angs.map(a => [cx + r * Math.cos(a * Math.PI / 180), cy + r * Math.sin(a * Math.PI / 180)]);
         pts.forEach(([x, y]) => dr.bar(x, y, d));
-        itemLabel(dr, it, pts, `${pts.length}Ø${fmt(d)}`);
+        itemLabel(dr, it, pts, `${pts.length}Ø${fmt(dr.nom(d))}`);
       } else if (t === "Row") {
-        const x1 = fnum(it.x1, "x1"), y1 = fnum(it.y1, "y1"), x2 = fnum(it.x2, "x2"), y2 = fnum(it.y2, "y2"), d = fnum(it.d, "Ø");
+        const x1 = fnum(it.x1, "x1"), y1 = fnum(it.y1, "y1"), x2 = fnum(it.x2, "x2"), y2 = fnum(it.y2, "y2"), d = dr.G(fnum(it.d, "Ø"));
         const L = Math.hypot(x2 - x1, y2 - y1);
         const pts = distribute(0, L, it).map(u => L > 0 ? [x1 + (x2 - x1) * u / L, y1 + (y2 - y1) * u / L] : [x1, y1]);
         pts.forEach(([x, y]) => dr.bar(x, y, d));
-        itemLabel(dr, it, pts, (it.dist || "count").startsWith("spacing") ? `Ø${fmt(d)}/${fmt(fnum(it.s))}` : `${pts.length}Ø${fmt(d)}`);
+        itemLabel(dr, it, pts, (it.dist || "count").startsWith("spacing") ? `Ø${fmt(dr.nom(d))}/${fmt(fnum(it.s))}` : `${pts.length}Ø${fmt(dr.nom(d))}`);
       } else if (t === "Single bar") {
-        const x = fnum(it.x, "x"), y = fnum(it.y, "y"), d = fnum(it.d, "Ø");
-        dr.bar(x, y, d); itemLabel(dr, it, [[x, y]], `Ø${fmt(d)}`);
+        const x = fnum(it.x, "x"), y = fnum(it.y, "y"), d = dr.G(fnum(it.d, "Ø"));
+        dr.bar(x, y, d); itemLabel(dr, it, [[x, y]], `Ø${fmt(dr.nom(d))}`);
       } else if (t === "Line bar") {
         const pts = parsePoints(it.points), closed = truthy(it.closed);
         if (pts.length < (closed ? 3 : 2)) throw new UserError("not enough points");
-        const d = fnum(it.d, "Ø"), sp = onum(it.s, "spacing");
-        dr.steel(pts, d, closed, "BARS"); itemLabel(dr, it, pts, `Ø${fmt(d)}` + (sp ? `/${fmt(sp)}` : ""));
+        const d = dr.G(fnum(it.d, "Ø")), sp = onum(it.s, "spacing");
+        dr.steel(pts, d, closed, "BARS"); itemLabel(dr, it, pts, `Ø${fmt(dr.nom(d))}` + (sp ? `/${fmt(sp)}` : ""));
       } else if (t === "Dimension") {
         dr.dim([fnum(it.x1, "x1"), fnum(it.y1, "y1")], [fnum(it.x2, "x2"), fnum(it.y2, "y2")], it.orient || "h", fnum(it.pos, "position"), String(it.dtext || "").trim() || null, true);
       } else if (t === "Text") {
@@ -1094,7 +1111,7 @@ function primitives(dr) {
   const L = (a, b, w = thin) => out.push({ t: "path", verts: v3([a, b]), closed: false, w, color: "ink", layer: "DIMS", z: 4 });
   for (const it of dr.items) {
     if (it.k === "outline") out.push({ t: "area", rings: it.rings, layer: "CONCRETE", z: 1 });
-    else if (it.k === "steel") out.push({ t: "path", verts: it.verts, closed: it.closed, w: it.d, color: "steel", layer: it.layer, z: 2 });
+    else if (it.k === "steel") out.push({ t: "path", verts: it.verts, closed: it.closed, w: it.d, color: it.layer === "LINKS" ? "link" : "steel", layer: it.layer, z: 2 });
     else if (it.k === "bar") out.push({ t: "disc", x: it.x, y: it.y, r: it.d / 2, layer: "BARS", z: 3 });
     else if (it.k === "line") out.push({ t: "path", verts: v3(it.pts), closed: false, w: thin, color: "ink", layer: "TEXT", z: 4 });
     else if (it.k === "text") out.push({ t: "text", ...it, layer: "TEXT", z: 5 });
@@ -1116,6 +1133,8 @@ function primitives(dr) {
   return out.map((p, i) => [p, i]).sort((a, b) => a[0].z - b[0].z || a[1] - b[1]).map(a => a[0]);
 }
 
+const colorOf = (p, st) => ({ steel: st.steel, link: st.link_color || st.steel, ink: "#000" })[p.color] || "#000";
+
 /* ------------------------------------------------------------------ SVG */
 const N2 = v => String(Math.round(v * 100) / 100);
 const escXml = s => String(s).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
@@ -1124,7 +1143,7 @@ function svgBody(dr, prims) {
   const st = dr.st, s = st.scale; let o = "";
   for (const p of prims) {
     if (p.t === "area") o += `<path d="${p.rings.map(r => pathD(expand(r, true), true)).join("")}" fill="${escXml(st.concrete_fill)}" fill-rule="evenodd" stroke="#000" stroke-width="${N2(st.outline_lw * s)}" stroke-linejoin="miter"/>`;
-    else if (p.t === "path") o += `<path d="${pathD(expand(p.verts, p.closed), p.closed)}" fill="none" stroke="${p.color === "steel" ? escXml(st.steel) : "#000"}" stroke-width="${N2(p.w)}" stroke-linejoin="round" stroke-linecap="butt"/>`;
+    else if (p.t === "path") o += `<path d="${pathD(expand(p.verts, p.closed), p.closed)}" fill="none" stroke="${escXml(colorOf(p, st))}" stroke-width="${N2(p.w)}" stroke-linejoin="round" stroke-linecap="butt"/>`;
     else if (p.t === "disc") o += `<circle cx="${N2(p.x)}" cy="${N2(-p.y)}" r="${N2(p.r)}" fill="${escXml(st.steel)}"/>`;
     else if (p.t === "text") {
       const q = textPlace(p, s), anchor = { left: "start", center: "middle", right: "end" }[q.ha];
@@ -1174,7 +1193,7 @@ function exportPDF(dr) {
   let c = "1 1 1 rg 0 0 " + F(W) + " " + F(H) + " re f\n";
   for (const p of primitives(dr)) {
     if (p.t === "area") c += `${rgb(st.concrete_fill)} rg 0 0 0 RG ${F(st.outline_lw * s * k)} w 0 j\n${p.rings.map(r => poly(expand(r, true), true)).join("\n")}\nB*\n`;
-    else if (p.t === "path") c += `${p.color === "steel" ? rgb(st.steel) : "0 0 0"} RG ${F(p.w * k)} w 0 J 1 j\n${poly(expand(p.verts, p.closed), p.closed)}\nS\n`;
+    else if (p.t === "path") c += `${rgb(colorOf(p, st))} RG ${F(p.w * k)} w 0 J 1 j\n${poly(expand(p.verts, p.closed), p.closed)}\nS\n`;
     else if (p.t === "disc") {
       const r = p.r, m = 0.5523 * r, cx = p.x, cy = p.y;
       c += `${rgb(st.steel)} rg\n${X(cx + r)} ${Y(cy)} m\n${X(cx + r)} ${Y(cy + m)} ${X(cx + m)} ${Y(cy + r)} ${X(cx)} ${Y(cy + r)} c\n${X(cx - m)} ${Y(cy + r)} ${X(cx - r)} ${Y(cy + m)} ${X(cx - r)} ${Y(cy)} c\n${X(cx - r)} ${Y(cy - m)} ${X(cx - m)} ${Y(cy - r)} ${X(cx)} ${Y(cy - r)} c\n${X(cx + m)} ${Y(cy - r)} ${X(cx + r)} ${Y(cy - m)} ${X(cx + r)} ${Y(cy)} c\nf\n`;
@@ -1229,7 +1248,7 @@ function exportDXF(dr) {
   };
   for (const p of primitives(dr)) {
     if (p.t === "area") p.rings.forEach(r => pline("CONCRETE", r, true, 0));
-    else if (p.t === "path") pline(p.layer, p.verts, p.closed, p.color === "steel" ? p.w : 0);
+    else if (p.t === "path") pline(p.layer, p.verts, p.closed, p.color !== "ink" ? p.w : 0);
     else if (p.t === "disc") { const r = p.r; pline("BARS", [[p.x - r / 2, p.y, 1], [p.x + r / 2, p.y, 1]], true, r); }
     else if (p.t === "text") {
       const q = textPlace(p, s), hj = { left: 0, center: 1, right: 2 }[q.ha];
@@ -1342,9 +1361,14 @@ const CUSTOM_GEO_SPEC = [["name", "Name", "str", "Custom section"], ["cover", "D
   ["openings", "Openings: rect x y w h, circle cx cy D or poly x1 y1 x2 y2 …", "text", "", 4]];
 const OUTLINE_HELP = "arc° is the angle of an arc to the next vertex: + counter-clockwise, − clockwise, 180 for a half circle. brk draws the edge to the next vertex as a break line. Separate values with commas or spaces; use ; or tabs if you write decimal commas. Lines starting with # are ignored.";
 const STYLE_SPEC = [["scale", "Drawing scale 1:", "float", "10"], ["text_h", "Text height on paper [mm]", "float", "2.5"],
-  ["dpi", "PNG resolution [dpi]", "int", "300"], ["concrete_fill", "Concrete fill colour", "str", "#eeeeee"],
-  ["steel", "Steel colour", "str", "#1a1a1a"], ["outline_lw", "Concrete outline width [mm on paper]", "float", "0.5"],
+  ["dpi", "PNG resolution [dpi]", "int", "300"],
+  ["concrete_fill", "Concrete colour", "color", "#eeeeee"], ["steel", "Bar colour", "color", "#1a1a1a"],
+  ["link_color", "Link colour", "color", "#1a1a1a"],
+  ["outline_lw", "Concrete outline width [mm on paper]", "float", "0.5"],
+  ["actual_d", "Draw bars at their actual outer diameter (ribs included) instead of the nominal diameter", "bool", false],
+  ["dfactor", "Outer Ø ÷ nominal Ø", "float", "1.15"],
   ["show_labels", "Show bar labels", "bool", true], ["show_dims", "Show automatic dimensions", "bool", true]];
+const STYLE_SHOW = { dfactor: ["actual_d", [true]] };
 const TEMPLATES = {
   "Rectangle": ["0, 0\n300, 0\n300, 600\n0, 600", ""],
   "T-section": ["450, 0\n750, 0\n750, 500\n1200, 500\n1200, 700\n0, 700\n0, 500\n450, 500", ""],
@@ -1372,9 +1396,11 @@ const defaultCustom = () => ({
     newItem("Perimeter", { ring: "openings", d: 16, dist: "max spacing", s: 150, link: 2 })],
 });
 function makeStyle(v, isColor = () => true) {
-  for (const key of ["concrete_fill", "steel"]) if (!isColor(v[key])) throw new UserError(`'${v[key]}' is not a colour`);
+  for (const key of ["concrete_fill", "steel", "link_color"]) if (!isColor(v[key])) throw new UserError(`'${v[key]}' is not a colour`);
+  const dfac = truthy(v.actual_d) ? fnum(v.dfactor, "outer Ø ÷ nominal Ø") : 1;
+  if (dfac < 1 || dfac > 1.5) throw new UserError("outer Ø ÷ nominal Ø should be between 1 and 1.5");
   const st = { scale: fnum(v.scale, "scale"), text_h: fnum(v.text_h, "text height"), dpi: inum(v.dpi, "dpi"),
-    concrete_fill: v.concrete_fill, steel: v.steel, outline_lw: fnum(v.outline_lw, "outline width"), thin_lw: 0.18,
+    concrete_fill: v.concrete_fill, steel: v.steel, link_color: v.link_color, dfac, outline_lw: fnum(v.outline_lw, "outline width"), thin_lw: 0.18,
     show_labels: truthy(v.show_labels), show_dims: truthy(v.show_dims) };
   if (st.scale <= 0 || st.text_h <= 0 || st.dpi <= 0) throw new UserError("scale, text height and dpi must be positive");
   return st;
@@ -1472,6 +1498,7 @@ function buildForm(host, spec, values, onChange, showIf = {}) {
       inp.addEventListener("input", () => set(key, inp.value));
       return el("div", { class: "row" + (kind === "str" && key !== "name" ? "" : "") }, el("label", { for: id }, label), inp);
     }
+    if (kind === "color") return colorField(id, label, val, v => set(key, v));
     if (kind === "choice") {
       const sel = el("select", { id }, extra.map(o => el("option", { value: o, selected: o === val }, o)));
       sel.addEventListener("change", () => set(key, sel.value));
@@ -1528,6 +1555,93 @@ function layerTable(label, cols, rows, onChange) {
   return box;
 }
 
+/* ------------------------------------------------------------------ colour wheel */
+const SWATCHES = ["#ffffff", "#eeeeee", "#d9dcdf", "#b8bec3", "#e2ddd3", "#1a1a1a", "#b3261e", "#1b5fa8", "#2d6a3e", "#8a5a2b"];
+function hexOf(c) {
+  if (!isColor(c)) return null;
+  const cx = hexOf.ctx || (hexOf.ctx = document.createElement("canvas").getContext("2d"));
+  cx.fillStyle = "#010203"; cx.fillStyle = String(c);
+  return cx.fillStyle.startsWith("#") ? cx.fillStyle : null;
+}
+function hexToHsv(h) {
+  const r = parseInt(h.slice(1, 3), 16) / 255, g = parseInt(h.slice(3, 5), 16) / 255, b = parseInt(h.slice(5, 7), 16) / 255;
+  const mx = Math.max(r, g, b), d = mx - Math.min(r, g, b);
+  let H = 0;
+  if (d) { H = mx === r ? ((g - b) / d) % 6 : mx === g ? (b - r) / d + 2 : (r - g) / d + 4; H *= 60; if (H < 0) H += 360; }
+  return [H, mx ? d / mx : 0, mx];
+}
+function hsvToRgb(H, S, V) {
+  const f = n => { const k = (n + H / 60) % 6; return V - V * S * Math.max(0, Math.min(k, 4 - k, 1)); };
+  return [f(5), f(3), f(1)].map(x => Math.round(x * 255));
+}
+const hsvToHex = (H, S, V) => "#" + hsvToRgb(H, S, V).map(x => x.toString(16).padStart(2, "0")).join("");
+
+function colorField(id, label, value, onSet) {
+  const swatch = el("button", { type: "button", class: "swatch", "aria-label": `${label}: open the colour wheel`, "aria-expanded": "false" });
+  const txt = el("input", { type: "text", id, value: String(value ?? ""), autocomplete: "off", spellcheck: "false" });
+  const box = el("div", { class: "colorbox" }, swatch, txt);
+  const paint = () => { swatch.style.background = hexOf(txt.value) || "repeating-linear-gradient(45deg,#fff 0 4px,#e5e5e5 4px 8px)"; };
+  let pop = null;
+  txt.addEventListener("input", () => { paint(); onSet(txt.value); if (pop) pop.sync(txt.value); });
+  swatch.addEventListener("click", () => {
+    if (pop) { pop.close(); return; }
+    swatch.setAttribute("aria-expanded", "true");
+    pop = openWheel(box, hexOf(txt.value) || "#808080",
+      hex => { txt.value = hex; paint(); onSet(hex); },
+      () => { pop = null; swatch.setAttribute("aria-expanded", "false"); });
+  });
+  paint();
+  return el("div", { class: "row" }, el("label", { for: id }, label), box);
+}
+function openWheel(anchor, hex, onPick, onClose) {
+  document.querySelector(".wheelpop")?.__close?.();
+  let [H, S, V] = hexToHsv(hex);
+  const size = 176, R0 = size / 2 - 2;
+  const cv = el("canvas", { width: size, height: size, class: "wheel", title: "Click or drag to pick a colour" });
+  const vr = el("input", { type: "range", min: 0, max: 100, value: Math.round(V * 100), "aria-label": "Brightness" });
+  const pick = hx => { [H, S, V] = hexToHsv(hx); vr.value = Math.round(V * 100); draw(); onPick(hx); };
+  const sw = el("div", { class: "swatches" }, SWATCHES.map(c => el("button", { type: "button", style: `background:${c}`, title: c, "aria-label": `Use ${c}`, onclick: () => pick(c) })));
+  const grad = el("div", { class: "vgrad", "aria-hidden": "true" });
+  const pop = el("div", { class: "wheelpop", role: "dialog", "aria-label": "Colour wheel" }, cv,
+    el("label", { class: "vlabel" }, "Brightness", grad, vr), sw);
+  anchor.append(pop);
+  const g = cv.getContext("2d"), img = g.createImageData(size, size);
+  for (let y = 0; y < size; y++) for (let x = 0; x < size; x++) {      // hue around, saturation outwards
+    const dx = x - size / 2, dy = y - size / 2, r = Math.hypot(dx, dy), i = (y * size + x) * 4;
+    if (r > R0 + 1) continue;
+    const [cr, cg, cb] = hsvToRgb((Math.atan2(-dy, dx) * 180 / Math.PI + 360) % 360, Math.min(1, r / R0), 1);
+    img.data[i] = cr; img.data[i + 1] = cg; img.data[i + 2] = cb; img.data[i + 3] = r > R0 ? Math.round(255 * (R0 + 1 - r)) : 255;
+  }
+  function draw() {
+    g.clearRect(0, 0, size, size);
+    g.putImageData(img, 0, 0);
+    grad.style.background = `linear-gradient(to right, #000, ${hsvToHex(H, S, 1)})`;
+    const a = H * Math.PI / 180, mx = size / 2 + Math.cos(a) * S * R0, my = size / 2 - Math.sin(a) * S * R0;
+    g.beginPath(); g.arc(mx, my, 6, 0, 2 * Math.PI); g.lineWidth = 2.5; g.strokeStyle = "#fff"; g.stroke();
+    g.beginPath(); g.arc(mx, my, 7.5, 0, 2 * Math.PI); g.lineWidth = 1; g.strokeStyle = "#000"; g.stroke();
+  }
+  const fromPointer = e => {
+    const b = cv.getBoundingClientRect(), dx = (e.clientX - b.left) * size / b.width - size / 2, dy = (e.clientY - b.top) * size / b.height - size / 2;
+    H = (Math.atan2(-dy, dx) * 180 / Math.PI + 360) % 360; S = Math.min(1, Math.hypot(dx, dy) / R0);
+    if (V < 0.35) { V = 1; vr.value = 100; }             // a dark colour: show the picked hue
+    draw(); onPick(hsvToHex(H, S, V));
+  };
+  let down = false;
+  cv.addEventListener("pointerdown", e => { down = true; cv.setPointerCapture(e.pointerId); fromPointer(e); });
+  cv.addEventListener("pointermove", e => { if (down) fromPointer(e); });
+  cv.addEventListener("pointerup", () => { down = false; });
+  vr.addEventListener("input", () => { V = vr.value / 100; draw(); onPick(hsvToHex(H, S, V)); });
+  const outside = e => { if (!anchor.contains(e.target)) close(); };
+  const esc = e => { if (e.key === "Escape") { close(); anchor.querySelector(".swatch")?.focus(); } };
+  function close() {
+    pop.remove(); document.removeEventListener("pointerdown", outside, true); document.removeEventListener("keydown", esc); onClose();
+  }
+  setTimeout(() => { document.addEventListener("pointerdown", outside, true); document.addEventListener("keydown", esc); });
+  pop.__close = close;
+  draw();
+  return { close, sync: v => { const h = hexOf(v); if (h) { [H, S, V] = hexToHsv(h); vr.value = Math.round(V * 100); draw(); } } };
+}
+
 /* ------------------------------------------------------------------ panel */
 const TABS = { standard: [["section", "Section"], ["drawing", "Drawing"]], custom: [["geometry", "Geometry"], ["reinforcement", "Reinforcement"], ["drawing", "Drawing"]] };
 function changed() { persist(); schedule(); }
@@ -1550,7 +1664,8 @@ function renderStd(body) {
   buildForm(body, STD_SPECS[state.stdType], state.std[state.stdType], changed);
 }
 function renderDrawingTab(body) {
-  buildForm(body, STYLE_SPEC, state.style, changed);
+  buildForm(body, STYLE_SPEC, state.style, changed, STYLE_SHOW);
+  body.append(el("p", { class: "hint" }, "Actual diameter: bars and links are drawn and placed at their outer diameter, so the cover is measured to the ribs and the spacing check uses the real gaps. Labels and A_s keep the nominal diameter. Ribbed bars are typically 1.1 to 1.2 × nominal; your supplier's data sheet gives the exact figure."));
   body.append(el("p", { class: "hint" }, "The PDF and SVG are true to the drawing scale when printed at 100 %. The DXF is always 1 unit = 1 mm; text and dimension sizes follow the scale. Dimensions in the DXF are drawn as lines and text."));
 }
 function renderGeo(body) {
@@ -1705,7 +1820,7 @@ function renderPNG(dr) {
       g.lineWidth = st.outline_lw * s * k; g.strokeStyle = "#000"; g.lineJoin = "miter"; g.stroke();
     } else if (p.t === "path") {
       g.beginPath(); trace(expand(p.verts, p.closed), p.closed);
-      g.lineWidth = p.w * k; g.lineCap = "butt"; g.lineJoin = "round"; g.strokeStyle = p.color === "steel" ? st.steel : "#000"; g.stroke();
+      g.lineWidth = p.w * k; g.lineCap = "butt"; g.lineJoin = "round"; g.strokeStyle = colorOf(p, st); g.stroke();
     } else if (p.t === "disc") {
       g.beginPath(); g.arc(X(p.x), Y(p.y), p.r * k, 0, 2 * Math.PI); g.fillStyle = st.steel; g.fill();
     } else if (p.t === "text") {
