@@ -29,6 +29,7 @@
   --font: "IBM Plex Sans", "Segoe UI", system-ui, -apple-system, Roboto, Arial, sans-serif;
 }
 * { box-sizing: border-box; }
+[hidden] { display: none !important; }
 html, body { height: 100%; margin: 0; }
 body { font: 14px/1.45 var(--font); color: var(--ink); background: var(--panel); display: flex; flex-direction: column; }
 button, input, select, textarea { font: inherit; color: inherit; }
@@ -110,8 +111,53 @@ ol.items .sum { color: var(--muted); overflow: hidden; text-overflow: ellipsis; 
 
 /* stage */
 .stage { position: relative; min-height: 0; background: var(--paper); display: flex; flex-direction: column; }
+.canvas { position: relative; flex: 1; min-height: 0; display: flex; }
 #view { flex: 1; width: 100%; min-height: 0; display: block; cursor: grab; touch-action: none; user-select: none; }
+#view[data-tool="measure"], #view[data-tool="text"] { cursor: crosshair; }
+#view[data-tool="edit"], #view[data-tool="erase"] { cursor: default; }
 #view.drag { cursor: grabbing; }
+#view .hitL, #view .hitT { pointer-events: none; }
+#view[data-tool="edit"] .hitL, #view[data-tool="erase"] .hitL { pointer-events: stroke; cursor: pointer; }
+#view[data-tool="edit"] .hitT, #view[data-tool="erase"] .hitT { pointer-events: all; cursor: pointer; }
+#dwg text.hot { fill: var(--accent); }
+#dwg path.hot { stroke: var(--accent); }
+#view[data-tool="erase"] #dwg text.hot { fill: var(--err); }
+#view[data-tool="erase"] #dwg path.hot { stroke: var(--err); }
+#ovl .pv path { stroke: var(--accent); }
+#ovl .pv text { fill: var(--accent); }
+.tools { position: absolute; top: 12px; left: 12px; display: flex; flex-wrap: wrap; gap: 3px; align-items: center; background: rgba(255,255,255,.94); border: 1px solid var(--rule); border-radius: 8px; padding: 3px; max-width: calc(100% - 170px); }
+.tools button { display: inline-flex; align-items: center; gap: 6px; height: 30px; padding: 0 9px; border: 1px solid transparent; background: none; border-radius: 6px; cursor: pointer; color: var(--ink); font-size: 13px; }
+.tools button svg { width: 16px; height: 16px; fill: none; stroke: currentColor; stroke-width: 1.4; stroke-linecap: round; stroke-linejoin: round; flex: none; }
+.tools button:hover:not(:disabled) { background: var(--panel); }
+.tools button[aria-pressed="true"], .tools button[aria-pressed="true"]:hover { background: var(--accent); color: var(--accent-ink); }
+.tools button:disabled { opacity: .4; cursor: default; }
+.tools .sep { width: 1px; height: 20px; background: var(--rule); margin: 0 3px; }
+#tRestore { color: var(--accent); }
+.toolopts { position: absolute; top: 56px; left: 12px; display: flex; gap: 10px; align-items: center; background: rgba(255,255,255,.94); border: 1px solid var(--rule); border-radius: 8px; padding: 4px 8px; font-size: 13px; }
+.toolopts select { width: auto; padding: 3px 6px; }
+#drawOpts { flex-wrap: wrap; max-width: calc(100% - 24px); }
+.segs { display: inline-flex; border: 1px solid var(--rule); border-radius: 6px; overflow: hidden; }
+.segs button { border: 0; background: #fff; padding: 4px 9px; cursor: pointer; font-size: 13px; }
+.segs button + button { border-left: 1px solid var(--rule); }
+.segs button[aria-pressed="true"] { background: var(--accent); color: var(--accent-ink); }
+.swatchrow { display: inline-flex; gap: 4px; align-items: center; position: relative; }
+.swatchrow > button { width: 22px; height: 22px; border-radius: 50%; border: 1px solid rgba(0,0,0,.25); cursor: pointer; padding: 0; }
+.swatchrow > button[aria-pressed="true"] { box-shadow: 0 0 0 2px #fff, 0 0 0 4px var(--accent); }
+.swatchrow > button.more { background: conic-gradient(red, yellow, lime, cyan, blue, magenta, red); }
+.swatchrow .wheelpop { left: 0; right: auto; }
+#dwg circle.hot { fill: var(--accent); }
+#view[data-tool="erase"] #dwg circle.hot { fill: var(--err); }
+#view[data-tool="draw"] { cursor: crosshair; }
+.toolopts label { display: inline-flex; gap: 6px; align-items: center; }
+.hintpill { position: absolute; left: 50%; bottom: 14px; transform: translateX(-50%); background: var(--ink); color: #eef2f5; padding: 7px 14px; border-radius: 20px; font-size: 13px; max-width: calc(100% - 32px); text-align: center; pointer-events: none; }
+.hintpill b { color: #fff; font-weight: 600; font-variant-numeric: tabular-nums; }
+.textpop { position: absolute; z-index: 15; width: 280px; background: #fff; border: 1px solid var(--rule); border-radius: 10px; padding: 12px; box-shadow: 0 10px 28px rgba(20, 30, 40, .2); }
+.textpop label { display: block; font-size: 12.5px; color: var(--muted); margin-bottom: 4px; }
+.popbtns { display: flex; gap: 6px; margin-top: 8px; }
+.btn.primary { background: var(--accent); border-color: var(--accent); color: var(--accent-ink); }
+.btn.primary:hover:not(:disabled) { background: #2169b8; color: var(--accent-ink); }
+.pophint { margin: 8px 0 0; font-size: 12px; color: var(--muted); }
+.pophint:empty { display: none; }
 .zoom { position: absolute; top: 12px; right: 12px; display: flex; gap: 4px; }
 .zoom button { width: 34px; height: 30px; border: 1px solid var(--rule); background: rgba(255,255,255,.92); border-radius: 6px; cursor: pointer; font-size: 15px; }
 .zoom button.fit { width: auto; padding: 0 10px; font-size: 13px; }
@@ -133,6 +179,12 @@ dialog p, dialog li { max-width: 68ch; }
 dialog ul { padding-left: 20px; margin: 4px 0; }
 dialog code { background: var(--panel-2); padding: 1px 4px; border-radius: 3px; font-size: 13px; }
 
+@media (max-width: 700px) {
+  .tools button span { display: none; }
+  .tools button { padding: 0 7px; }
+  .tools .sep { display: none; }
+  .tools { max-width: calc(100% - 150px); }
+}
 @media (max-width: 900px) {
   html, body { height: auto; }
   main { display: flex; flex-direction: column; }
@@ -176,7 +228,8 @@ dialog code { background: var(--panel-2); padding: 1px 4px; border-radius: 3px; 
     <div class="body" id="body"></div>
   </aside>
   <section class="stage" id="stage">
-    <svg id="view" xmlns="http://www.w3.org/2000/svg" preserveAspectRatio="xMidYMid meet" aria-label="Section preview">
+    <div class="canvas" id="canvas">
+    <svg id="view" xmlns="http://www.w3.org/2000/svg" preserveAspectRatio="xMidYMid meet" aria-label="Section preview" data-tool="pan">
       <defs>
         <pattern id="gMinor" patternUnits="userSpaceOnUse" width="100" height="100">
           <path d="M100 0 L0 0 0 100" fill="none" stroke="var(--grid-minor)" stroke-width="1" vector-effect="non-scaling-stroke"/>
@@ -188,11 +241,55 @@ dialog code { background: var(--panel-2); padding: 1px 4px; border-radius: 3px; 
       </defs>
       <rect x="-1000000" y="-1000000" width="2000000" height="2000000" fill="url(#gMajor)"/>
       <g id="dwg" font-family="Helvetica, Arial, 'Liberation Sans', sans-serif" style="white-space: pre"></g>
+      <g id="ovl" font-family="Helvetica, Arial, 'Liberation Sans', sans-serif" pointer-events="none"></g>
     </svg>
+    <div class="tools" role="toolbar" aria-label="Drawing tools">
+      <button type="button" data-tool="pan" title="Move the view (H). Drag to pan, scroll to zoom."><svg viewBox="0 0 16 16" aria-hidden="true"><path d="M8 1.5v13M1.5 8h13M8 1.5 6 3.5M8 1.5l2 2M8 14.5l-2-2M8 14.5l2-2M1.5 8l2-2M1.5 8l2 2M14.5 8l-2-2M14.5 8l-2 2"/></svg><span>Move</span></button>
+      <button type="button" data-tool="measure" title="Add a measurement (M): click two points, then place the dimension line"><svg viewBox="0 0 16 16" aria-hidden="true"><rect x="1" y="3.5" width="9" height="9" rx="2"/><circle cx="5.5" cy="8" r="1.8"/><path d="M10 10.5h5v2h-5M12 10.5v1M14 10.5v1"/></svg><span>Measure</span></button>
+      <button type="button" data-tool="text" title="Add text (T): click where the text should go"><svg viewBox="0 0 16 16" aria-hidden="true"><path d="M3 3.5h10M8 3.5v10M6 13.5h4"/></svg><span>Add text</span></button>
+      <button type="button" data-tool="edit" title="Change a text or dimension value (E)"><svg viewBox="0 0 16 16" aria-hidden="true"><path d="M11 2.5l2.5 2.5-8 8H3v-2.5z"/></svg><span>Edit text</span></button>
+      <button type="button" data-tool="draw" title="Draw with pencil, marker, arrows, circles and numbered tags (D)"><svg viewBox="0 0 16 16" aria-hidden="true"><path d="M1.5 13.5c1.5-.5 2-2.5 3.5-2.5s1.5 2 3 2 2-3 3.5-4M10.5 3.5l2 2L8 10l-2.5.5.5-2.5z"/></svg><span>Draw</span></button>
+      <button type="button" data-tool="erase" title="Remove a text, label, dimension or drawing (R)"><svg viewBox="0 0 16 16" aria-hidden="true"><path d="M6.5 14h7.5M2.5 10.5l6.5-6.5 4.5 4.5-5.5 5.5H6z"/></svg><span>Remove</span></button>
+      <span class="sep" aria-hidden="true"></span>
+      <button type="button" id="tUndo" title="Undo the last drawing change (Ctrl+Z)" disabled><svg viewBox="0 0 16 16" aria-hidden="true"><path d="M5 3.5 2 6.5l3 3M2 6.5h7.5a4 4 0 010 8H7"/></svg><span>Undo</span></button>
+      <button type="button" id="tRestore" hidden title="Bring back all removed or changed predefined text on this section"></button>
+    </div>
+    <div class="toolopts" id="measureOpts" hidden>
+      <select id="mDir" aria-label="Measurement direction">
+        <option value="auto">Horizontal or vertical</option>
+        <option value="a">Along the two points</option>
+      </select>
+      <label><input type="checkbox" id="mSnap" checked> Snap to points</label>
+    </div>
+    <div class="toolopts" id="drawOpts" hidden>
+      <div class="segs" role="group" aria-label="Drawing style">
+        <button type="button" data-draw="pencil" title="Thin freehand line">Pencil</button>
+        <button type="button" data-draw="marker" title="Broad see-through marker for colouring areas">Marker</button>
+        <button type="button" data-draw="arrow" title="Drag from the tail to the point">Arrow</button>
+        <button type="button" data-draw="circle" title="Drag from the centre outwards">Circle</button>
+        <button type="button" data-draw="tag" title="Numbered marker: click to place">Tag</button>
+      </div>
+      <div class="swatchrow" id="drawColors" role="group" aria-label="Colour"></div>
+      <select id="drawWidth" aria-label="Line width">
+        <option value="s">Thin</option><option value="m">Medium</option><option value="l">Thick</option>
+      </select>
+    </div>
     <div class="zoom">
       <button type="button" class="fit" id="zFit" title="Fit the drawing">Fit</button>
       <button type="button" id="zIn" title="Zoom in" aria-label="Zoom in">+</button>
       <button type="button" id="zOut" title="Zoom out" aria-label="Zoom out">−</button>
+    </div>
+    <div class="hintpill" id="hint" hidden></div>
+    <form class="textpop" id="pop" hidden>
+      <label for="popIn" id="popLabel">Text</label>
+      <input type="text" id="popIn" autocomplete="off" spellcheck="false">
+      <div class="popbtns">
+        <button type="button" class="btn primary" id="popOk">Save</button>
+        <button type="button" class="btn" id="popDel">Remove</button>
+        <button type="button" class="btn" id="popCancel">Cancel</button>
+      </div>
+      <p class="pophint" id="popHint"></p>
+    </form>
     </div>
     <div class="status" id="status" aria-live="polite"></div>
   </section>
@@ -211,6 +308,16 @@ dialog code { background: var(--panel-2); padding: 1px 4px; border-radius: 3px; 
     <li><b>Perimeter</b>: bars around the outline or the openings, with a bar in every corner.</li>
     <li><b>Link</b>: follows the outline, the part inside a rectangle or polygon, or runs around an opening. Links are numbered in list order; bars with <em>Inside link no.</em> stay inside that link.</li>
     <li><b>Row, circle pattern, single bar, line bar, dimension, text</b>: free placement.</li>
+  </ul>
+  <h4>Measuring and editing the drawing</h4>
+  <ul>
+    <li><b>Measure</b>: click two points, then move the mouse to place the dimension line and click again. Points snap to corners, edges, bar centres, bar faces and link faces; hold Alt to place a point freely. Choose <em>Along the two points</em> for sloping measurements. Esc or right-click cancels.</li>
+    <li><b>Add text</b>: click where the text should go and type it.</li>
+    <li><b>Edit text</b>: click any label, title or dimension to change what it says. For a dimension, an empty text brings back the measured value.</li>
+    <li><b>Draw</b>: <em>Pencil</em> draws thin freehand lines, <em>Marker</em> colours areas with a broad see-through stroke, <em>Arrow</em> and <em>Circle</em> are dragged out, and <em>Tag</em> places numbered markers (1, 2, 3 …) you can refer to in the text. Pick a colour and a width in the bar under the tools.</li>
+    <li><b>Remove</b>: click a label, title, dimension or drawing to take it off the drawing. <em>Restore</em> brings back the predefined ones; <em>Undo</em> reverses the last change.</li>
+    <li>Scroll to zoom in any mode; drag with the middle mouse button (or hold Space) to pan while measuring. Shortcuts: H move, M measure, T text, E edit, D draw, R remove, Ctrl+Z undo.</li>
+    <li>Measurements belong to the section they were drawn on and appear in every export. They stay where you put them, so check them after changing the geometry.</li>
   </ul>
   <h4>Saving and sharing</h4>
   <p>Your work is kept in this browser automatically. <em>Save project</em> downloads a .json file that <em>Open…</em> reads back. <em>Copy link</em> puts the whole section into a link you can send to a colleague.</p>
@@ -232,6 +339,7 @@ const MM2PT = 72 / 25.4, CAP = 0.72;
 const fmt = v => (v === null || v === undefined) ? "" :
   (typeof v === "boolean") ? v : (typeof v === "number") ? String(Math.round(v * 1e6) / 1e6) : String(v);
 const fmt0 = v => String(Math.round(v));
+const fmtLen = v => Math.abs(v - Math.round(v)) < 0.05 ? String(Math.round(v)) : v.toFixed(1);
 function fnum(v, what = "value") {
   if (typeof v === "number" && isFinite(v)) return v;
   const t = String(v ?? "").trim().replace(",", ".");
@@ -302,7 +410,7 @@ const helvW = s => { let w = 0; for (const ch of s) w += HELV[ch] ?? 556; return
 function textPlace(t, s) {
   const hm = t.h * s;
   let ha = t.ha, va = t.va;
-  if (((t.rot % 360) + 360) % 360 === 90) {       // alignment refers to the rotated box
+  if (!t.raw && ((t.rot % 360) + 360) % 360 === 90) {       // alignment refers to the rotated box
     ha = { bottom: "left", center: "center", top: "right" }[t.va];
     va = { right: "bottom", center: "center", left: "top" }[t.ha];
   }
@@ -316,6 +424,27 @@ function textCorners(t, s) {
   return [[u0, -.25 * q.hm], [u0 + q.w, -.25 * q.hm], [u0 + q.w, q.hm * 1.05], [u0, q.hm * 1.05]]
     .map(([u, v]) => [q.bx + u * c - v * sn, q.by + u * sn + v * c]);
 }
+
+/* aligned dimension: dimension line offset `pos` along the left normal of p1 -> p2 */
+function alignedGeo(p1, p2, pos) {
+  const len = dist(p1, p2);
+  if (len < 1e-9) return null;
+  const ux = (p2[0] - p1[0]) / len, uy = (p2[1] - p1[1]) / len, nx = -uy, ny = ux;
+  return { len, ux, uy, nx, ny, A: [p1[0] + nx * pos, p1[1] + ny * pos], B: [p2[0] + nx * pos, p2[1] + ny * pos] };
+}
+
+/* freehand, arrows, circles and tags drawn on top of the section */
+const MARKUP = new Set(["free", "arrow", "circle", "tag"]);
+function tagRadius(it, s) { return Math.max(2.6 * s, helvW(it.txt) * (2.2 * s / CAP) / 2000 + 1.2 * s); }
+function markPts(it, s) {
+  const w = (it.w || 0) / 2;
+  if (it.k === "free") return it.pts.flatMap(([x, y]) => [[x - w, y - w], [x + w, y + w]]);
+  if (it.k === "arrow") return [it.p1, it.p2].flatMap(([x, y]) => [[x - 2 * s, y - 2 * s], [x + 2 * s, y + 2 * s]]);
+  if (it.k === "circle") return [[it.c[0] - it.r - w, it.c[1] - it.r - w], [it.c[0] + it.r + w, it.c[1] + it.r + w]];
+  const R = tagRadius(it, s);
+  return [[it.x - R, it.y - R], [it.x + R, it.y + R]];
+}
+function lightColor(c) { const [r, g, b] = colorRGB(c); return 0.299 * r + 0.587 * g + 0.114 * b > 0.62; }
 
 /* ------------------------------------------------------------------ Drawing */
 class Drawing {
@@ -342,11 +471,41 @@ class Drawing {
   finalize(subtitle = "") {
     if ((this.st.dfac || 1) !== 1) subtitle += `    bars drawn at outer Ø = ${fmt(this.st.dfac)} × nominal`;
     const s = this.st.scale, th = this.st.text_h * s;
+    const hid = new Set(this.st.hidden || []), ov = this.st.overrides || {}, has = k => typeof ov[k] === "string";
+    // user annotations (measurements and text placed on the drawing)
+    for (const a of this.st.annots || []) {
+      if (a.t === "dim") this.items.push({ k: "dim", p1: a.p1, p2: a.p2, o: a.o, pos: a.pos, text: a.text || null, key: "u:" + a.id, user: true });
+      else if (a.t === "text") this.items.push({ k: "text", x: a.x, y: a.y, txt: a.txt, ha: "left", va: "bottom", rot: 0, h: a.size || this.st.text_h, key: "u:" + a.id, user: true });
+      else if (a.t === "free" && Array.isArray(a.pts) && a.pts.length > 1) this.items.push({ k: "free", pts: a.pts, color: a.color, w: a.w * s, op: a.mode === "marker" ? 0.38 : 1, key: "u:" + a.id, user: true });
+      else if (a.t === "arrow") this.items.push({ k: "arrow", p1: a.p1, p2: a.p2, color: a.color, w: a.w * s, key: "u:" + a.id, user: true });
+      else if (a.t === "circle") this.items.push({ k: "circle", c: a.c, r: a.r, color: a.color, w: a.w * s, key: "u:" + a.id, user: true });
+      else if (a.t === "tag") this.items.push({ k: "tag", x: a.x, y: a.y, txt: String(a.txt ?? ""), color: a.color, key: "u:" + a.id, user: true });
+    }
+    // every predefined dimension and text gets a stable key, so it can be removed or re-worded
+    let di = 0, ti = 0;
+    this.items = this.items.filter(it => {
+      if (it.k === "dim" && !it.key) it.key = "dim:" + di++;
+      else if (it.k === "text" && !it.key) it.key = "text:" + ti++;
+      if (!it.key) return true;
+      if (hid.has(it.key)) return false;
+      if (!it.user && has(it.key)) { if (it.k === "dim") it.text = ov[it.key]; else it.txt = ov[it.key]; }
+      return true;
+    });
+    const seen = {};
+    for (const l of this.labels) { seen[l.text] = (seen[l.text] || 0) + 1; l.key = `lbl:${l.text}#${seen[l.text]}`; }
+    this.labels = this.labels.filter(l => !hid.has(l.key));
+    for (const l of this.labels) if (has(l.key)) l.text = ov[l.key];
     let [x0, y0, x1, y1] = this.geomBounds();
     const gap = 12 * s, clearDim = (this.st.text_h + 3) * s;
     let low = y0;
     for (const it of this.items) if (it.k === "dim" && it.o === "v") {
       if (it.pos < x0) x0 = Math.min(x0, it.pos - clearDim); else if (it.pos > x1) x1 = Math.max(x1, it.pos + clearDim);
+    } else if (it.k === "dim" && it.o === "a") {
+      const g = alignedGeo(it.p1, it.p2, it.pos);
+      if (!g) continue;
+      const xs = [g.A[0], g.B[0]];
+      if (Math.max(...xs) > x1) x1 = Math.max(...xs) + clearDim;
+      if (Math.min(...xs) < x0) x0 = Math.min(...xs) - clearDim;
     }
     for (const side of ["right", "left"]) {
       const labs = this.labels.filter(l => l.side === side).sort((a, b) => a.anchor[1] - b.anchor[1]);
@@ -357,15 +516,22 @@ class Drawing {
       for (let i = 0; i < pos.length; i++) pos[i] += shift;
       const sg = side === "right" ? 1 : -1, xt = side === "right" ? x1 + gap : x0 - gap;
       labs.forEach((l, i) => {
-        this.items.push({ k: "line", pts: [l.anchor, [xt - sg * 3 * s, pos[i]], [xt - sg * 0.8 * s, pos[i]]] });
-        this.items.push({ k: "text", x: xt, y: pos[i], txt: l.text, ha: sg > 0 ? "left" : "right", va: "center", rot: 0, h: this.st.text_h });
+        this.items.push({ k: "line", pts: [l.anchor, [xt - sg * 3 * s, pos[i]], [xt - sg * 0.8 * s, pos[i]]], key: l.key });
+        this.items.push({ k: "text", x: xt, y: pos[i], txt: l.text, ha: sg > 0 ? "left" : "right", va: "center", rot: 0, h: this.st.text_h, key: l.key });
       });
       low = Math.min(low, pos[0] - th);
     }
-    for (const it of this.items) if (it.k === "dim" && it.o === "h") low = Math.min(low, it.pos - 2 * s);
+    for (const it of this.items) {
+      if (it.k === "dim" && it.o === "h") low = Math.min(low, it.pos - 2 * s);
+      else if (it.k === "dim" && it.o === "a") { const g = alignedGeo(it.p1, it.p2, it.pos); if (g) low = Math.min(low, g.A[1] - 2 * s, g.B[1] - 2 * s); }
+      else if (it.k === "text" && it.user) low = Math.min(low, it.y - s);
+      else if (MARKUP.has(it.k)) for (const q of markPts(it, s)) low = Math.min(low, q[1] - s);
+    }
     const yt = low - 6 * s, xc = (x0 + x1) / 2;
-    this.items.push({ k: "text", x: xc, y: yt, txt: this.title, ha: "center", va: "top", rot: 0, h: this.st.text_h * 1.4 });
-    this.items.push({ k: "text", x: xc, y: yt - 6 * s, txt: `1:${fmt(this.st.scale)}    ${subtitle}`.trim(), ha: "center", va: "top", rot: 0, h: this.st.text_h });
+    const tTitle = has("title") ? ov.title : this.title, tSub = has("subtitle") ? ov.subtitle : `1:${fmt(this.st.scale)}    ${subtitle}`.trim();
+    if (!hid.has("title")) this.items.push({ k: "text", x: xc, y: yt, txt: tTitle, ha: "center", va: "top", rot: 0, h: this.st.text_h * 1.4, key: "title" });
+    const ys = hid.has("title") ? yt : yt - 6 * s;
+    if (!hid.has("subtitle")) this.items.push({ k: "text", x: xc, y: ys, txt: tSub, ha: "center", va: "top", rot: 0, h: this.st.text_h, key: "subtitle" });
   }
   bounds() {
     const s = this.st.scale, xs = [], ys = [];
@@ -376,11 +542,15 @@ class Drawing {
       else if (it.k === "bar") { P(it.x - it.d, it.y - it.d); P(it.x + it.d, it.y + it.d); }
       else if (it.k === "line") it.pts.forEach(([x, y]) => P(x, y));
       else if (it.k === "text") textCorners(it, s).forEach(([x, y]) => P(x, y));
+      else if (MARKUP.has(it.k)) markPts(it, s).forEach(([x, y]) => P(x, y));
       else if (it.k === "dim") {
         P(...it.p1); P(...it.p2);
         const m = (2.5 + this.st.text_h + 1.0) * s;
         if (it.o === "h") { ys.push(it.pos - m, it.pos + m); }
-        else {
+        else if (it.o === "a") {
+          const g = alignedGeo(it.p1, it.p2, it.pos);
+          if (g) for (const Q of [g.A, g.B]) for (const f of [-m, m]) P(Q[0] + g.nx * f, Q[1] + g.ny * f);
+        } else {
           xs.push(it.pos - m, it.pos + m);
         }
       }
@@ -1108,49 +1278,89 @@ function buildCustom(cs, st) {
 /* ------------------------------------------------------------ render list */
 function primitives(dr) {
   const st = dr.st, s = st.scale, out = [], thin = st.thin_lw * s;
-  const L = (a, b, w = thin) => out.push({ t: "path", verts: v3([a, b]), closed: false, w, color: "ink", layer: "DIMS", z: 4 });
+  let key = null;
+  const fits = (txt, len) => helvW(txt) * (st.text_h * s / CAP) / 1000 + 2 * s <= len;
+  const outside = txt => helvW(txt) * (st.text_h * s / CAP) / 2000 + 1.5 * s;
+  const L = (a, b, w = thin) => out.push({ t: "path", verts: v3([a, b]), closed: false, w, color: "ink", layer: "DIMS", z: 4, key });
   for (const it of dr.items) {
+    key = it.key || null;
     if (it.k === "outline") out.push({ t: "area", rings: it.rings, layer: "CONCRETE", z: 1 });
     else if (it.k === "steel") out.push({ t: "path", verts: it.verts, closed: it.closed, w: it.d, color: it.layer === "LINKS" ? "link" : "steel", layer: it.layer, z: 2 });
     else if (it.k === "bar") out.push({ t: "disc", x: it.x, y: it.y, r: it.d / 2, layer: "BARS", z: 3 });
-    else if (it.k === "line") out.push({ t: "path", verts: v3(it.pts), closed: false, w: thin, color: "ink", layer: "TEXT", z: 4 });
+    else if (it.k === "line") out.push({ t: "path", verts: v3(it.pts), closed: false, w: thin, color: "ink", layer: "TEXT", z: 4, key });
     else if (it.k === "text") out.push({ t: "text", ...it, layer: "TEXT", z: 5 });
+    else if (it.k === "free") out.push({ t: "path", verts: v3(it.pts), closed: false, w: it.w, color: it.color, op: it.op, cap: "round", layer: "MARKUP", z: 6, key });
+    else if (it.k === "circle") out.push({ t: "path", verts: [[it.c[0] - it.r, it.c[1], 1], [it.c[0] + it.r, it.c[1], 1]], closed: true, w: it.w, color: it.color, layer: "MARKUP", z: 6, key });
+    else if (it.k === "arrow") {
+      const len = dist(it.p1, it.p2);
+      if (len < 1e-9) continue;
+      const ux = (it.p2[0] - it.p1[0]) / len, uy = (it.p2[1] - it.p1[1]) / len;
+      const hl = Math.min(0.6 * len, 2.8 * s + 2.5 * it.w), hw = 0.42 * hl, bx = it.p2[0] - ux * hl, by = it.p2[1] - uy * hl;
+      out.push({ t: "path", verts: v3([it.p1, [bx + ux * 0.2 * hl, by + uy * 0.2 * hl]]), closed: false, w: it.w, color: it.color, cap: "round", layer: "MARKUP", z: 6, key });
+      out.push({ t: "poly", pts: [it.p2, [bx - uy * hw, by + ux * hw], [bx + uy * hw, by - ux * hw]], fill: it.color, layer: "MARKUP", z: 6, key });
+    } else if (it.k === "tag") {
+      out.push({ t: "disc", x: it.x, y: it.y, r: tagRadius(it, s), fill: it.color, layer: "MARKUP", z: 6, key });
+      out.push({ t: "text", x: it.x, y: it.y, txt: it.txt, ha: "center", va: "center", rot: 0, h: 2.2, fill: lightColor(it.color) ? "#000" : "#fff", layer: "MARKUP", z: 7, key });
+    }
     else if (it.k === "dim") {
       const { p1, p2, o, pos } = it, gap = s, over = 1.5 * s, tk = s;
       if (o === "h") {
         for (const [x, y] of [p1, p2]) { const sg = pos > y ? 1 : -1; L([x, y + sg * gap], [x, pos + sg * over]); }
         L([p1[0], pos], [p2[0], pos]);
         for (const x of [p1[0], p2[0]]) L([x - tk, pos - tk], [x + tk, pos + tk], thin * 2.5);
-        out.push({ t: "text", x: (p1[0] + p2[0]) / 2, y: pos + 0.8 * s, txt: it.text || fmt0(Math.abs(p2[0] - p1[0])), ha: "center", va: "bottom", rot: 0, h: st.text_h, layer: "DIMS", z: 5 });
+        const len = Math.abs(p2[0] - p1[0]), txt = it.text || fmtLen(len);
+        const tx = fits(txt, len) ? (p1[0] + p2[0]) / 2 : Math.max(p1[0], p2[0]) + outside(txt);
+        out.push({ t: "text", x: tx, y: pos + 0.8 * s, txt, ha: "center", va: "bottom", rot: 0, h: st.text_h, layer: "DIMS", z: 5, key });
+      } else if (o === "a") {
+        const g = alignedGeo(p1, p2, pos);
+        if (!g) continue;
+        const sg = pos >= 0 ? 1 : -1;
+        for (const [q, e] of [[p1, g.A], [p2, g.B]]) L([q[0] + g.nx * sg * gap, q[1] + g.ny * sg * gap], [e[0] + g.nx * sg * over, e[1] + g.ny * sg * over]);
+        L(g.A, g.B);
+        const tx = (g.ux + g.nx) * Math.SQRT1_2 * tk, ty = (g.uy + g.ny) * Math.SQRT1_2 * tk;
+        for (const Q of [g.A, g.B]) L([Q[0] - tx, Q[1] - ty], [Q[0] + tx, Q[1] + ty], thin * 2.5);
+        let th = Math.atan2(g.uy, g.ux) * 180 / Math.PI;
+        if (th > 90.001) th -= 180; else if (th <= -89.999) th += 180;
+        const a = th * Math.PI / 180, upx = -Math.sin(a), upy = Math.cos(a);
+        const txt = it.text || fmtLen(g.len), sh = fits(txt, g.len) ? 0 : g.len / 2 + outside(txt);
+        out.push({ t: "text", x: (g.A[0] + g.B[0]) / 2 + g.ux * sh + upx * 0.8 * s, y: (g.A[1] + g.B[1]) / 2 + g.uy * sh + upy * 0.8 * s, txt, ha: "center", va: "bottom", rot: th, raw: true, h: st.text_h, layer: "DIMS", z: 5, key });
       } else {
         for (const [x, y] of [p1, p2]) { const sg = pos > x ? 1 : -1; L([x + sg * gap, y], [pos + sg * over, y]); }
         L([pos, p1[1]], [pos, p2[1]]);
         for (const y of [p1[1], p2[1]]) L([pos - tk, y - tk], [pos + tk, y + tk], thin * 2.5);
-        out.push({ t: "text", x: pos - 0.8 * s, y: (p1[1] + p2[1]) / 2, txt: it.text || fmt0(Math.abs(p2[1] - p1[1])), ha: "right", va: "center", rot: 90, h: st.text_h, layer: "DIMS", z: 5 });
+        const len = Math.abs(p2[1] - p1[1]), txt = it.text || fmtLen(len);
+        const ty = fits(txt, len) ? (p1[1] + p2[1]) / 2 : Math.max(p1[1], p2[1]) + outside(txt);
+        out.push({ t: "text", x: pos - 0.8 * s, y: ty, txt, ha: "right", va: "center", rot: 90, h: st.text_h, layer: "DIMS", z: 5, key });
       }
     }
   }
   return out.map((p, i) => [p, i]).sort((a, b) => a[0].z - b[0].z || a[1] - b[1]).map(a => a[0]);
 }
 
-const colorOf = (p, st) => ({ steel: st.steel, link: st.link_color || st.steel, ink: "#000" })[p.color] || "#000";
+const colorOf = (p, st) => ({ steel: st.steel, link: st.link_color || st.steel, ink: "#000" })[p.color] || p.color || "#000";
 
 /* ------------------------------------------------------------------ SVG */
 const N2 = v => String(Math.round(v * 100) / 100);
 const escXml = s => String(s).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
 const pathD = (pts, closed) => "M" + pts.map(([x, y]) => `${N2(x)} ${N2(-y)}`).join("L") + (closed ? "Z" : "");
-function svgBody(dr, prims) {
-  const st = dr.st, s = st.scale; let o = "";
+function svgBody(dr, prims, interactive = false) {
+  const st = dr.st, s = st.scale; let o = "", hits = "";
   for (const p of prims) {
+    const dk = interactive && p.key ? ` data-key="${escXml(p.key)}"` : "";
+    if (dk && p.t === "path") hits += `<path class="hitL"${dk} d="${pathD(expand(p.verts, p.closed), p.closed)}" fill="none" stroke="transparent" stroke-width="${N2(Math.max(p.w, 2.2 * s))}"/>`;
+    if (dk && p.t === "disc") hits += `<circle class="hitT"${dk} cx="${N2(p.x)}" cy="${N2(-p.y)}" r="${N2(p.r)}" fill="transparent"/>`;
+    if (dk && p.t === "poly") hits += `<path class="hitT"${dk} d="${pathD(p.pts, true)}" fill="transparent"/>`;
+    if (dk && p.t === "text") hits += `<path class="hitT"${dk} d="${pathD(textCorners(p, s), true)}" fill="transparent" stroke="none"/>`;
     if (p.t === "area") o += `<path d="${p.rings.map(r => pathD(expand(r, true), true)).join("")}" fill="${escXml(st.concrete_fill)}" fill-rule="evenodd" stroke="#000" stroke-width="${N2(st.outline_lw * s)}" stroke-linejoin="miter"/>`;
-    else if (p.t === "path") o += `<path d="${pathD(expand(p.verts, p.closed), p.closed)}" fill="none" stroke="${escXml(colorOf(p, st))}" stroke-width="${N2(p.w)}" stroke-linejoin="round" stroke-linecap="butt"/>`;
-    else if (p.t === "disc") o += `<circle cx="${N2(p.x)}" cy="${N2(-p.y)}" r="${N2(p.r)}" fill="${escXml(st.steel)}"/>`;
+    else if (p.t === "path") o += `<path d="${pathD(expand(p.verts, p.closed), p.closed)}" fill="none" stroke="${escXml(colorOf(p, st))}" stroke-width="${N2(p.w)}" stroke-linejoin="round" stroke-linecap="${p.cap || "butt"}"${p.op < 1 ? ` stroke-opacity="${p.op}"` : ""}${dk}/>`;
+    else if (p.t === "disc") o += `<circle cx="${N2(p.x)}" cy="${N2(-p.y)}" r="${N2(p.r)}" fill="${escXml(p.fill || st.steel)}"${dk}/>`;
+    else if (p.t === "poly") o += `<path d="${pathD(p.pts, true)}" fill="${escXml(p.fill)}" stroke="none"${dk}/>`;
     else if (p.t === "text") {
       const q = textPlace(p, s), anchor = { left: "start", center: "middle", right: "end" }[q.ha];
-      o += `<text x="${N2(q.bx)}" y="${N2(-q.by)}" font-size="${N2(q.size)}" text-anchor="${anchor}" fill="#000"${p.rot ? ` transform="rotate(${-p.rot} ${N2(q.bx)} ${N2(-q.by)})"` : ""}>${escXml(p.txt).replace(/ {2,}/g, m => "\u00A0".repeat(m.length))}</text>`;
+      o += `<text${dk} x="${N2(q.bx)}" y="${N2(-q.by)}" font-size="${N2(q.size)}" text-anchor="${anchor}" fill="${escXml(p.fill || "#000")}"${p.rot ? ` transform="rotate(${-p.rot} ${N2(q.bx)} ${N2(-q.by)})"` : ""}>${escXml(p.txt).replace(/ {2,}/g, m => "\u00A0".repeat(m.length))}</text>`;
     }
   }
-  return o;
+  return o + hits;
 }
 function exportSVG(dr) {
   const [x0, y0, x1, y1] = dr.bounds(), s = dr.st.scale, W = x1 - x0, H = y1 - y0;
@@ -1191,20 +1401,23 @@ function exportPDF(dr) {
   const X = x => F((x - x0) * k), Y = y => F((y - y0) * k), rgb = c => colorRGB(c).map(v => v.toFixed(3)).join(" ");
   const poly = (pts, closed) => pts.map(([x, y], i) => `${X(x)} ${Y(y)} ${i ? "l" : "m"}`).join("\n") + (closed ? "\nh" : "");
   let c = "1 1 1 rg 0 0 " + F(W) + " " + F(H) + " re f\n";
+  const gstates = new Map();
+  const alpha = op => { if (!gstates.has(op)) gstates.set(op, "GS" + gstates.size); return `/${gstates.get(op)} gs`; };
   for (const p of primitives(dr)) {
     if (p.t === "area") c += `${rgb(st.concrete_fill)} rg 0 0 0 RG ${F(st.outline_lw * s * k)} w 0 j\n${p.rings.map(r => poly(expand(r, true), true)).join("\n")}\nB*\n`;
-    else if (p.t === "path") c += `${rgb(colorOf(p, st))} RG ${F(p.w * k)} w 0 J 1 j\n${poly(expand(p.verts, p.closed), p.closed)}\nS\n`;
+    else if (p.t === "path") c += `${p.op < 1 ? "q " + alpha(p.op) + " " : ""}${rgb(colorOf(p, st))} RG ${F(p.w * k)} w ${p.cap === "round" ? 1 : 0} J 1 j\n${poly(expand(p.verts, p.closed), p.closed)}\nS${p.op < 1 ? " Q" : ""}\n`;
+    else if (p.t === "poly") c += `${rgb(p.fill)} rg\n${poly(p.pts, true)}\nf\n`;
     else if (p.t === "disc") {
       const r = p.r, m = 0.5523 * r, cx = p.x, cy = p.y;
-      c += `${rgb(st.steel)} rg\n${X(cx + r)} ${Y(cy)} m\n${X(cx + r)} ${Y(cy + m)} ${X(cx + m)} ${Y(cy + r)} ${X(cx)} ${Y(cy + r)} c\n${X(cx - m)} ${Y(cy + r)} ${X(cx - r)} ${Y(cy + m)} ${X(cx - r)} ${Y(cy)} c\n${X(cx - r)} ${Y(cy - m)} ${X(cx - m)} ${Y(cy - r)} ${X(cx)} ${Y(cy - r)} c\n${X(cx + m)} ${Y(cy - r)} ${X(cx + r)} ${Y(cy - m)} ${X(cx + r)} ${Y(cy)} c\nf\n`;
+      c += `${rgb(p.fill || st.steel)} rg\n${X(cx + r)} ${Y(cy)} m\n${X(cx + r)} ${Y(cy + m)} ${X(cx + m)} ${Y(cy + r)} ${X(cx)} ${Y(cy + r)} c\n${X(cx - m)} ${Y(cy + r)} ${X(cx - r)} ${Y(cy + m)} ${X(cx - r)} ${Y(cy)} c\n${X(cx - r)} ${Y(cy - m)} ${X(cx - m)} ${Y(cy - r)} ${X(cx)} ${Y(cy - r)} c\n${X(cx + m)} ${Y(cy - r)} ${X(cx + r)} ${Y(cy - m)} ${X(cx + r)} ${Y(cy)} c\nf\n`;
     } else if (p.t === "text") {
       const q = textPlace(p, s), u0 = -q.w * { left: 0, center: .5, right: 1 }[q.ha], ca = Math.cos(q.a), sa = Math.sin(q.a);
       const sx = q.bx + u0 * ca, sy = q.by + u0 * sa;
-      c += `0 0 0 rg BT /F1 ${F(q.size * k)} Tf ${ca.toFixed(4)} ${sa.toFixed(4)} ${(-sa).toFixed(4)} ${ca.toFixed(4)} ${X(sx)} ${Y(sy)} Tm (${pdfStr(p.txt)}) Tj ET\n`;
+      c += `${rgb(p.fill || "#000")} rg BT /F1 ${F(q.size * k)} Tf ${ca.toFixed(4)} ${sa.toFixed(4)} ${(-sa).toFixed(4)} ${ca.toFixed(4)} ${X(sx)} ${Y(sy)} Tm (${pdfStr(p.txt)}) Tj ET\n`;
     }
   }
   const objs = [null, "<< /Type /Catalog /Pages 2 0 R >>", "<< /Type /Pages /Kids [3 0 R] /Count 1 >>",
-    `<< /Type /Page /Parent 2 0 R /MediaBox [0 0 ${F(W)} ${F(H)}] /Resources << /Font << /F1 4 0 R >> >> /Contents 5 0 R >>`,
+    `<< /Type /Page /Parent 2 0 R /MediaBox [0 0 ${F(W)} ${F(H)}] /Resources << /Font << /F1 4 0 R >>${gstates.size ? " /ExtGState << " + [...gstates].map(([op, n]) => `/${n} << /CA ${op} /ca ${op} >>`).join(" ") + " >>" : ""} >> /Contents 5 0 R >>`,
     "<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica /Encoding /WinAnsiEncoding >>",
     `<< /Length ${c.length} >>\nstream\n${c}\nendstream`,
     `<< /Title (${pdfStr(dr.title)}) /Producer (Rebar Sketch Studio) >>`];
@@ -1232,7 +1445,9 @@ function exportDXF(dr) {
   const st = dr.st, s = st.scale, L = [];
   const g = (code, val) => L.push(String(code), String(val));
   const F = v => (Math.round(v * 1e4) / 1e4).toString();
-  const layers = [["CONCRETE", 7], ["LINKS", 1], ["BARS", 1], ["TEXT", 7], ["DIMS", 8]];
+  const layers = [["CONCRETE", 7], ["LINKS", 1], ["BARS", 1], ["TEXT", 7], ["DIMS", 8], ["MARKUP", 1]];
+  const ACI = [[1, 255, 0, 0], [2, 255, 255, 0], [3, 0, 255, 0], [4, 0, 255, 255], [5, 0, 0, 255], [6, 255, 0, 255], [7, 0, 0, 0], [8, 128, 128, 128], [9, 192, 192, 192], [30, 255, 127, 0], [150, 0, 76, 153], [94, 0, 127, 0], [14, 165, 0, 0]];
+  const aci = c => { const [r, gg, b] = colorRGB(c).map(v => v * 255); return ACI.reduce((m, a) => { const d = (a[1] - r) ** 2 + (a[2] - gg) ** 2 + (a[3] - b) ** 2; return d < m[1] ? [a[0], d] : m; }, [7, Infinity])[0]; };
   g(0, "SECTION"); g(2, "HEADER"); g(9, "$ACADVER"); g(1, "AC1009"); g(9, "$INSUNITS"); g(70, 4); g(0, "ENDSEC");
   g(0, "SECTION"); g(2, "TABLES");
   g(0, "TABLE"); g(2, "LTYPE"); g(70, 1); g(0, "LTYPE"); g(2, "CONTINUOUS"); g(70, 0); g(3, "Solid line"); g(72, 65); g(73, 0); g(40, "0.0"); g(0, "ENDTAB");
@@ -1240,16 +1455,21 @@ function exportDXF(dr) {
   for (const [n, col] of layers) { g(0, "LAYER"); g(2, n); g(70, 0); g(62, col); g(6, "CONTINUOUS"); }
   g(0, "ENDTAB"); g(0, "ENDSEC");
   g(0, "SECTION"); g(2, "ENTITIES");
-  const pline = (layer, verts, closed, w) => {
-    g(0, "POLYLINE"); g(8, layer); g(66, 1); g(10, "0.0"); g(20, "0.0"); g(30, "0.0"); g(70, closed ? 1 : 0);
+  const pline = (layer, verts, closed, w, col) => {
+    g(0, "POLYLINE"); g(8, layer); if (col) g(62, col); g(66, 1); g(10, "0.0"); g(20, "0.0"); g(30, "0.0"); g(70, closed ? 1 : 0);
     if (w > 0) { g(40, F(w)); g(41, F(w)); }
     for (const [x, y, b] of verts) { g(0, "VERTEX"); g(8, layer); g(10, F(x)); g(20, F(y)); g(30, "0.0"); if (b) g(42, F(b)); }
     g(0, "SEQEND"); g(8, layer);
   };
   for (const p of primitives(dr)) {
     if (p.t === "area") p.rings.forEach(r => pline("CONCRETE", r, true, 0));
-    else if (p.t === "path") pline(p.layer, p.verts, p.closed, p.color !== "ink" ? p.w : 0);
-    else if (p.t === "disc") { const r = p.r; pline("BARS", [[p.x - r / 2, p.y, 1], [p.x + r / 2, p.y, 1]], true, r); }
+    else if (p.t === "path") pline(p.layer, p.verts, p.closed, p.color !== "ink" ? p.w : 0, p.layer === "MARKUP" ? aci(p.color) : 0);
+    else if (p.t === "disc") { const r = p.r; pline(p.layer, [[p.x - r / 2, p.y, 1], [p.x + r / 2, p.y, 1]], true, r, p.fill ? aci(p.fill) : 0); }
+    else if (p.t === "poly") {
+      const [a, b, c3] = p.pts;
+      g(0, "SOLID"); g(8, p.layer); g(62, aci(p.fill));
+      [a, b, c3, c3].forEach(([x, y], i) => { g(10 + i, F(x)); g(20 + i, F(y)); g(30 + i, "0.0"); });
+    }
     else if (p.t === "text") {
       const q = textPlace(p, s), hj = { left: 0, center: 1, right: 2 }[q.ha];
       g(0, "TEXT"); g(8, p.layer); g(10, F(q.bx)); g(20, F(q.by)); g(30, "0.0"); g(40, F(q.hm)); g(1, dxfText(p.txt));
@@ -1453,7 +1673,7 @@ function defaultState() {
   return { mode: "standard", stdType: STD_TYPES[0],
     std: Object.fromEntries(STD_TYPES.map(t => [t, specDefaults(STD_SPECS[t])])),
     custom: defaultCustom(), style: specDefaults(STYLE_SPEC),
-    tab: { standard: "section", custom: "geometry" }, sel: null };
+    tab: { standard: "section", custom: "geometry" }, sel: null, annot: {}, draw: { mode: "pencil", color: "#b3261e", width: "m" } };
 }
 function mergeState(data) {
   const s = defaultState();
@@ -1468,12 +1688,19 @@ function mergeState(data) {
   }
   Object.assign(s.style, data.style || {});
   if (data.tab) Object.assign(s.tab, data.tab);
+  if (data.draw && typeof data.draw === "object") Object.assign(s.draw, data.draw);
+  if (data.annot && typeof data.annot === "object") for (const [k, a] of Object.entries(data.annot)) {
+    if (!a || typeof a !== "object") continue;
+    s.annot[k] = { items: Array.isArray(a.items) ? a.items.filter(x => x && ["dim", "text", "free", "arrow", "circle", "tag"].includes(x.t)) : [],
+      hidden: Array.isArray(a.hidden) ? a.hidden.map(String) : [], over: a.over && typeof a.over === "object" ? a.over : {} };
+  }
   return s;
 }
 let state = defaultState();
 try { const raw = localStorage.getItem(LS_KEY); if (raw) state = mergeState(JSON.parse(raw)); } catch (e) { /* private mode etc. */ }
 state.sel = null;
 let saveJob = null;
+addEventListener("pagehide", () => { clearTimeout(saveJob); try { localStorage.setItem(LS_KEY, JSON.stringify({ ...state, sel: null })); } catch (e) { /* ignore */ } });
 function persist() {
   clearTimeout(saveJob);
   saveJob = setTimeout(() => { try { localStorage.setItem(LS_KEY, JSON.stringify({ ...state, sel: null })); } catch (e) { /* ignore */ } }, 400);
@@ -1646,6 +1873,7 @@ function openWheel(anchor, hex, onPick, onClose) {
 const TABS = { standard: [["section", "Section"], ["drawing", "Drawing"]], custom: [["geometry", "Geometry"], ["reinforcement", "Reinforcement"], ["drawing", "Drawing"]] };
 function changed() { persist(); schedule(); }
 function renderAll() {
+  if (typeof cancelMeasure === "function") { meas = null; ink = null; closePop(true); }
   document.querySelectorAll(".seg button").forEach(b => b.setAttribute("aria-pressed", String(b.dataset.mode === state.mode)));
   const tabs = $("#tabs"); tabs.replaceChildren();
   let cur = state.tab[state.mode];
@@ -1665,6 +1893,13 @@ function renderStd(body) {
 }
 function renderDrawingTab(body) {
   buildForm(body, STYLE_SPEC, state.style, changed, STYLE_SHOW);
+  const A = annotOf(false), nAdd = A ? A.items.length : 0, nMod = A ? A.hidden.length + Object.keys(A.over).length : 0;
+  body.append(el("h3", {}, "Measurements and text on this section"),
+    el("p", { class: "hint" }, nAdd || nMod ? `${nAdd} added, ${nMod} predefined text${nMod === 1 ? "" : "s"} removed or changed. Use the tools above the drawing to add more.`
+      : "Use Measure, Add text, Edit text and Remove above the drawing to annotate it."),
+    el("div", { class: "toolbar" },
+      el("button", { type: "button", class: "btn", disabled: !nAdd, onclick: () => { if (confirm("Delete all measurements and text you added to this section?")) { editAnnot(a => { a.items = []; }); renderAll(); } } }, "Delete added"),
+      el("button", { type: "button", class: "btn", disabled: !nMod, onclick: () => { editAnnot(a => { a.hidden = []; a.over = {}; }); renderAll(); } }, "Restore predefined text")));
   body.append(el("p", { class: "hint" }, "Actual diameter: bars and links are drawn and placed at their outer diameter, so the cover is measured to the ribs and the spacing check uses the real gaps. Labels and A_s keep the nominal diameter. Ribbed bars are typically 1.1 to 1.2 × nominal; your supplier's data sheet gives the exact figure."));
   body.append(el("p", { class: "hint" }, "The PDF and SVG are true to the drawing scale when printed at 100 %. The DXF is always 1 unit = 1 mm; text and dimension sizes follow the scale. Dimensions in the DXF are drawn as lines and text."));
 }
@@ -1719,6 +1954,8 @@ function stdToCustom() {
   try { cs = stdSection(state.stdType, state.std[state.stdType]).toCustom(); }
   catch (e) { toast(e instanceof UserError ? `Cannot copy: ${e.message}` : `Cannot copy: ${e}`); return; }
   if (state.custom.items.length && !confirm("Replace the current custom section with this one?")) return;
+  const fromAnnot = state.annot["std:" + state.stdType];
+  if (fromAnnot) state.annot.custom = clone(fromAnnot); else delete state.annot.custom;
   state.custom = cs; state.mode = "custom"; state.tab.custom = "reinforcement"; state.sel = null;
   persist(); renderAll();
 }
@@ -1730,31 +1967,50 @@ function setVB(v) { vb = v; svg.setAttribute("viewBox", `${v.x} ${v.y} ${v.w} ${
 function fitView() {
   if (!current) return;
   const [x0, y0, x1, y1] = current.bounds();
-  const r = (svg.clientWidth || 800) / (svg.clientHeight || 600);
+  const W = svg.clientWidth || 800, Hs = svg.clientHeight || 600;
+  const top = W > 700 ? 56 : 100, bot = 44, avail = Math.max(80, Hs - top - bot);   // keep clear of the toolbars
   let w = (x1 - x0) * 1.06, h = (y1 - y0) * 1.06;
-  if (w / h < r) w = h * r; else h = w / r;
-  const cx = (x0 + x1) / 2, cy = -(y0 + y1) / 2;
-  setVB({ x: cx - w / 2, y: cy - h / 2, w, h });
+  if (w / h < W / avail) w = h * W / avail; else h = w * avail / W;
+  const k = w / W, cx = (x0 + x1) / 2, cy = -(y0 + y1) / 2;
+  setVB({ x: cx - w / 2, y: cy - (top + avail / 2) * k, w, h: Hs * k });
   userView = false;
+  if (typeof drawOverlay === "function" && current) try { drawOverlay(); } catch (e) { /* tools not ready yet */ }
 }
 function zoomAt(f, px, py) {
   if (!vb) return;
   if (px === undefined) { px = vb.x + vb.w / 2; py = vb.y + vb.h / 2; }
   setVB({ x: px - (px - vb.x) * f, y: py - (py - vb.y) * f, w: vb.w * f, h: vb.h * f });
   userView = true;
+  drawOverlay();
 }
 function toSvgPoint(e) { const p = svg.createSVGPoint(); p.x = e.clientX; p.y = e.clientY; return p.matrixTransform(svg.getScreenCTM().inverse()); }
 svg.addEventListener("wheel", e => { e.preventDefault(); const p = toSvgPoint(e); zoomAt(Math.exp(Math.max(-60, Math.min(60, e.deltaY)) * 0.004), p.x, p.y); }, { passive: false });
 let drag = null;
-svg.addEventListener("pointerdown", e => { if (!vb) return; drag = { x: e.clientX, y: e.clientY }; svg.setPointerCapture(e.pointerId); svg.classList.add("drag"); });
+svg.addEventListener("contextmenu", e => e.preventDefault());
+svg.addEventListener("mousedown", e => { if (e.button === 1) e.preventDefault(); });   // no auto-scroll on middle click
+svg.addEventListener("pointerdown", e => {
+  if (!vb) return;
+  closePop(true);                                   // clicking elsewhere keeps what was typed
+  if (e.button === 1 || (e.button === 0 && (tool === "pan" || spaceDown))) {
+    drag = { x: e.clientX, y: e.clientY }; svg.setPointerCapture(e.pointerId); svg.classList.add("drag"); e.preventDefault(); return;
+  }
+  if (e.button === 2) { cancelMeasure(); return; }
+  if (e.button === 0) toolDown(e);
+});
 svg.addEventListener("pointermove", e => {
-  if (!drag) return;
-  const k = vb.w / svg.clientWidth;
-  setVB({ ...vb, x: vb.x - (e.clientX - drag.x) * k, y: vb.y - (e.clientY - drag.y) * k });
-  drag = { x: e.clientX, y: e.clientY }; userView = true;
+  if (drag) {
+    const k = vb.w / svg.clientWidth;
+    setVB({ ...vb, x: vb.x - (e.clientX - drag.x) * k, y: vb.y - (e.clientY - drag.y) * k });
+    drag = { x: e.clientX, y: e.clientY }; userView = true;
+    drawOverlay();
+    return;
+  }
+  toolMove(e);
 });
 const endDrag = () => { drag = null; svg.classList.remove("drag"); };
-svg.addEventListener("pointerup", endDrag); svg.addEventListener("pointercancel", endDrag);
+svg.addEventListener("pointerup", e => { endDrag(); if (ink) finishInk(e); });
+svg.addEventListener("pointercancel", () => { endDrag(); ink = null; drawOverlay(); });
+svg.addEventListener("pointerleave", () => { if (!drag) { cursor = null; setHot(null); drawOverlay(); } });
 $("#zFit").onclick = fitView; $("#zIn").onclick = () => zoomAt(1 / 1.3); $("#zOut").onclick = () => zoomAt(1.3);
 new ResizeObserver(() => { if (!userView) fitView(); else if (vb) { const r = svg.clientWidth / svg.clientHeight; setVB({ ...vb, h: vb.w / r }); } }).observe(svg);
 
@@ -1769,6 +2025,8 @@ function setGrid(scale) {
 }
 function buildDrawing() {
   const st = makeStyle(state.style, isColor);
+  const A = annotOf(false);
+  if (A) Object.assign(st, { annots: A.items, hidden: A.hidden, overrides: A.over });
   if (state.mode === "standard") return stdSection(state.stdType, state.std[state.stdType]).build(st);
   return buildCustom(state.custom, st);
 }
@@ -1788,12 +2046,374 @@ function redraw() {
   stage.classList.remove("stale");
   current = dr;
   setGrid(dr.st.scale);
-  dwg.innerHTML = svgBody(dr, primitives(dr));
+  dwg.innerHTML = svgBody(dr, primitives(dr), true);
+  snapCache = null; hotKey = null;
+  refreshToolbar(); drawOverlay();
   const key = dr.bounds().map(v => Math.round(v)).join(",") + state.mode;
   if (!userView || !vb) fitView();
   lastBoundsKey = key;
   status.replaceChildren(el("p", { class: "ok" }, dr.summary()), ...dr.warnings.map(w => el("p", { class: "warn" }, "⚠ " + w)));
 }
+
+/* ------------------------------------------------------------------ drawing tools */
+let tool = "pan", meas = null, ink = null, cursor = null, snapCache = null, hotKey = null, spaceDown = false, popState = null;
+const undoStack = [];
+const secKey = () => state.mode === "custom" ? "custom" : "std:" + state.stdType;
+function annotOf(create = true) {
+  const k = secKey();
+  if (!state.annot) state.annot = {};
+  if (!state.annot[k] && create) state.annot[k] = { items: [], hidden: [], over: {} };
+  return state.annot[k] || null;
+}
+function editAnnot(fn) {
+  const a = annotOf(true);
+  undoStack.push({ key: secKey(), json: JSON.stringify(a) });
+  if (undoStack.length > 100) undoStack.shift();
+  fn(a);
+  persist(); userView = true; redraw();
+  if (state.tab[state.mode] === "drawing") renderAll();
+}
+function undo() {
+  const u = undoStack.pop();
+  if (!u) return;
+  state.annot[u.key] = JSON.parse(u.json);
+  persist(); userView = true;
+  if (u.key !== secKey()) toast("Undid a change on another section.");
+  redraw();
+  if ((state.tab[state.mode] || "") === "drawing") renderAll();
+}
+const newId = () => Date.now().toString(36) + Math.random().toString(36).slice(2, 6);
+const pxSize = () => vb && svg.clientWidth ? vb.w / svg.clientWidth : 1;
+function modelAt(e) { const p = toSvgPoint(e); return [p.x, -p.y]; }
+
+function setTool(t) {
+  closePop(true);
+  tool = t; meas = null; ink = null; setHot(null);
+  svg.dataset.tool = t;
+  document.querySelectorAll(".tools [data-tool]").forEach(b => b.setAttribute("aria-pressed", String(b.dataset.tool === t)));
+  $("#measureOpts").hidden = t !== "measure";
+  $("#drawOpts").hidden = t !== "draw";
+  if (t === "draw") renderDrawOpts();
+  drawOverlay();
+}
+const DRAW_COLORS = ["#1a1a1a", "#b3261e", "#1b5fa8", "#2d6a3e", "#e07b00", "#f2c300"];
+const DRAW_W = { pencil: { s: 0.25, m: 0.5, l: 1 }, marker: { s: 2.5, m: 4, l: 6 } };
+const drawWidth = () => (DRAW_W[state.draw.mode] || DRAW_W.pencil)[state.draw.width] || 0.5;
+function renderDrawOpts() {
+  document.querySelectorAll("[data-draw]").forEach(b => b.setAttribute("aria-pressed", String(b.dataset.draw === state.draw.mode)));
+  $("#drawWidth").value = state.draw.width;
+  $("#drawWidth").disabled = state.draw.mode === "tag";
+  const row = $("#drawColors"), cur = (hexOf(state.draw.color) || "").toLowerCase();
+  row.replaceChildren(...DRAW_COLORS.map(c => el("button", { type: "button", style: `background:${c}`, title: c, "aria-label": `Colour ${c}`,
+    "aria-pressed": String(c === cur), onclick: () => { state.draw.color = c; persist(); renderDrawOpts(); } })));
+  const more = el("button", { type: "button", class: "more", title: "Other colour", "aria-label": "Pick another colour", "aria-pressed": String(!DRAW_COLORS.includes(cur)) });
+  if (!DRAW_COLORS.includes(cur)) more.style.boxShadow = `0 0 0 2px #fff, 0 0 0 4px var(--accent), inset 0 0 0 5px ${cur}`;
+  let wheel = null;
+  more.onclick = () => {
+    if (wheel) { wheel.close(); return; }
+    wheel = openWheel(row, cur || "#b3261e", hx => { state.draw.color = hx; persist(); more.style.boxShadow = `0 0 0 2px #fff, 0 0 0 4px var(--accent), inset 0 0 0 5px ${hx}`; row.querySelectorAll(":scope > button:not(.more)").forEach(b => b.setAttribute("aria-pressed", "false")); }, () => { wheel = null; });
+  };
+  row.append(more);
+  updateHint();
+}
+document.querySelectorAll("[data-draw]").forEach(b => b.addEventListener("click", () => { state.draw.mode = b.dataset.draw; persist(); renderDrawOpts(); }));
+$("#drawWidth").addEventListener("change", e => { state.draw.width = e.target.value; persist(); });
+document.querySelectorAll(".tools [data-tool]").forEach(b => b.addEventListener("click", () => setTool(b.dataset.tool)));
+$("#tUndo").onclick = undo;
+$("#tRestore").onclick = () => editAnnot(a => { a.hidden = []; a.over = {}; });
+function refreshToolbar() {
+  $("#tUndo").disabled = !undoStack.length;
+  const A = annotOf(false), n = A ? A.hidden.length + Object.keys(A.over).length : 0;
+  const r = $("#tRestore");
+  r.hidden = !n;
+  r.textContent = `Restore text (${n})`;
+}
+function cancelMeasure() { meas = null; drawOverlay(); }
+
+/* snapping */
+function snapTargets() {
+  if (snapCache) return snapCache;
+  const pts = [], segs = [];
+  if (current) for (const it of current.items) {
+    if (it.k === "bar") {
+      pts.push({ x: it.x, y: it.y, kind: "bar centre" });
+      const r = it.d / 2;
+      for (const [dx, dy] of [[r, 0], [-r, 0], [0, r], [0, -r]]) pts.push({ x: it.x + dx, y: it.y + dy, kind: "bar face" });
+    } else if (it.k === "outline") {
+      for (const ring of it.rings) {
+        for (const v of ring) pts.push({ x: v[0], y: v[1], kind: "corner" });
+        const e = expand(ring, true);
+        e.forEach((a, i) => segs.push({ a, b: e[(i + 1) % e.length], w: 0, kind: "edge" }));
+      }
+    } else if (it.k === "steel") {
+      const e = expand(it.verts, it.closed);
+      for (let i = 0; i < e.length - (it.closed ? 0 : 1); i++) segs.push({ a: e[i], b: e[(i + 1) % e.length], w: it.d, kind: it.layer === "LINKS" ? "link face" : "bar face" });
+    } else if (it.k === "dim") {
+      pts.push({ x: it.p1[0], y: it.p1[1], kind: "dimension end" }, { x: it.p2[0], y: it.p2[1], kind: "dimension end" });
+    }
+  }
+  return (snapCache = { pts, segs });
+}
+function snapAt(m, e) {
+  if (!$("#mSnap").checked || e.altKey) return { x: m[0], y: m[1], kind: null };
+  const r = 12 * pxSize(), T = snapTargets();
+  let best = null, bd = r;
+  for (const p of T.pts) { const d = Math.hypot(p.x - m[0], p.y - m[1]); if (d < bd) { bd = d; best = p; } }
+  if (best) return best;
+  bd = r;
+  for (const sg of T.segs) {
+    const [ax, ay] = sg.a, [bx, by] = sg.b, vx = bx - ax, vy = by - ay, L2 = vx * vx + vy * vy;
+    const t = L2 ? Math.max(0, Math.min(1, ((m[0] - ax) * vx + (m[1] - ay) * vy) / L2)) : 0;
+    let qx = ax + vx * t, qy = ay + vy * t, d = Math.hypot(m[0] - qx, m[1] - qy);
+    if (sg.w) {                                   // snap to the face of a link or bar nearest the pointer
+      if (d < 1e-9) continue;
+      const f = sg.w / 2 / d; qx += (m[0] - qx) * f; qy += (m[1] - qy) * f; d = Math.abs(d - sg.w / 2);
+    }
+    if (d < bd) { bd = d; best = { x: qx, y: qy, kind: sg.kind }; }
+  }
+  return best || { x: m[0], y: m[1], kind: null };
+}
+
+/* measurement geometry */
+function dimFrom(p1, p2, c) {
+  if ($("#mDir").value === "a") {
+    const g = alignedGeo(p1, p2, 0);
+    return g ? { o: "a", pos: (c[0] - p1[0]) * g.nx + (c[1] - p1[1]) * g.ny } : null;
+  }
+  const xmin = Math.min(p1[0], p2[0]), xmax = Math.max(p1[0], p2[0]), ymin = Math.min(p1[1], p2[1]), ymax = Math.max(p1[1], p2[1]);
+  const ox = c[0] < xmin ? xmin - c[0] : c[0] > xmax ? c[0] - xmax : 0;
+  const oy = c[1] < ymin ? ymin - c[1] : c[1] > ymax ? c[1] - ymax : 0;
+  let o = (ox === 0 && oy === 0) ? (xmax - xmin >= ymax - ymin ? "h" : "v") : (oy >= ox ? "h" : "v");
+  if (o === "h" && xmax - xmin < 0.01) o = "v";
+  if (o === "v" && ymax - ymin < 0.01) o = "h";
+  return { o, pos: o === "h" ? c[1] : c[0] };
+}
+
+/* overlay: snap marker, rubber band, live dimension */
+function drawOverlay() {
+  const ovl = $("#ovl");
+  if (!current || !vb) { ovl.innerHTML = ""; return; }
+  const k = pxSize(), acc = "#1b5fa8";
+  let o = "";
+  if (tool === "measure" && meas && meas.p2 && cursor) {
+    const d = dimFrom(meas.p1, meas.p2, cursor.raw);
+    if (d) {
+      const fake = { st: current.st, items: [{ k: "dim", p1: meas.p1, p2: meas.p2, o: d.o, pos: d.pos, text: null }] };
+      o += `<g class="pv" opacity=".9">${svgBody(fake, primitives(fake))}</g>`;
+    }
+  } else if (tool === "measure" && meas && cursor) {
+    o += `<path d="M${meas.p1[0]} ${-meas.p1[1]}L${cursor.x} ${-cursor.y}" stroke="${acc}" stroke-width="${1.5 * k}" stroke-dasharray="${6 * k} ${4 * k}" fill="none"/>`;
+  }
+  if (tool === "draw" && ink) {
+    const a = inkItem();
+    if (a) o += svgBody({ st: current.st }, primitives({ st: current.st, items: markupItems(a, current.st.scale) }));
+  }
+  if (tool === "measure" && meas) o += marker(meas.p1[0], meas.p1[1], "start", k);
+  if (tool === "measure" && meas && meas.p2) o += marker(meas.p2[0], meas.p2[1], "start", k);
+  if ((tool === "measure" || tool === "text") && cursor && cursor.kind) {
+    o += marker(cursor.x, cursor.y, cursor.kind, k);
+    o += `<text x="${cursor.x + 10 * k}" y="${-cursor.y - 10 * k}" font-size="${11 * k}" fill="${acc}" stroke="#fff" stroke-width="${3 * k}" paint-order="stroke">${cursor.kind}</text>`;
+  }
+  ovl.innerHTML = o;
+  updateHint();
+}
+function marker(x, y, kind, k) {
+  const r = 5 * k, sw = 1.6 * k, acc = "#1b5fa8", Y = -y;
+  if (kind === "start") return `<circle cx="${x}" cy="${Y}" r="${3 * k}" fill="${acc}"/>`;
+  if (kind === "corner" || kind === "dimension end") return `<rect x="${x - r}" y="${Y - r}" width="${2 * r}" height="${2 * r}" fill="none" stroke="${acc}" stroke-width="${sw}"/>`;
+  if (kind === "bar centre") return `<circle cx="${x}" cy="${Y}" r="${r}" fill="none" stroke="${acc}" stroke-width="${sw}"/><path d="M${x - r} ${Y}H${x + r}M${x} ${Y - r}V${Y + r}" stroke="${acc}" stroke-width="${sw}"/>`;
+  if (kind === "edge") return `<path d="M${x - r} ${Y - r}L${x + r} ${Y + r}M${x - r} ${Y + r}L${x + r} ${Y - r}" stroke="${acc}" stroke-width="${sw}"/>`;
+  return `<path d="M${x} ${Y - r}L${x + r} ${Y}L${x} ${Y + r}L${x - r} ${Y}Z" fill="none" stroke="${acc}" stroke-width="${sw}"/>`;
+}
+function updateHint() {
+  const h = $("#hint");
+  let msg = "";
+  if (tool === "measure") {
+    if (!meas) msg = "Click the first point · it snaps to corners, edges and bars (hold Alt to place freely)";
+    else if (!meas.p2) {
+      if (cursor) {
+        const dx = cursor.x - meas.p1[0], dy = cursor.y - meas.p1[1];
+        msg = `Click the second point · distance <b>${fmtLen(Math.hypot(dx, dy))} mm</b> (Δx ${fmtLen(Math.abs(dx))}, Δy ${fmtLen(Math.abs(dy))})`;
+      } else msg = "Click the second point.";
+    } else msg = "Move to place the dimension line, then click. Esc cancels.";
+  } else if (tool === "text") msg = "Click where the text should go.";
+  else if (tool === "edit") msg = "Click a label, title or dimension to change its text.";
+  else if (tool === "erase") msg = "Click a label, dimension or drawing to remove it. Undo or Restore brings it back.";
+  else if (tool === "draw") msg = {
+    pencil: "Drag to draw a line.", marker: "Drag to colour an area with a see-through marker.",
+    arrow: "Drag from the tail to the point of the arrow.", circle: "Drag from the centre outwards.",
+    tag: `Click to place tag ${nextTag()}. Edit text changes its number or text.` }[state.draw.mode] || "";
+  h.hidden = !msg || !!popState;
+  h.innerHTML = msg;
+}
+
+/* picking predefined and added texts */
+function keyAt(e) { const t = e.target.closest && e.target.closest("[data-key]"); return t ? t.getAttribute("data-key") : null; }
+function setHot(key) {
+  if (key === hotKey) return;
+  dwg.querySelectorAll(".hot").forEach(n => n.classList.remove("hot"));
+  hotKey = key;
+  if (key) dwg.querySelectorAll(`[data-key="${CSS.escape(key)}"]:not(.hitL):not(.hitT)`).forEach(n => n.classList.add("hot"));
+}
+function itemOfKey(key) { return current ? current.items.find(i => i.key === key && (i.k === "text" || i.k === "dim" || i.k === "tag")) : null; }
+function textOfItem(it) {
+  if (!it) return "";
+  if (it.k === "text" || it.k === "tag") return it.txt;
+  if (it.text) return it.text;
+  if (it.o === "h") return fmtLen(Math.abs(it.p2[0] - it.p1[0]));
+  if (it.o === "v") return fmtLen(Math.abs(it.p2[1] - it.p1[1]));
+  return fmtLen(dist(it.p1, it.p2));
+}
+function removeKey(key) {
+  editAnnot(a => {
+    if (key.startsWith("u:")) a.items = a.items.filter(x => "u:" + x.id !== key);
+    else { if (!a.hidden.includes(key)) a.hidden.push(key); delete a.over[key]; }
+  });
+}
+function setTextOfKey(key, val) {
+  const it = itemOfKey(key), isDim = it && it.k === "dim";
+  val = val.trim();
+  editAnnot(a => {
+    if (key.startsWith("u:")) {
+      const x = a.items.find(q => "u:" + q.id === key);
+      if (!x) return;
+      if (x.t === "dim") x.text = val || null;
+      else if (x.t === "text" || x.t === "tag") { if (val) x.txt = val; else a.items = a.items.filter(q => q !== x); }
+    } else if (isDim && !val) delete a.over[key];
+    else if (!val) { a.hidden.push(key); delete a.over[key]; }
+    else a.over[key] = val;
+  });
+}
+
+const rd = v => Math.round(v * 10) / 10;
+function nextTag() {
+  const A = annotOf(false);
+  const nums = A ? A.items.filter(x => x.t === "tag").map(x => parseInt(x.txt, 10)).filter(Number.isFinite) : [];
+  return (nums.length ? Math.max(...nums) : 0) + 1;
+}
+function inkItem() {
+  if (!ink) return null;
+  const base = { id: "preview", color: ink.color, w: ink.w };
+  if (ink.mode === "pencil" || ink.mode === "marker") return ink.pts.length > 1 ? { ...base, t: "free", mode: ink.mode, pts: ink.pts.map(([x, y]) => [rd(x), rd(y)]) } : null;
+  if (ink.mode === "arrow") return dist(ink.start, ink.end) > 3 * pxSize() ? { ...base, t: "arrow", p1: ink.start.map(rd), p2: ink.end.map(rd) } : null;
+  if (ink.mode === "circle") { const r = dist(ink.start, ink.end); return r > 3 * pxSize() ? { ...base, t: "circle", c: ink.start.map(rd), r: rd(r) } : null; }
+  return null;
+}
+function markupItems(a, s) {        // same conversion as Drawing.finalize, for the live preview
+  const key = "u:" + a.id;
+  if (a.t === "free") return [{ k: "free", pts: a.pts, color: a.color, w: a.w * s, op: a.mode === "marker" ? 0.38 : 1, key }];
+  if (a.t === "arrow") return [{ k: "arrow", p1: a.p1, p2: a.p2, color: a.color, w: a.w * s, key }];
+  if (a.t === "circle") return [{ k: "circle", c: a.c, r: a.r, color: a.color, w: a.w * s, key }];
+  return [];
+}
+function finishInk() {
+  const a = inkItem();
+  ink = null;
+  if (a) { a.id = newId(); editAnnot(x => x.items.push(a)); } else drawOverlay();
+}
+function toolMove(e) {
+  if (tool === "draw" && ink) {
+    const m = modelAt(e);
+    if (ink.mode === "pencil" || ink.mode === "marker") {
+      if (dist(ink.pts[ink.pts.length - 1], m) > 1.5 * pxSize()) ink.pts.push(m);
+    } else ink.end = m;
+    drawOverlay();
+    return;
+  }
+  if (tool === "measure" || tool === "text") {
+    const m = modelAt(e);
+    const sp = tool === "measure" ? snapAt(m, e) : { x: m[0], y: m[1], kind: null };
+    cursor = { ...sp, raw: m };
+    drawOverlay();
+  } else if (tool === "edit" || tool === "erase") setHot(keyAt(e));
+}
+function toolDown(e) {
+  if (!current) return;
+  if (tool === "measure") {
+    const m = modelAt(e), sp = snapAt(m, e), P = [sp.x, sp.y];
+    cursor = { ...sp, raw: m };
+    if (!meas) meas = { p1: P };
+    else if (!meas.p2) { if (dist(meas.p1, P) > 1e-6) meas.p2 = P; }
+    else {
+      const d = dimFrom(meas.p1, meas.p2, m);
+      const p1 = meas.p1, p2 = meas.p2;
+      meas = null;
+      if (d) editAnnot(a => a.items.push({ id: newId(), t: "dim", p1, p2, o: d.o, pos: Math.round(d.pos * 10) / 10, text: null }));
+    }
+    drawOverlay();
+  } else if (tool === "text") {
+    const m = modelAt(e);
+    openPop(e, "", { title: "New text", hint: "Enter adds it to the drawing.", remove: false,
+      save: v => { if (v.trim()) editAnnot(a => a.items.push({ id: newId(), t: "text", x: Math.round(m[0]), y: Math.round(m[1]), txt: v.trim() })); } });
+  } else if (tool === "draw") {
+    const m = modelAt(e);
+    if (state.draw.mode === "tag") {
+      const n = nextTag();
+      editAnnot(a => a.items.push({ id: newId(), t: "tag", x: rd(m[0]), y: rd(m[1]), txt: String(n), color: state.draw.color }));
+      return;
+    }
+    ink = { mode: state.draw.mode, pts: [m], start: m, end: m, color: state.draw.color, w: drawWidth() };
+    svg.setPointerCapture(e.pointerId);
+    drawOverlay();
+  } else if (tool === "edit") {
+    const key = keyAt(e);
+    if (!key) return;
+    const it = itemOfKey(key), isDim = it && it.k === "dim";
+    if (!it) return;
+    openPop(e, textOfItem(it), { title: isDim ? "Dimension text" : "Text",
+      hint: isDim ? "Leave empty to show the measured length." : "Leave empty to remove it.",
+      save: v => setTextOfKey(key, v), remove: () => removeKey(key) });
+  } else if (tool === "erase") {
+    const key = keyAt(e);
+    if (key) { setHot(null); removeKey(key); }
+  }
+}
+
+/* small text box on the drawing */
+function openPop(e, value, opt) {
+  const pop = $("#pop"), cv = $("#canvas").getBoundingClientRect();
+  popState = opt;
+  opt.initial = value; opt.sk = secKey();
+  $("#popLabel").textContent = opt.title;
+  $("#popHint").textContent = opt.hint || "";
+  $("#popDel").hidden = !opt.remove;
+  pop.hidden = false;
+  const w = pop.offsetWidth, h = pop.offsetHeight;
+  pop.style.left = Math.max(8, Math.min(cv.width - w - 8, e.clientX - cv.left + 12)) + "px";
+  pop.style.top = Math.max(8, Math.min(cv.height - h - 8, e.clientY - cv.top + 12)) + "px";
+  const inp = $("#popIn"); inp.value = value;
+  setTimeout(() => { inp.focus(); inp.select(); });
+  updateHint();
+}
+function closePop(commit = false) {
+  if (!popState) return;
+  const o = popState, v = $("#popIn").value;
+  popState = null; $("#pop").hidden = true; updateHint();
+  if (commit && o.save && o.sk === secKey() && v.trim() !== String(o.initial ?? "").trim()) o.save(v);
+}
+$("#pop").addEventListener("submit", e => { e.preventDefault(); closePop(true); });
+$("#popOk").addEventListener("click", () => closePop(true));
+$("#popIn").addEventListener("keydown", e => { if (e.key === "Enter") { e.preventDefault(); closePop(true); } });
+$("#popDel").onclick = () => { const o = popState; closePop(); o && o.remove && o.remove(); };
+$("#popCancel").onclick = closePop;
+
+/* keyboard */
+const typing = e => /^(INPUT|TEXTAREA|SELECT)$/.test(e.target.tagName) || e.target.isContentEditable;
+document.addEventListener("keydown", e => {
+  if (e.key === "Escape") {
+    if (popState) { closePop(); return; }
+    if (meas) { cancelMeasure(); return; }
+    if (ink) { ink = null; drawOverlay(); return; }
+  }
+  if (typing(e) || document.querySelector("dialog[open]")) return;
+  if ((e.ctrlKey || e.metaKey) && !e.shiftKey && e.key.toLowerCase() === "z") { e.preventDefault(); undo(); return; }
+  if (e.ctrlKey || e.metaKey || e.altKey) return;
+  if (e.key === " " && (e.target === document.body || e.target === svg)) { spaceDown = true; e.preventDefault(); return; }
+  const t = { h: "pan", m: "measure", t: "text", e: "edit", r: "erase", d: "draw" }[e.key.toLowerCase()];
+  if (t) setTool(t);
+});
+document.addEventListener("keyup", e => { if (e.key === " ") spaceDown = false; });
+setTool("pan");
 
 /* ------------------------------------------------------------------ files */
 function download(name, data, type) {
@@ -1820,13 +2440,16 @@ function renderPNG(dr) {
       g.lineWidth = st.outline_lw * s * k; g.strokeStyle = "#000"; g.lineJoin = "miter"; g.stroke();
     } else if (p.t === "path") {
       g.beginPath(); trace(expand(p.verts, p.closed), p.closed);
-      g.lineWidth = p.w * k; g.lineCap = "butt"; g.lineJoin = "round"; g.strokeStyle = colorOf(p, st); g.stroke();
+      g.lineWidth = p.w * k; g.lineCap = p.cap || "butt"; g.lineJoin = "round"; g.strokeStyle = colorOf(p, st);
+      g.globalAlpha = p.op < 1 ? p.op : 1; g.stroke(); g.globalAlpha = 1;
+    } else if (p.t === "poly") {
+      g.beginPath(); trace(p.pts, true); g.fillStyle = p.fill; g.fill();
     } else if (p.t === "disc") {
-      g.beginPath(); g.arc(X(p.x), Y(p.y), p.r * k, 0, 2 * Math.PI); g.fillStyle = st.steel; g.fill();
+      g.beginPath(); g.arc(X(p.x), Y(p.y), p.r * k, 0, 2 * Math.PI); g.fillStyle = p.fill || st.steel; g.fill();
     } else if (p.t === "text") {
       const q = textPlace(p, s);
       g.save(); g.translate(X(q.bx), Y(q.by)); g.rotate(-q.a);
-      g.font = `${q.size * k}px Helvetica, Arial, sans-serif`; g.textAlign = q.ha; g.textBaseline = "alphabetic"; g.fillStyle = "#000";
+      g.font = `${q.size * k}px Helvetica, Arial, sans-serif`; g.textAlign = q.ha; g.textBaseline = "alphabetic"; g.fillStyle = p.fill || "#000";
       g.fillText(p.txt, 0, 0); g.restore();
     }
   }
