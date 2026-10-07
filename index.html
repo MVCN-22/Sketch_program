@@ -131,6 +131,10 @@ fieldset.layers legend { font-weight: 600; font-size: 13.5px; padding: 0; margin
 .toolbar select { width: auto; flex: 1 1 auto; min-width: 0; }
 .toolbar .btn { padding: 5px 9px; flex: none; }
 .toolbar.items-bar { flex-wrap: nowrap; }
+.cnote { border: 1px solid #b9d1ec; background: #eef5fc; border-radius: 8px; padding: 10px 12px; margin: 0 0 12px; font-size: 13px; line-height: 1.4; }
+.cnote p { margin: 0 0 8px; }
+.cnote .row { display: flex; flex-wrap: wrap; gap: 6px; }
+.cnote .btn { padding: 5px 9px; }
 .sectype { display: flex; gap: 8px; align-items: center; margin-bottom: 10px; }
 .sectype select { flex: 1; }
 
@@ -316,10 +320,68 @@ table.anch.pick { margin-bottom: 0; }
 .wk.note .wr { color: var(--muted); }
 .ap-print { display: none; }
 .linkbtn { background: none; border: 0; padding: 0 0 0 6px; color: var(--accent); cursor: pointer; font: inherit; text-decoration: underline; }
+/* SOFiSTiK page */
+body.page-sofi main > aside, body.page-sofi main > .stage, body.page-sofi #expGrp { display: none; }
+.sofpage { grid-template-columns: minmax(320px, 380px) 1fr; }
+.sf-main { display: grid; grid-template-columns: minmax(0, 1fr) minmax(300px, 38%); min-width: 0; min-height: 0; }
+.sf-viewbox { position: relative; min-width: 0; min-height: 0; background: var(--paper); border-right: 1px solid var(--rule); overflow: hidden; }
+#sfView { position: absolute; inset: 0; width: 100%; height: 100%; touch-action: none; cursor: grab; user-select: none; }
+#sfView.picking { cursor: crosshair; }
+#sfView .sf-end, #sfView [data-cut] { cursor: move; }
+.sf-bar { position: absolute; top: 10px; left: 12px; right: 12px; display: flex; gap: 8px; align-items: center; pointer-events: none; }
+.sf-bar > * { pointer-events: auto; }
+.sf-hint { font-size: 12.5px; color: var(--muted); background: rgba(255,255,255,.9); border-radius: 6px; padding: 3px 8px; pointer-events: none !important; line-height: 1.35; min-width: 0; }
+.sf-hint.act { color: #fff; background: #1b4f8a; }
+.seg.light { border-color: var(--rule); background: #fff; flex: none; }
+.sf-bar .btn { flex: none; }
+.seg.light button { color: var(--muted); padding: 4px 14px; }
+.seg.light button[aria-pressed="true"] { background: var(--accent); color: var(--accent-ink); }
+#sfEmpty { position: absolute; inset: 0; display: grid; place-content: center; text-align: center; color: var(--muted); padding: 20px; pointer-events: none; }
+.sofpage.drop .sf-viewbox { outline: 3px dashed var(--accent); outline-offset: -10px; }
+.sf-prev { display: flex; flex-direction: column; min-height: 0; overflow: auto; padding: 12px 16px 24px; background: #fbfcfc; }
+.sf-prevhead { display: flex; gap: 8px; align-items: center; justify-content: space-between; flex-wrap: wrap; }
+.sf-prevhead h2 { font-size: 16px; margin: 0; }
+.sf-chk { font-size: 12.5px; color: var(--muted); display: flex; gap: 5px; align-items: center; cursor: pointer; }
+#sfPrev { width: 100%; height: 340px; flex: none; background: #fff; border: 1px solid var(--rule); border-radius: 6px; margin: 8px 0 10px; }
+#sfPrev .sf-part { cursor: pointer; }
+#sfInfo p { margin: 8px 0 0; font-size: 13px; }
+#sfInfo p.warn, .sf-det p.warn { color: var(--warn); font-size: 12.5px; }
+.sf-file { font-size: 13px; margin: 4px 0 6px; line-height: 1.45; }
+.sf-files { list-style: none; margin: 0 0 8px; padding: 0; border: 1px solid var(--rule); border-radius: 6px; background: #fff; }
+.sf-files li { display: flex; align-items: center; gap: 8px; padding: 4px 4px 4px 10px; font-size: 13px; }
+.sf-files li + li { border-top: 1px solid #edf0f2; }
+.sf-files .nm { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.sf-files .sum { color: var(--muted); font-size: 12px; }
+.sf-files .x { border: 0; background: none; color: var(--muted); font-size: 16px; cursor: pointer; padding: 0 6px; }
+.sf-files .x:hover { color: var(--err); }
+.sf-miss { border: 1px solid #e3c48a; background: #fdf6e8; border-radius: 8px; padding: 8px 12px; margin: 0 0 10px; font-size: 13px; }
+.sf-miss p { margin: 0 0 6px; }
+.sf-groups { display: flex; flex-direction: column; gap: 5px; }
+.sf-grp { display: flex; align-items: center; gap: 7px; font-size: 13px; cursor: pointer; }
+.sf-grp .sw { width: 12px; height: 12px; border-radius: 3px; opacity: .85; flex: none; }
+.sf-grp .sum { color: var(--muted); }
+.sf-warn { margin: 0; padding-left: 18px; font-size: 12.5px; color: var(--warn); }
+.sf-area { border: 1px solid #b9d1ec; background: #eef5fc; border-radius: 8px; padding: 8px 12px; margin: 12px 0 4px; }
+.sf-area .hint { margin: 4px 0 8px; }
+.sf-area .check { margin-top: 4px; }
+.sf-areahead { display: flex; justify-content: space-between; align-items: baseline; }
+ol.items.sf-cuts button { grid-template-columns: 46px 74px 1fr; }
+.sf-det { margin-top: 4px; }
+.sf-det .fgrid { margin-bottom: 8px; }
+@media (max-width: 1150px) {
+  .sf-main { grid-template-columns: 1fr; grid-template-rows: minmax(340px, 1fr) auto; overflow: auto; }
+  .sf-viewbox { border-right: 0; border-bottom: 1px solid var(--rule); min-height: 340px; }
+}
 @media (max-width: 900px) {
+  .anchpage.sofpage { display: grid; grid-template-columns: 290px 1fr; }
   .ap-result { grid-template-columns: 1fr 1fr; }
   .anchpage { display: block; }
   .ap-detail { grid-template-columns: 1fr; }
+}
+@media (max-width: 760px) {
+  .anchpage.sofpage { display: block; overflow: auto; }
+  .sofpage .sf-main { display: block; }
+  .sofpage .sf-viewbox { height: 60vh; }
 }
 @media print {
   body { background: #fff; display: block; height: auto; }
@@ -378,6 +440,7 @@ dialog code { background: var(--panel-2); padding: 1px 4px; border-radius: 3px; 
   <div class="seg" id="pageSeg" role="group" aria-label="Page">
     <button type="button" data-page="sketch" title="The cross-section sketch">Section</button>
     <button type="button" data-page="anch" title="Anchorage and lap lengths for the bars of this section">Anchorage and laps</button>
+    <button type="button" data-page="sofi" title="Read a SOFiSTiK model and cut sections through its structural areas">SOFiSTiK</button>
   </div>
   <div class="spacer"></div>
   <div class="grp hist">
@@ -552,6 +615,27 @@ dialog code { background: var(--panel-2); padding: 1px 4px; border-radius: 3px; 
     </div>
     <div id="apReport" class="ap-print" aria-hidden="true"></div>
   </section>
+  <section class="anchpage sofpage" id="sofPage" hidden aria-label="SOFiSTiK model">
+    <div class="ap-side" id="sfSide"></div>
+    <div class="sf-main">
+      <div class="sf-viewbox">
+        <svg id="sfView" aria-label="The model"></svg>
+        <div class="sf-bar">
+          <div class="seg light" id="sfViewSeg" role="group" aria-label="View"><button type="button" data-v="plan">Plan</button><button type="button" data-v="3d">3D</button></div>
+          <span class="sf-hint" id="sfHint" hidden></span>
+          <span class="spacer"></span>
+          <button type="button" class="btn small" id="sfFit" title="Fit the model (F)">Fit</button>
+        </div>
+        <div id="sfEmpty"><p><b>No model yet.</b><br>Open a SOFiMSHC .dat file in the panel, or drop it here.</p></div>
+      </div>
+      <div class="sf-prev" id="sfPrevBox">
+        <div class="sf-prevhead"><h2 id="sfPrevTitle">Section</h2><label class="sf-chk" title="Show each area's part of the section in its group colour"><input type="checkbox" id="sfStrips"> Show the areas</label></div>
+        <svg id="sfPrev" aria-label="The section"></svg>
+        <div><button type="button" class="btn primary" id="sfOpen" hidden>Draw its bars in the editor</button></div>
+        <div id="sfInfo"></div>
+      </div>
+    </div>
+  </section>
 </main>
 
 <dialog id="guide">
@@ -581,6 +665,7 @@ dialog code { background: var(--panel-2); padding: 1px 4px; border-radius: 3px; 
   <p>Pick a type and fill in the fields. Layer tables take one row per layer, from the outer face inwards; <em>gap</em> is the clear distance to the layer before it (blank = the minimum spacing). <em>Edit as custom</em> copies the section, reinforcement included, into the custom editor as a starting point.</p>
   <h4>Custom sections</h4>
   <ul>
+    <li><b>One custom section</b> is kept while you work on standard sections. Coming back from a different standard section, a note offers to keep it, start blank or copy that standard section instead. <em>New section or shape…</em> on the Geometry tab starts a new section from a template, copies any standard section, or changes only the shape and keeps the bars. Undo brings the previous section back.</li>
     <li><b>Outline</b>: one vertex per line, <code>x, y</code>. Add an angle for an arc to the next vertex (<code>0, 300, 180</code> is a half circle), and <code>brk</code> to draw the next edge as a break line. Pasting from Excel works.</li>
     <li><b>Openings</b>: <code>rect x y w h</code>, <code>circle cx cy D</code> or <code>poly x1 y1 x2 y2 …</code>.</li>
     <li><b>Layer</b>: bars parallel to a face. Bottom and top give horizontal layers, left and right vertical ones. With a blank offset, layers from the same face stack inwards at the minimum spacing.</li>
@@ -603,6 +688,19 @@ dialog code { background: var(--panel-2); padding: 1px 4px; border-radius: 3px; 
     <li><b>Remove</b>: click a label, title, dimension or drawing to take it off the drawing. <em>Restore</em> brings back the predefined ones; <em>Undo</em> reverses the last change.</li>
     <li>Scroll to zoom in any mode; drag with the middle mouse button (or hold Space) to pan while measuring. Shortcuts: H move, M measure, T text, E edit, D draw, B rebar, C cut, R remove, F fit the drawing, Ctrl+Z undo, Ctrl+Y redo.</li>
     <li>Measurements belong to the section they were drawn on and appear in every export. They stay where you put them, so check them after changing the geometry.</li>
+  </ul>
+  <h4>SOFiSTiK models</h4>
+  <p><em>SOFiSTiK</em> in the header opens a page of its own for cutting sections out of a 3D model.</p>
+  <ul>
+    <li><b>.dat files</b>: the Teddy input with the structural points, lines and areas (SPT, SLN with SLNB, SAR with SARB) and SYST for the direction of gravity. Open the main file together with the files it includes (pick several at once, or add them afterwards); <code>#include Geometry.dat</code> is then read from the file you opened, and the page lists any included file that is missing. Comments, <code>;</code>, LET#/STO# variables (also from TEMPLATE blocks), LOOP and IF, #define with $(…) and #define blocks, and units such as <code>300[mm]</code> are understood. Records of other programs (AQUA, SOFILOAD, ASE …) are skipped, and so are items the page does not need. A model built in SOFiPLUS can be written to a .dat with <em>Export to DAT</em> or <code>EXPO</code>.</li>
+    <li><b>SAF files</b> (.xlsx): SOFiSTiK's SAF export writes the model as it is in the database, so it works whatever way the input was written. The 2D members (StructuralSurfaceMember with their nodes, thickness and system plane, and their openings) are read; their layers become the groups. This is the safest route for models with geometry the .dat reader cannot follow, for example points given relative to an axis.</li>
+    <li>Beams (lines with a cross-section) are not part of the cuts.</li>
+    <li><b>Units</b>: coordinates are taken in m and the thickness T is guessed from its values (m or mm), unless the file gives a unit. Check the size shown under the file name, and change them under <em>Units and direction</em> if needed. Up is taken from GDIR.</li>
+    <li><b>The views</b>: <em>Plan</em> shows the areas from above, coloured by group; <em>3D</em> can be turned by dragging. Scroll to zoom, drag to pan. Click an area to see its number, group, thickness and side, to leave it out of the cuts, or to put its thickness on the other side of its surface (QREF ABOV or BELO). Groups can be left out of all cuts.</li>
+    <li><b>Cuts</b>: <em>Draw a cut on the plan</em> and click two points across the structure (they snap to the corners of the areas; Shift keeps the line square to x or y). The cut is vertical and only reaches between the two points; the arrows show the direction it is seen in, and <em>Reverse</em> turns it round. Drag its ends or the line to move it, or type the coordinates. <em>Add a level cut</em> makes a horizontal cut, for walls and columns.</li>
+    <li><b>The section</b>: every area the cut passes through gives a strip of its thickness, with ends that follow the area's edges; curved and warped areas are cut as surfaces. Areas modelled at their mid-surfaces leave notches where they meet; <em>Close the corners where areas meet</em> fills them. The strips are joined into one outline, and enclosed spaces, such as the cell of a box girder, become openings. If the cut has separate parts, choose the one to use (or click it in the picture).</li>
+    <li><b>Bars</b>: <em>Draw its bars in the editor</em> opens the section in the custom editor with its 0, 0 at its lowest left corner, and sets a drawing scale to suit its size. Each section keeps its own bars, texts and anchorage settings: opening another section stores the one you were working on. Moving a cut updates its section, bars included, until you change the outline in the editor yourself.</li>
+    <li>The model is kept in this browser and in <em>Save project</em> files. A <em>Copy link</em> carries the sections but not the model.</li>
   </ul>
   <h4>Saving and sharing</h4>
   <p>Your work is kept in this browser automatically. <em>Save project</em> downloads a .json file that <em>Open…</em> reads back. <em>Copy link</em> puts the whole section into a link you can send to a colleague.</p>
@@ -2529,7 +2627,7 @@ function newItem(t, kw = {}) {
   return it;
 }
 const defaultCustom = () => ({
-  name: "Hollow pier H1", cover: "40", dg: "16", auto_dims: true,
+  name: "Hollow pier H1", cover: "40", dg: "16", auto_dims: true, src: "example",
   outline: TEMPLATES["Hollow box (chamfered)"][0], openings: TEMPLATES["Hollow box (chamfered)"][1],
   items: [newItem("Link", { region: "outline", d: 12, s: 200 }),
     newItem("Link", { region: "around opening", opening: 1, d: 10, s: 200, hooks: false }),
@@ -2577,7 +2675,826 @@ function itemSummary(it, linkNo) {
   }
   return "";
 }
-if (typeof module !== "undefined") module.exports = { textPlace, stdSection, buildCustom, makeStyle, specDefaults, STD_SPECS, STYLE_SPEC, TEMPLATES, defaultCustom, newItem, exportSVG, exportPDF, exportDXF, primitives, UserError };
+/* ------------------------------------------------------------ SOFiSTiK import: SOFiMSHC input (CADINP) */
+/* the items of the records that matter, in their input order (positional values fill them in this order) */
+const SOF_ITEMS = {
+  SYST: ["TYPE", "GDIR", "GDIV"],
+  SPT: ["NO", "X", "Y", "Z", "NX", "NY", "NZ", "KR", "DRX", "DRY", "DRZ", "DROT", "GRP", "XFLG", "TITL", "REF", "NREF", "FIX", "SNO", "MNO"],
+  SLN: ["NO", "NPA", "NPE", "REF", "FIX", "SDIV", "GRP", "STYP", "SNO", "NP", "KR", "DRX", "DRY", "DRZ", "DROT", "EXA", "EYA", "EZA", "EXE", "EYE", "EZE",
+    "FIXA", "FIXE", "FIMA", "FIME", "XFLG", "TITL", "NREF", "REFT", "SNOE", "SDIA", "SDIE"],
+  SLNB: ["X1", "Y1", "Z1", "X2", "Y2", "Z2", "R", "NX", "NY", "NZ", "XM", "YM", "ZM", "X3", "Y3", "Z3", "TYPE"],
+  SAR: ["NO", "FIX", "GRP", "MNO", "MRF", "REF", "NX", "NY", "NZ", "NRA", "QREF", "KR", "DRX", "DRY", "DRZ", "DROT", "T", "TX", "TY", "TXY", "TT", "CB", "CT", "MCTL", "H1", "H2", "H3", "XFLG", "TITL",
+    "TD", "CQ", "CQT", "NREF", "REFT", "SDIV", "HMIN", "HMAX", "MESH"],
+  SARB: ["TYPE", "NL", "NP", "NA", "NE", "T", "MNO", "FIX", "DFIX", "CA", "CL", "CD", "TITL"],
+};
+const SOF_ALIAS = { MNR: "MNO", MBW: "MRF" };
+const SOF_UNITS = { mm: 1, cm: 10, dm: 100, m: 1000, km: 1e6 };
+const sofKw = s => String(s).toUpperCase().slice(0, 4);           // CADINP reads the first four characters of a keyword
+
+/* split a record into tokens: blanks separate, quotes, (…) and […] stay together */
+function sofTokens(s) {
+  const out = []; let cur = "", depth = 0, q = null;
+  for (const ch of s) {
+    if (q) { cur += ch; if (ch === q) q = null; continue; }
+    if (ch === "'" || ch === '"') { q = ch; cur += ch; continue; }
+    if (ch === "(" || ch === "[") depth++;
+    if (ch === ")" || ch === "]") depth = Math.max(0, depth - 1);
+    if (/\s/.test(ch) && depth === 0) { if (cur) out.push(cur); cur = ""; continue; }
+    cur += ch;
+  }
+  if (cur) out.push(cur);
+  const res = [];                                                    // a unit written apart: 0.3 [m]
+  for (const t of out) { if (/^\[[a-z]+\]$/i.test(t) && res.length) res[res.length - 1] += t; else res.push(t); }
+  return res;
+}
+const splitTop = (s, sep) => {                                       // split on sep outside brackets and quotes
+  const out = []; let cur = "", d = 0, q = null;
+  for (const ch of s) {
+    if (q) { cur += ch; if (ch === q) q = null; continue; }
+    if (ch === "'" || ch === '"') q = ch;
+    if (ch === "(" || ch === "[") d++; else if (ch === ")" || ch === "]") d--;
+    if (ch === sep && d === 0) { out.push(cur); cur = ""; } else cur += ch;
+  }
+  out.push(cur);
+  return out;
+};
+
+/* expressions: numbers with units, #variables, functions (angles in degrees), + - * / ** and comparisons.
+   A value is { v, u }: u is true when a length unit was written, and v is then in mm. */
+const SOF_FN = {
+  SIN: a => Math.sin(a * Math.PI / 180), COS: a => Math.cos(a * Math.PI / 180), TAN: a => Math.tan(a * Math.PI / 180),
+  ASIN: a => Math.asin(a) * 180 / Math.PI, ACOS: a => Math.acos(a) * 180 / Math.PI, ATN: (a, b) => (b === undefined ? Math.atan(a) : Math.atan2(a, b)) * 180 / Math.PI,
+  ATAN: a => Math.atan(a) * 180 / Math.PI, ATN2: (a, b) => Math.atan2(a, b) * 180 / Math.PI, ATAN2: (a, b) => Math.atan2(a, b) * 180 / Math.PI,
+  SQR: Math.sqrt, SQRT: Math.sqrt, ABS: Math.abs, EXP: Math.exp, LOG: Math.log, LN: Math.log, LG: Math.log10, LOG10: Math.log10,
+  INT: Math.trunc, RND: Math.round, ROUND: Math.round, MIN: Math.min, MAX: Math.max, MOD: (a, b) => a % b, DIV: (a, b) => Math.trunc(a / b),
+  POW: Math.pow, SIGN: Math.sign, SGN: Math.sign, FLOOR: Math.floor, CEIL: Math.ceil,
+};
+function sofExpr(src, vars) {
+  let i = 0;
+  const s = src.replace(/\s+/g, ""), peek = () => s[i], eat = t => { if (s.startsWith(t, i)) { i += t.length; return true; } return false; };
+  const fail = () => { throw new Error(`cannot read '${src}'`); };
+  const V = (v, u = false) => ({ v, u });
+  const bin = (a, b, f) => V(f(a.v, b.v), a.u || b.u);
+  function primary() {
+    if (eat("(")) { const v = cmp(); if (!eat(")")) fail(); return unit(v); }
+    if (peek() === "#") {
+      i++; const m = /^[A-Za-z_][A-Za-z0-9_]*/.exec(s.slice(i)); if (!m) fail(); i += m[0].length;
+      const name = m[0].toUpperCase(); let val = vars.has(name) ? vars.get(name) : undefined;
+      if (eat("(")) { const k = cmp(); if (!eat(")")) fail(); val = Array.isArray(val) ? val[Math.round(k.v)] : (Math.round(k.v) === 0 ? val : undefined); }
+      else if (Array.isArray(val)) val = val[0];
+      if (val === undefined) { sofExpr.missing.add("#" + name); return V(0); }
+      return typeof val === "object" ? val : V(+val || 0);
+    }
+    const num = /^(\d+\.?\d*|\.\d+)([eE][+-]?\d+)?/.exec(s.slice(i));
+    if (num) { i += num[0].length; return unit(V(parseFloat(num[0]))); }
+    const fn = /^[A-Za-z][A-Za-z0-9]*/.exec(s.slice(i));
+    if (fn && SOF_FN[fn[0].toUpperCase()] && s[i + fn[0].length] === "(") {
+      i += fn[0].length + 1; const args = [cmp()];
+      while (eat(",")) args.push(cmp());
+      if (!eat(")")) fail();
+      return V(SOF_FN[fn[0].toUpperCase()](...args.map(a => a.v)), args.some(a => a.u));
+    }
+    fail();
+  }
+  function unit(v) {
+    const m = /^\[([^\]]*)\]/.exec(s.slice(i));
+    if (!m) return v;
+    i += m[0].length;
+    const f = SOF_UNITS[m[1].trim().toLowerCase()];
+    return f ? V((v.u ? v.v / 1 : v.v) * f, true) : v;                // other units (kN, °) are left as written
+  }
+  function unary() { if (eat("-")) { const a = unary(); return V(-a.v, a.u); } if (eat("+")) return unary(); return primary(); }
+  function pow() { const a = unary(); if (eat("**") || eat("^")) { const b = pow(); return bin(a, b, Math.pow); } return a; }
+  function mul() { let a = pow(); for (;;) { if (s[i] === "*" && s[i + 1] !== "*") { i++; a = bin(a, pow(), (x, y) => x * y); } else if (eat("/")) a = bin(a, pow(), (x, y) => x / y); else return a; } }
+  function add() { let a = mul(); for (;;) { if (eat("+")) a = bin(a, mul(), (x, y) => x + y); else if (eat("-")) a = bin(a, mul(), (x, y) => x - y); else return a; } }
+  function cmp() {
+    let a = add();
+    for (;;) {
+      const op = ["<=", ">=", "==", "<>", "!=", "<", ">", "=", "&", "|"].find(o => s.startsWith(o, i));
+      if (!op) return a;
+      i += op.length; const b = add();
+      const r = { "<=": a.v <= b.v, ">=": a.v >= b.v, "==": a.v === b.v, "=": a.v === b.v, "<>": a.v !== b.v, "!=": a.v !== b.v, "<": a.v < b.v, ">": a.v > b.v, "&": !!a.v && !!b.v, "|": !!a.v || !!b.v }[op];
+      a = V(r ? 1 : 0);
+    }
+  }
+  const r = cmp();
+  if (i < s.length) fail();
+  return r;
+}
+sofExpr.missing = new Set();
+
+/* a value token: a number or expression, a list a,b,c, a range (from to step), or a word */
+function sofValue(tok, vars) {
+  const isExpr = t => /^[+\-.\d(#]/.test(t) || /^[A-Za-z][A-Za-z0-9]*\(/.test(t) && SOF_FN[t.split("(")[0].toUpperCase()];
+  if (/^['"]/.test(tok)) return tok.replace(/^['"]|['"]$/g, "");
+  const parts = splitTop(tok, ",");
+  if (parts.length > 1) return parts.flatMap(p => { const v = sofValue(p, vars); return Array.isArray(v) ? v : [v]; });
+  const rg = /^\(([^()]*)\)$/.exec(tok);
+  if (rg) {
+    const bits = rg[1].trim().split(/\s+/);
+    if (bits.length >= 2 && bits.length <= 3 && bits.every(b => /^[+\-]?[\d.#]/.test(b) && !/^[+\-]$/.test(b))) {
+      const [a, b, st] = bits.map(b2 => sofExpr(b2, vars)), step = st ? st.v : (b.v >= a.v ? 1 : -1), out = [];
+      if (step) for (let x = a.v; step > 0 ? x <= b.v + 1e-9 : x >= b.v - 1e-9; x += step) { out.push({ v: x, u: a.u }); if (out.length > 100000) break; }
+      return out;
+    }
+  }
+  if (isExpr(tok)) {
+    try { return sofExpr(tok, vars); }
+    catch (e) { if (/^[\w.]+$/.test(tok)) return tok; throw e; }                 // a word that starts with a digit, e.g. 3D
+  }
+  return tok;
+}
+
+/* read the text into records: { cmd, v: { ITEM: value }, line }, for the SOFiMSHC blocks (all of it when there is no +PROG) */
+/* files: { name: text } of all files at hand, so #include can find them; text is the main file */
+const sofBase = n => String(n || "").replace(/^["']|["']$/g, "").trim().split(/[\\/]/).pop().toLowerCase();
+function sofFind(files, name) {
+  const b = sofBase(name), keys = Object.keys(files || {});
+  const k = keys.find(f => sofBase(f) === b) || keys.find(f => sofBase(f) === b + ".dat") || keys.find(f => sofBase(f).replace(/\.[^.]+$/, "") === b.replace(/\.[^.]+$/, ""));
+  return k === undefined ? null : k;
+}
+function sofRecords(text, files = {}, mainName = "the file") {
+  const warn = [], vars = new Map(), defs = new Map(), blocks = new Map(), missing = new Map(), used = new Set();
+  sofExpr.missing = new Set();
+  const flat = [];                                                   // [where, record text]
+  const ifs = [];                                                    // #if stack: true = keep
+  let inDef = null;
+  const pre = (text0, src, depth) => {
+    String(text0 || "").split(/\r?\n/).forEach((raw, li) => {
+      const where = `${src} line ${li + 1}`;
+      if (inDef) { if (/^\s*#enddef/i.test(raw)) { blocks.set(inDef.name, inDef.body.join("\n")); inDef = null; } else inDef.body.push(raw); return; }
+      const ln = raw.replace(/\$\(([A-Za-z_][A-Za-z0-9_]*)\)/g, (m, k) => defs.has(k.toUpperCase()) ? defs.get(k.toUpperCase()) : m);
+      const tl = ln.trim();
+      if (tl.startsWith("#")) {
+        const m = /^#(\w+)\s*(.*)$/.exec(tl) || [];
+        const d = (m[1] || "").toLowerCase(), arg = (m[2] || "").replace(/\s+[$!].*$/, "").trim();
+        const keep = ifs.every(Boolean);
+        if (d === "if" || d === "ifdef") {
+          const [k, v] = arg.split("=").map(x => x.trim()), dv = defs.get((k || "").toUpperCase());
+          ifs.push(v !== undefined ? String(dv) === v : dv !== undefined && dv !== "0" && dv.toLowerCase() !== "false");
+        } else if (d === "ifndef") ifs.push(!defs.has(arg.toUpperCase()));
+        else if (d === "else") { if (ifs.length) ifs[ifs.length - 1] = !ifs[ifs.length - 1]; }
+        else if (d === "endif") ifs.pop();
+        else if (!keep) return;
+        else if (d === "define") {
+          const mm = /^([A-Za-z_][A-Za-z0-9_]*)\s*(=?)\s*(.*)$/.exec(arg);
+          if (!mm) return;
+          if (mm[2] || mm[3].trim()) defs.set(mm[1].toUpperCase(), mm[3].trim());
+          else inDef = { name: mm[1].toUpperCase(), body: [] };      // a block, used with #include NAME
+        } else if (d === "include") {
+          const nm = arg.replace(/^["']|["']$/g, "").trim(), blk = blocks.get(nm.toUpperCase());
+          if (depth > 20) { warn.push(`${where}: #include nested too deeply`); return; }
+          if (blk !== undefined) { pre(blk, src, depth + 1); return; }
+          const f = sofFind(files, nm);
+          if (f !== null) { used.add(f); pre(files[f], f, depth + 1); }
+          else if (!missing.has(nm)) missing.set(nm, src);
+        }
+        return;
+      }
+      if (!ifs.every(Boolean)) return;
+      let body = "", q = null;                                       // comments: $ … , // … and ! …
+      for (let k = 0; k < ln.length; k++) {
+        const ch = ln[k];
+        if (q) { body += ch; if (ch === q) q = null; continue; }
+        if (ch === "'" || ch === '"') { q = ch; body += ch; continue; }
+        if (ch === "$" || ch === "!" || (ch === "/" && ln[k + 1] === "/")) break;
+        body += ch;
+      }
+      for (const r of splitTop(body, ";")) if (r.trim()) flat.push([where, r.trim()]);
+    });
+  };
+  pre(text, mainName, 0);
+  for (const [nm, src] of missing) warn.unshift(`${src} includes ${nm}, which is not open; add it if it holds points, lines or areas`);
+  const hasProg = flat.some(([, r]) => /^\+PROG\b/i.test(r));
+  const out = [], loops = [], prev = {};
+  let prog = hasProg ? null : "SOFIMSHC", guard = 0;
+  for (let pc = 0; pc < flat.length; pc++) {
+    if (++guard > 2e6) { warn.push("the loops run too long; reading stopped"); break; }
+    const [line, rec] = flat[pc], toks = sofTokens(rec);
+    if (!toks.length) continue;
+    const head = toks[0].toUpperCase();
+    try {
+      if (head === "+PROG" || head === "-PROG") { prog = head === "+PROG" ? sofKw(toks[1] || "") === "SOFI" && /^SOFIMSHC/i.test(toks[1]) ? "SOFIMSHC" : String(toks[1] || "").toUpperCase() : "-"; continue; }
+      if (sofKw(head) === "END" && head.length <= 4 && !head.startsWith("ENDL") && !head.startsWith("ENDI")) { if (hasProg) prog = null; continue; }
+      if (/^(LET|STO)#/.test(head)) {
+        const m = /^(?:LET|STO)#([A-Za-z_][A-Za-z0-9_]*)(?:\((.*)\))?$/i.exec(toks[0]);
+        if (!m) throw new Error(`cannot read '${toks[0]}'`);
+        const name = m[1].toUpperCase(), vals = toks.slice(1).flatMap(t => { const v = sofValue(t, vars); return Array.isArray(v) ? v : [v]; })
+          .map(v => typeof v === "object" ? v : { v: NaN, u: false, s: v });
+        if (m[2] !== undefined) {
+          const k = Math.round(sofExpr(m[2], vars).v), arr = Array.isArray(vars.get(name)) ? vars.get(name).slice() : vars.has(name) ? [vars.get(name)] : [];
+          vals.forEach((v, j) => { arr[k + j] = v; });
+          vars.set(name, arr);
+        } else vars.set(name, vals.length === 1 ? vals[0] : vals);
+        continue;
+      }
+      if (/^(DEL|PRT|DBG)#/.test(head)) continue;
+      if (head.startsWith("LOOP")) {
+        const m = /^LOOP(?:#([A-Za-z_][A-Za-z0-9_]*))?$/i.exec(toks[0]);
+        let n = 1;
+        if (toks[1] !== undefined) {
+          const am = /^#([A-Za-z_][A-Za-z0-9_]*)$/.exec(toks[1]);
+          const arr = am && vars.get(am[1].toUpperCase());
+          n = Array.isArray(arr) ? arr.length : Math.round(sofExpr(toks[1], vars).v);
+        } else n = 9999;
+        const v = m && m[1] ? m[1].toUpperCase() : null;
+        if (v) vars.set(v, { v: 0, u: false });
+        if (n <= 0) { pc = sofSkipBlock(flat, pc, "LOOP", ["ENDLOOP"]); continue; }
+        loops.push({ pc, n, i: 0, v });
+        continue;
+      }
+      if (head.startsWith("ENDL")) {
+        const L = loops[loops.length - 1];
+        if (!L) continue;
+        L.i++;
+        let go = L.i < L.n;
+        if (go && toks[1] !== undefined) go = !!sofExpr(toks.slice(1).join(""), vars).v;
+        if (L.v) vars.set(L.v, { v: L.i, u: false });
+        if (go) pc = L.pc; else loops.pop();
+        continue;
+      }
+      if (head === "IF") { if (!sofExpr(toks.slice(1).join(""), vars).v) pc = sofSkipBlock(flat, pc, "IF", ["ELSE", "ENDIF"]); continue; }
+      if (head === "ELSE") { pc = sofSkipBlock(flat, pc, "IF", ["ENDIF"]); continue; }
+      if (head === "ENDIF") continue;
+      if (prog !== "SOFIMSHC") continue;
+      const cmd = sofKw(head) === "SARB" ? "SARB" : sofKw(head) === "SLNB" ? "SLNB" : sofKw(head) === "SYST" ? "SYST" : head;
+      const items = SOF_ITEMS[cmd];
+      if (!items) continue;
+      const v = {};
+      let next = 0, expect = true, skipping = false;                  // expect: a value may follow (start of record, after an item name)
+      for (const t of toks.slice(1)) {
+        const T = t.toUpperCase(), nm = SOF_ALIAS[T] || T;
+        const idx = items.indexOf(nm);
+        if (idx >= 0) { next = idx; expect = true; skipping = false; continue; }
+        if (/^[A-Za-z][A-Za-z0-9_]*$/.test(t) && !expect) { skipping = true; continue; }   // an item this reader does not know: skip it and its values
+        if (skipping || next >= items.length) continue;
+        expect = false;
+        const key = items[next++];
+        if (t === "=") { if (prev[cmd] && prev[cmd][key] !== undefined) v[key] = prev[cmd][key]; continue; }
+        if (t === "-") continue;
+        v[key] = sofValue(t, vars);
+      }
+      prev[cmd] = v;
+      out.push({ cmd, v, line });
+    } catch (e) { warn.push(`${line}: ${e.message}`); }
+  }
+  if (sofExpr.missing.size) warn.push(`unknown variables read as 0: ${[...sofExpr.missing].slice(0, 8).join(", ")}${sofExpr.missing.size > 8 ? " …" : ""}`);
+  return { recs: out, warn, missing: [...missing].map(([name, from]) => ({ name, from })), used: [...used] };
+}
+function sofSkipBlock(flat, pc, open, ends) {                       // jump to the matching ELSE / ENDIF / ENDLOOP
+  let depth = 0;
+  for (let k = pc + 1; k < flat.length; k++) {
+    const h = (sofTokens(flat[k][1])[0] || "").toUpperCase();
+    const isOpen = open === "IF" ? h === "IF" : h.startsWith("LOOP");
+    const isEnd = open === "IF" ? h === "ENDIF" : h.startsWith("ENDL");
+    if (isOpen) { depth++; continue; }
+    if (depth && isEnd) { depth--; continue; }
+    if (!depth && ends.some(e => (e === "ENDLOOP" ? h.startsWith("ENDL") : h === e))) return k;
+  }
+  return flat.length;
+}
+
+/* ------------------------------------------------------------ the model: points, lines and areas in mm */
+const V3 = { sub: (a, b) => [a[0] - b[0], a[1] - b[1], a[2] - b[2]], add: (a, b) => [a[0] + b[0], a[1] + b[1], a[2] + b[2]], mul: (a, k) => [a[0] * k, a[1] * k, a[2] * k],
+  dot: (a, b) => a[0] * b[0] + a[1] * b[1] + a[2] * b[2], cross: (a, b) => [a[1] * b[2] - a[2] * b[1], a[2] * b[0] - a[0] * b[2], a[0] * b[1] - a[1] * b[0]],
+  len: a => Math.hypot(a[0], a[1], a[2]), unit: a => { const l = Math.hypot(a[0], a[1], a[2]) || 1; return [a[0] / l, a[1] / l, a[2] / l]; } };
+const SOF_GDIR = { NEGZ: [0, 0, -1], POSZ: [0, 0, 1], NEGY: [0, -1, 0], POSY: [0, 1, 0], NEGX: [-1, 0, 0], POSX: [1, 0, 0] };
+function sofArc(a, b, seg) {                                         // points of a circular arc from a to b (b excluded)
+  let c = null, nrm = null;
+  const N3 = (x, y, z) => [x, y, z].some(q => q !== undefined) ? [x || 0, y || 0, z || 0] : null;
+  const p3 = seg.p3, m = seg.m;
+  if (p3) {                                                          // through a third point
+    const u = V3.sub(p3, a), w = V3.sub(b, a), n = V3.cross(u, w), nn = V3.dot(n, n);
+    if (nn < 1e-9) return [a];
+    const t1 = V3.mul(V3.cross(n, u), V3.dot(w, w)), t2 = V3.mul(V3.cross(w, n), V3.dot(u, u));
+    c = V3.add(a, V3.mul(V3.add(t1, t2), 1 / (2 * nn))); nrm = V3.unit(n);
+  } else if (m) { c = m; nrm = seg.n ? V3.unit(seg.n) : V3.unit(V3.cross(V3.sub(a, c), V3.sub(b, c))); }
+  else if (seg.r) {
+    const r = Math.abs(seg.r), ch = V3.sub(b, a), L = V3.len(ch);
+    nrm = seg.n ? V3.unit(seg.n) : [0, 0, 1];
+    if (L < 1e-9 || r < L / 2) return [a];
+    const mid = V3.add(a, V3.mul(ch, 0.5)), perp = V3.unit(V3.cross(nrm, ch)), h = Math.sqrt(r * r - L * L / 4);
+    c = V3.add(mid, V3.mul(perp, seg.r > 0 ? h : -h));
+  }
+  if (!c || !nrm || V3.len(nrm) < 1e-9) return [a];
+  const ra = V3.sub(a, c), rb = V3.sub(b, c), R = V3.len(ra), e1 = V3.unit(ra), e2 = V3.cross(nrm, e1);
+  let ang = Math.atan2(V3.dot(rb, e2), V3.dot(rb, e1));
+  if (p3) { const r3 = V3.sub(p3, c), a3 = Math.atan2(V3.dot(r3, e2), V3.dot(r3, e1)), A3 = a3 < 0 ? a3 + 2 * Math.PI : a3; let A = ang < 0 ? ang + 2 * Math.PI : ang; if (A3 > A) A -= 2 * Math.PI; ang = A; }
+  else if (!seg.n && !m) { /* shorter arc */ }
+  else if (ang < 0 && seg.n) ang += 2 * Math.PI;
+  const n = Math.max(2, Math.ceil(Math.abs(ang) / (Math.PI / 24))), out = [];
+  for (let k = 0; k < n; k++) { const t = ang * k / n; out.push(V3.add(c, V3.add(V3.mul(e1, R * Math.cos(t)), V3.mul(e2, R * Math.sin(t))))); }
+  return out;
+}
+function sofChain(curves, tol) {                                     // join curves end to end into closed loops
+  const left = curves.filter(c => c.length >= 2).map(c => c.slice()), loops = [];
+  const near = (p, q) => V3.len(V3.sub(p, q)) <= tol;
+  while (left.length) {
+    let loop = left.shift(), closed = near(loop[0], loop[loop.length - 1]);
+    while (!closed) {
+      const end = loop[loop.length - 1];
+      let k = left.findIndex(c => near(c[0], end)), rev = false;
+      if (k < 0) { k = left.findIndex(c => near(c[c.length - 1], end)); rev = true; }
+      if (k < 0) {                                                   // maybe it continues from the start
+        const st = loop[0];
+        let k2 = left.findIndex(c => near(c[c.length - 1], st)), rev2 = false;
+        if (k2 < 0) { k2 = left.findIndex(c => near(c[0], st)); rev2 = true; }
+        if (k2 < 0) break;
+        const c = left.splice(k2, 1)[0]; if (rev2) c.reverse();
+        loop = [...c.slice(0, -1), ...loop];
+      } else {
+        const c = left.splice(k, 1)[0]; if (rev) c.reverse();
+        loop = [...loop, ...c.slice(1)];
+      }
+      closed = near(loop[0], loop[loop.length - 1]);
+    }
+    if (closed && loop.length > 1) loop.pop();
+    loops.push({ pts: loop, closed });
+  }
+  return loops;
+}
+function newell(pts) {
+  let n = [0, 0, 0];
+  for (let i = 0; i < pts.length; i++) {
+    const a = pts[i], b = pts[(i + 1) % pts.length];
+    n = V3.add(n, [(a[1] - b[1]) * (a[2] + b[2]), (a[2] - b[2]) * (a[0] + b[0]), (a[0] - b[0]) * (a[1] + b[1])]);
+  }
+  return n;
+}
+/* opt: len = "m" | "mm" (unit of coordinates without a unit), t = "auto" | "m" | "mm" (thickness T), up = "auto" | "+Z" | "-Z" */
+function sofModel(text, opt = {}, files = {}, mainName = "the file") {
+  const { recs, warn, missing } = sofRecords(text, files, mainName);
+  const lf = opt.len === "mm" ? 1 : 1000;
+  const raw = [];                                                    // unitless thickness values, to guess their unit
+  for (const r of recs) for (const k of r.cmd === "SAR" || r.cmd === "SARB" ? ["T"] : []) { const x = r.v[k]; if (x && typeof x === "object" && !Array.isArray(x) && !x.u && x.v > 0) raw.push(x.v); }
+  const tUnit = opt.t === "m" || opt.t === "mm" ? opt.t : raw.length && Math.max(...raw) > 10 ? "mm" : "m", tf = tUnit === "m" ? 1000 : 1;
+  const L = (x, f) => x === undefined || x === null || typeof x !== "object" || Array.isArray(x) ? undefined : x.u ? x.v : x.v * f;
+  const num = x => x && typeof x === "object" && !Array.isArray(x) ? x.v : undefined;
+  const list = x => (Array.isArray(x) ? x : x === undefined ? [] : [x]).map(num).filter(q => q !== undefined && isFinite(q)).map(q => Math.abs(Math.round(q)));
+  const word = x => typeof x === "string" ? sofKw(x) : "";
+  let gdir = "NEGZ", gdirFile = null, refWarn = 0;
+  const pts = new Map(), lines = new Map(), sars = [];
+  let lastLn = null, lastSar = null, autoP = 0, autoL = 0, autoA = 0, beams = 0;
+  for (const r of recs) {
+    const v = r.v;
+    if (r.cmd === "SYST") { const g = Object.keys(SOF_GDIR).find(k => word(v.GDIR) === k); if (g) { gdir = g; gdirFile = g; } }
+    else if (r.cmd === "SPT") {
+      const no = num(v.NO) ?? autoP + 1; autoP = no;
+      if (v.REF !== undefined) refWarn++;
+      pts.set(no, [L(v.X, lf) || 0, L(v.Y, lf) || 0, L(v.Z, lf) || 0]);
+    } else if (r.cmd === "SLN") {
+      const no = num(v.NO) ?? autoL + 1; autoL = no;
+      lastLn = { no, npa: num(v.NPA), npe: num(v.NPE), segs: [], line: r.line };
+      if (v.SNO !== undefined) beams++;
+      lines.set(no, lastLn);
+    } else if (r.cmd === "SLNB") {
+      if (!lastLn) continue;
+      const P = (x, y, z) => [x, y, z].some(q => q !== undefined) ? [L(x, lf) || 0, L(y, lf) || 0, L(z, lf) || 0] : null;
+      lastLn.segs.push({ p1: P(v.X1, v.Y1, v.Z1), p2: P(v.X2, v.Y2, v.Z2), r: L(v.R, lf), n: [num(v.NX), num(v.NY), num(v.NZ)].some(q => q !== undefined) ? [num(v.NX) || 0, num(v.NY) || 0, num(v.NZ) || 0] : null,
+        m: P(v.XM, v.YM, v.ZM), p3: P(v.X3, v.Y3, v.Z3) });
+    } else if (r.cmd === "SAR") {
+      const no = num(v.NO) ?? autoA + 1; autoA = no;
+      const q = word(v.QREF);
+      lastSar = { no, grp: num(v.GRP) ?? 0, mno: num(v.MNO), t: L(v.T, tf) || 0, qref: q === "ABOV" || q === "OBEN" ? "ABOV" : q === "BELO" || q === "UNTE" ? "BELO" : "CENT",
+        nhint: [num(v.NX), num(v.NY), num(v.NZ)].some(x => x !== undefined) ? [num(v.NX) || 0, num(v.NY) || 0, num(v.NZ) || 0] : null, bnd: [], line: r.line, title: typeof v.TITL === "string" ? v.TITL : "" };
+      sars.push(lastSar);
+    } else if (r.cmd === "SARB") {
+      if (!lastSar) continue;
+      const ty = word(v.TYPE) || "OUT";
+      lastSar.bnd.push({ type: ty === "IN" || ty === "INNE" ? "IN" : ty === "CONS" ? "CONS" : "OUT", nl: list(v.NL), np: list(v.NP), t: L(v.T, tf) });
+    }
+  }
+  if (refWarn) warn.push(`${refWarn} point${refWarn === 1 ? "" : "s"} with REF (relative or projected coordinates) were read as plain x, y, z`);
+  if (beams) warn.push(`${beams} structural line${beams === 1 ? "" : "s"} with a cross-section (beams) are not part of the cuts; only areas (SAR) are`);
+  /* the geometry of the structural lines */
+  const lineGeo = new Map();
+  for (const ln of lines.values()) {
+    const A = pts.get(ln.npa), E = pts.get(ln.npe);
+    let poly = [];
+    if (!ln.segs.length) { if (A && E) poly = [A, E]; }
+    else {
+      let cur = (ln.segs[0].p1) || A;
+      ln.segs.forEach((sg, k) => {
+        const a = sg.p1 || cur, b = sg.p2 || (k === ln.segs.length - 1 ? E : null);
+        if (!a || !b) return;
+        const pa = sg.r || sg.m || sg.p3 ? sofArc(a, b, sg) : [a];
+        poly.push(...pa); cur = b;
+        if (k === ln.segs.length - 1) poly.push(b);
+      });
+    }
+    if (poly.length >= 2) lineGeo.set(ln.no, poly); else warn.push(`line SLN ${ln.no} has no geometry (its points are missing)`);
+  }
+  /* the areas */
+  let size = 1;
+  for (const p of pts.values()) size = Math.max(size, Math.abs(p[0]), Math.abs(p[1]), Math.abs(p[2]));
+  const tol = Math.max(1, size * 1e-6), out = [], g = SOF_GDIR[gdir];
+  for (const a of sars) {
+    const outerC = [], outerP = [], inner = [], samples = [];
+    for (const b of a.bnd) {
+      if (b.type === "CONS") continue;
+      for (const no of b.nl) {
+        const geo = lineGeo.get(no);
+        if (!geo) { warn.push(`area SAR ${a.no}: line ${no} is missing`); continue; }
+        (b.type === "OUT" ? outerC : inner).push(geo);
+        if (b.t) geo.forEach(p => samples.push([p, b.t]));
+      }
+      for (const no of b.np) {
+        const p = pts.get(no);
+        if (!p) { warn.push(`area SAR ${a.no}: point ${no} is missing`); continue; }
+        if (b.type === "OUT") outerP.push(p); else inner.push([p]);
+        if (b.t) samples.push([p, b.t]);
+      }
+    }
+    let outer = null;
+    if (outerC.length) {
+      const loops = sofChain(outerC, tol);
+      if (loops.length > 1 || !loops[0].closed) warn.push(`area SAR ${a.no}: the outer boundary is not one closed loop`);
+      outer = loops.reduce((p, q) => (q.pts.length > p.pts.length ? q : p)).pts;
+    } else if (outerP.length >= 3) outer = outerP;
+    if (!outer || outer.length < 3) { warn.push(`area SAR ${a.no} has no outer boundary`); continue; }
+    const holes = sofChain(inner.filter(c => c.length >= 2), tol).filter(l => l.closed && l.pts.length >= 3).map(l => l.pts);
+    const A = sofArea(a, outer, holes, samples, g, warn, `area SAR ${a.no}`);
+    if (A) out.push(A);
+  }
+  return sofFinish(out, warn, gdir, opt, { missing, nPts: pts.size, nLines: lines.size, gdirFile, tUnit, lenUnit: lf === 1 ? "mm" : "m", tol });
+}
+/* an area: its normal (local z, along gravity unless given), centre and whether it is curved */
+function sofArea(a, outer, holes, samples, g, warn, label) {
+  let n = newell(outer);
+  if (V3.len(n) < 1e-9) { warn.push(`${label} has no area`); return null; }
+  n = V3.unit(n);
+  if (a.nhint) { if (V3.dot(n, a.nhint) < 0) n = V3.mul(n, -1); }
+  else if (Math.abs(V3.dot(n, g)) > 0.15 && V3.dot(n, g) < 0) n = V3.mul(n, -1);   // local z along gravity
+  const c = V3.mul(outer.reduce((s0, p) => V3.add(s0, p), [0, 0, 0]), 1 / outer.length);
+  const dev = Math.max(...outer.map(p => Math.abs(V3.dot(V3.sub(p, c), n)))), diag = Math.max(...outer.map(p => V3.len(V3.sub(p, c))));
+  const curved = dev > Math.max(2, 0.002 * diag);                    // warped or curved: cut as a surface between its sides
+  if (curved && holes.length) warn.push(`${label} is curved and has openings; the openings are left out of the cuts`);
+  if (curved && outer.length < 4) warn.push(`${label} is curved with fewer than four corners; it is cut approximately`);
+  if (!(a.t > 0) && !samples.length) warn.push(`${label} has no thickness`);
+  return { no: a.no, grp: a.grp, t: a.t, qref: a.qref, outer, holes, n, c, samples, title: a.title, curved };
+}
+function sofFinish(out, warn, gdir, opt, extra) {
+  const g = SOF_GDIR[gdir] || [0, 0, -1];
+  const up = opt.up === "+Z" ? [0, 0, 1] : opt.up === "-Z" ? [0, 0, -1] : V3.mul(g, -1);
+  if (Math.abs(up[2]) < 0.5) warn.push(`gravity is along ${gdir}; the cuts take Z as the vertical`);
+  const groups = new Map();
+  for (const a of out) {
+    const G = groups.get(a.grp) || { grp: a.grp, n: 0, tmin: Infinity, tmax: 0 };
+    G.n++; G.tmin = Math.min(G.tmin, a.t || Infinity); G.tmax = Math.max(G.tmax, a.t || 0);
+    groups.set(a.grp, G);
+  }
+  const bb = [Infinity, Infinity, Infinity, -Infinity, -Infinity, -Infinity];
+  for (const a of out) for (const p of a.outer) for (let k = 0; k < 3; k++) { bb[k] = Math.min(bb[k], p[k]); bb[k + 3] = Math.max(bb[k + 3], p[k]); }
+  return { missing: [], gdirFile: null, tol: 1, ...extra, sars: out, groups: [...groups.values()].sort((p, q) => p.grp - q.grp), gdir, up: up[2] >= 0 ? 1 : -1, bbox: bb, warnings: warn };
+}
+
+/* ------------------------------------------------------------ SAF (Structural Analysis Format, .xlsx) */
+/* the sheets of an .xlsx file as rows of cell values; a small unzip and XML read, so no library is needed */
+async function sofXlsx(buf) {
+  const u8 = new Uint8Array(buf), dv = new DataView(u8.buffer, u8.byteOffset, u8.byteLength), td = new TextDecoder();
+  let e = u8.length - 22;
+  while (e >= 0 && dv.getUint32(e, true) !== 0x06054b50) e--;
+  if (e < 0) throw new Error("not an .xlsx file");
+  const n = dv.getUint16(e + 10, true); let p = dv.getUint32(e + 16, true);
+  const ent = {};
+  for (let i = 0; i < n; i++) {
+    const meth = dv.getUint16(p + 10, true), csz = dv.getUint32(p + 20, true), nl = dv.getUint16(p + 28, true), xl = dv.getUint16(p + 30, true), cl = dv.getUint16(p + 32, true), off = dv.getUint32(p + 42, true);
+    ent[td.decode(u8.subarray(p + 46, p + 46 + nl))] = { meth, csz, off };
+    p += 46 + nl + xl + cl;
+  }
+  const read = async name => {
+    const f = ent[name]; if (!f) return null;
+    const s0 = f.off + 30 + dv.getUint16(f.off + 26, true) + dv.getUint16(f.off + 28, true), raw = u8.subarray(s0, s0 + f.csz);
+    if (f.meth === 0) return td.decode(raw);
+    const st = new Blob([raw]).stream().pipeThrough(new DecompressionStream("deflate-raw"));
+    return await new Response(st).text();
+  };
+  const ent2 = s0 => s0.replace(/&lt;/g, "<").replace(/&gt;/g, ">").replace(/&quot;/g, '"').replace(/&apos;/g, "'").replace(/&#(\d+);/g, (m, d) => String.fromCharCode(+d)).replace(/&amp;/g, "&");
+  const ss = [], sx = await read("xl/sharedStrings.xml");
+  if (sx) for (const m of sx.matchAll(/<si>([\s\S]*?)<\/si>/g)) ss.push(ent2([...m[1].matchAll(/<t[^>]*>([\s\S]*?)<\/t>/g)].map(t => t[1]).join("")));
+  const wb = await read("xl/workbook.xml") || "", rels = await read("xl/_rels/workbook.xml.rels") || "", book = {};
+  const tgt = {}; for (const m of rels.matchAll(/<Relationship\b[^>]*>/g)) { const id = /Id="([^"]+)"/.exec(m[0]), t = /Target="([^"]+)"/.exec(m[0]); if (id && t) tgt[id[1]] = t[1].replace(/^\/?xl\//, ""); }
+  for (const m of wb.matchAll(/<sheet\b[^>]*>/g)) {
+    const nm = /name="([^"]+)"/.exec(m[0]), rid = /r:id="([^"]+)"/.exec(m[0]);
+    if (!nm || !rid || !tgt[rid[1]]) continue;
+    const x = await read("xl/" + tgt[rid[1]]); if (!x) continue;
+    const rows = [];
+    for (const r of x.matchAll(/<row\b[^>]*>([\s\S]*?)<\/row>/g)) {
+      const row = [];
+      for (const c of r[1].matchAll(/<c\b([^>]*?)(?:\/>|>([\s\S]*?)<\/c>)/g)) {
+        const ref = /r="([A-Z]+)\d+"/.exec(c[1]), t = (/t="([^"]+)"/.exec(c[1]) || [])[1], body = c[2] || "";
+        const col = ref ? [...ref[1]].reduce((a, ch) => a * 26 + ch.charCodeAt(0) - 64, 0) - 1 : row.length;
+        const v = (/<v>([\s\S]*?)<\/v>/.exec(body) || [])[1];
+        row[col] = t === "s" ? ss[+v] : t === "inlineStr" ? ent2([...body.matchAll(/<t[^>]*>([\s\S]*?)<\/t>/g)].map(q => q[1]).join("")) : t === "str" || t === "e" ? ent2(v || "") : t === "b" ? v === "1" : v === undefined ? "" : +v;
+      }
+      rows.push(row);
+    }
+    book[ent2(nm[1])] = rows;
+  }
+  return book;
+}
+/* the 2D members of a SAF file (points, surface members and their openings) as a model */
+function sofFromSaf(book, opt = {}) {
+  const warn = [], key = nm => Object.keys(book).find(k => k.toLowerCase().replace(/\s/g, "") === nm.toLowerCase());
+  const table = nm => {
+    const k = key(nm); if (!k) return [];
+    const rows = book[k], hi = rows.findIndex(r => (r || []).some(c => String(c).trim().toLowerCase() === "name"));
+    if (hi < 0) return [];
+    const head = rows[hi].map(h => String(h || "").trim().toLowerCase());
+    return rows.slice(hi + 1).filter(r => r && r.some(c => c !== "" && c !== undefined)).map(r => { const o = {}; head.forEach((h, i) => { if (h) o[h] = r[i] === undefined ? "" : r[i]; }); return o; });
+  };
+  const col = (o, ...pre) => { for (const p of pre) { const k = Object.keys(o).find(h => h.startsWith(p)); if (k !== undefined) return [o[k], k]; } return ["", ""]; };
+  const unitOf = h => /\[mm\]/.test(h) ? 1 : /\[cm\]/.test(h) ? 10 : 1000;
+  const nodes = new Map();
+  for (const o of table("StructuralPointConnection")) {
+    const [x, hx] = col(o, "coordinate x"), [y] = col(o, "coordinate y"), [z] = col(o, "coordinate z"), f = unitOf(hx);
+    nodes.set(String(o.name).trim(), [(+x || 0) * f, (+y || 0) * f, (+z || 0) * f]);
+  }
+  const list = v => String(v || "").split(/\s*;\s*/).map(q => q.trim()).filter(Boolean);
+  const ring = (nm, label) => {
+    const ns = list(nm.nodes), es = list(nm.edges), pts = [];
+    const P = ns.map(q => nodes.get(q));
+    if (P.some(q => !q)) { warn.push(`${label}: node ${ns[P.findIndex(q => !q)]} is missing`); return null; }
+    if (es.length && es.length < ns.length) {                        // an arc takes three nodes: start, a point on it, end
+      let k = 0;
+      for (const e of es) {
+        if (/arc|circle/i.test(e) && k + 2 <= ns.length) { const a = P[k], m = P[(k + 1) % P.length], b = P[(k + 2) % P.length]; pts.push(...sofArc(a, b, { p3: m })); k += 2; }
+        else { pts.push(P[k]); k++; }
+      }
+    } else {
+      if (es.some(e => !/^line$/i.test(e))) warn.push(`${label}: curved edges are drawn straight between their nodes`);
+      pts.push(...P);
+    }
+    return pts.length >= 3 ? pts : null;
+  };
+  const surf = table("StructuralSurfaceMember"), groupOf = new Map(), names = [];
+  const holes = new Map();
+  for (const o of table("StructuralSurfaceMemberOpening")) {
+    const [par] = col(o, "2d member"), r = ring(o, `opening ${o.name}`);
+    if (r) { const k = String(par).trim(); if (!holes.has(k)) holes.set(k, []); holes.get(k).push(r); }
+  }
+  const out = [], g = SOF_GDIR.NEGZ;
+  surf.forEach((o, i) => {
+    const nm = String(o.name).trim(), label = `2D member ${nm}`, outer = ring(o, label);
+    if (!outer) return;
+    const [lay] = col(o, "layer"), [typ] = col(o, "type"), gk = String(lay || typ || "").trim() || "-";
+    if (!groupOf.has(gk)) { groupOf.set(gk, groupOf.size + 1); names.push(gk); }
+    const [th] = col(o, "thickness [", "thickness"), [plane] = col(o, "system plane"), samples = [];
+    let t = 0;
+    if (/:/.test(String(th))) for (const part of list(th)) { const [nn, v] = part.split(":").map(q => q.trim()), q = nodes.get(nn); if (q && isFinite(+v)) samples.push([q, +v]); }
+    else t = +String(th).replace(",", ".") || 0;
+    const pl = String(plane).toLowerCase(), qref = pl.startsWith("top") ? "BELO" : pl.startsWith("bot") ? "ABOV" : "CENT";
+    const A = sofArea({ no: i + 1, grp: groupOf.get(gk), t, qref, nhint: null, title: nm }, outer, holes.get(nm) || [], samples, g, warn, label);
+    if (A) out.push(A);
+  });
+  if (!surf.length) warn.push("the file has no StructuralSurfaceMember sheet with 2D members");
+  const M = sofFinish(out, warn, "NEGZ", opt, { nPts: nodes.size, nLines: 0, tUnit: "mm", lenUnit: "m", saf: true });
+  M.groups.forEach(G => { G.name = names[G.grp - 1]; });
+  return M;
+}
+
+/* ------------------------------------------------------------ a cut through the areas
+   cut: { kind: "plan", p1: [x, y], p2: [x, y] } (vertical, along the line between the points) or { kind: "level", z }
+   opt: skip, flip (sets of SAR numbers), off (set of groups left out), joints (close the corners where areas meet) */
+function sofFrame(model, cut) {
+  const s = model.up;                                                // +1: Z up, -1: Z down
+  if (cut.kind === "level") {
+    const O = [0, 0, cut.z], eu = [1, 0, 0], ev = s > 0 ? [0, 1, 0] : [0, -1, 0];
+    return { O, eu, ev, m: V3.cross(eu, ev), L: null };
+  }
+  const d = [cut.p2[0] - cut.p1[0], cut.p2[1] - cut.p1[1], 0], L = Math.hypot(d[0], d[1]);
+  if (L < 1) return null;
+  const eu = [d[0] / L, d[1] / L, 0], ev = [0, 0, s];
+  return { O: [cut.p1[0], cut.p1[1], 0], eu, ev, m: V3.cross(eu, ev), L };
+}
+function sofThick(a, p) {                                            // thickness at a point: T, or interpolated from the boundary values
+  if (!a.samples.length) return a.t;
+  let w = 0, sum = 0;
+  for (const [q, t] of a.samples) { const d = V3.len(V3.sub(p, q)); if (d < 1e-6) return t; const k = 1 / (d * d); w += k; sum += k * t; }
+  return sum / w;
+}
+/* a non-plane area as a surface between its four sides (Coons patch), as triangles */
+function sofSurface(a) {
+  if (a._tri) return a._tri;
+  const P = a.outer, m = P.length, turn = [];
+  for (let i = 0; i < m; i++) {
+    const u = V3.unit(V3.sub(P[i], P[(i - 1 + m) % m])), w = V3.unit(V3.sub(P[(i + 1) % m], P[i]));
+    turn.push([Math.acos(Math.max(-1, Math.min(1, V3.dot(u, w)))), i]);
+  }
+  const cs = turn.slice().sort((x, y) => y[0] - x[0]).slice(0, 4).map(t => t[1]).sort((x, y) => x - y);
+  const side = (i, j) => { const out = []; for (let k = i; ; k = (k + 1) % m) { out.push(P[k]); if (k === j) break; } return out; };
+  const along = pts => {                                             // evaluate a polyline at 0..1 of its length
+    const L = [0]; for (let k = 1; k < pts.length; k++) L.push(L[k - 1] + V3.len(V3.sub(pts[k], pts[k - 1])));
+    const tot = L[L.length - 1] || 1;
+    return t => { const x = t * tot; let k = 1; while (k < pts.length - 1 && L[k] < x) k++; const f = (x - L[k - 1]) / ((L[k] - L[k - 1]) || 1); return V3.add(pts[k - 1], V3.mul(V3.sub(pts[k], pts[k - 1]), Math.max(0, Math.min(1, f)))); };
+  };
+  const C0 = along(side(cs[0], cs[1])), D1 = along(side(cs[1], cs[2])), C1 = along(side(cs[2], cs[3]).reverse()), D0 = along(side(cs[3], cs[0]).reverse());
+  const P00 = P[cs[0]], P10 = P[cs[1]], P11 = P[cs[2]], P01 = P[cs[3]];
+  const S = (u, v) => {
+    const r = V3.add(V3.add(V3.mul(C0(u), 1 - v), V3.mul(C1(u), v)), V3.add(V3.mul(D0(v), 1 - u), V3.mul(D1(v), u)));
+    const b = V3.add(V3.add(V3.mul(P00, (1 - u) * (1 - v)), V3.mul(P10, u * (1 - v))), V3.add(V3.mul(P01, (1 - u) * v), V3.mul(P11, u * v)));
+    return V3.sub(r, b);
+  };
+  const N = 24, G = [];
+  for (let j = 0; j <= N; j++) for (let i = 0; i <= N; i++) G.push(S(i / N, j / N));
+  const id = (i, j) => j * (N + 1) + i, tri = [];
+  for (let j = 0; j < N; j++) for (let i = 0; i < N; i++) { tri.push([id(i, j), id(i + 1, j), id(i + 1, j + 1)], [id(i, j), id(i + 1, j + 1), id(i, j + 1)]); }
+  const border = (p, q) => { const ip = p % (N + 1), jp = Math.floor(p / (N + 1)), iq = q % (N + 1), jq = Math.floor(q / (N + 1));
+    return (jp === jq && (jp === 0 || jp === N)) || (ip === iq && (ip === 0 || ip === N)); };
+  a._tri = { G, tri, border };
+  return a._tri;
+}
+/* where an area meets the cut: polylines on its surface, each point with the area's normal there */
+function sofPieces(a, F, n) {
+  const { O, m } = F, sd = P => V3.dot(V3.sub(P, O), m);
+  if (!a.curved) {
+    const dL = V3.cross(n, m);
+    if (V3.len(dL) < 1e-4) return [];                               // the area lies in the cut plane
+    const dl = V3.unit(dL), X = [];
+    for (const ring of [a.outer, ...a.holes]) for (let i = 0; i < ring.length; i++) {
+      const P = ring[i], Q = ring[(i + 1) % ring.length], sp = sd(P), sq = sd(Q);
+      if ((sp >= 0) === (sq >= 0)) continue;
+      const Xp = V3.add(P, V3.mul(V3.sub(Q, P), sp / (sp - sq)));
+      X.push({ p: Xp, tau: V3.dot(Xp, dl), e: V3.unit(V3.sub(Q, P)) });
+    }
+    X.sort((p, q) => p.tau - q.tau);
+    const out = [];
+    for (let k = 0; k + 1 < X.length; k += 2) out.push({ pts: [X[k].p, X[k + 1].p], nrm: [n, n], e: [X[k].e, X[k + 1].e] });
+    return out;
+  }
+  const { G, tri, border } = sofSurface(a), s = G.map(sd), segs = [];
+  const hit = (p, q) => { if (p > q) [p, q] = [q, p]; return { p: V3.add(G[p], V3.mul(V3.sub(G[q], G[p]), s[p] / (s[p] - s[q]))), key: p + ":" + q, e: border(p, q) ? V3.unit(V3.sub(G[q], G[p])) : null }; };
+  for (const t of tri) {
+    const cr = [];
+    for (let k = 0; k < 3; k++) { const p = t[k], q = t[(k + 1) % 3]; if ((s[p] >= 0) !== (s[q] >= 0)) cr.push(hit(p, q)); }
+    if (cr.length !== 2) continue;
+    let tn = V3.cross(V3.sub(G[t[1]], G[t[0]]), V3.sub(G[t[2]], G[t[0]]));
+    if (V3.len(tn) < 1e-9) continue;
+    tn = V3.unit(tn); if (V3.dot(tn, n) < 0) tn = V3.mul(tn, -1);
+    segs.push({ a: cr[0], b: cr[1], n: tn });
+  }
+  /* chain the pieces of the triangles into polylines */
+  const byKey = new Map();
+  segs.forEach((g, i) => { for (const e of [g.a, g.b]) { if (!byKey.has(e.key)) byKey.set(e.key, []); byKey.get(e.key).push(i); } });
+  const used = new Set(), out = [];
+  for (let i0 = 0; i0 < segs.length; i0++) {
+    if (used.has(i0)) continue;
+    used.add(i0);
+    let chain = [segs[i0].a, segs[i0].b], ns = [segs[i0].n];
+    for (const dir of [1, 0]) {
+      for (;;) {
+        const end = dir ? chain[chain.length - 1] : chain[0];
+        const nx = (byKey.get(end.key) || []).find(j => !used.has(j));
+        if (nx === undefined) break;
+        used.add(nx);
+        const g = segs[nx], other = g.a.key === end.key ? g.b : g.a;
+        if (dir) { chain.push(other); ns.push(g.n); } else { chain.unshift(other); ns.unshift(g.n); }
+      }
+    }
+    let nrm = chain.map((_, k) => V3.unit(V3.add(ns[Math.max(0, k - 1)], ns[Math.min(ns.length - 1, k)])));
+    let pts = chain.map(c => c.p);
+    const keep = pts.map((q, k) => k === 0 || k === pts.length - 1 || V3.len(V3.sub(q, pts[k - 1])) > 1);   // points a triangle edge and a diagonal share
+    if (keep.length > 2 && V3.len(V3.sub(pts[pts.length - 1], pts[pts.length - 2])) <= 1) keep[pts.length - 2] = false;
+    pts = pts.filter((_, k) => keep[k]); nrm = nrm.filter((_, k) => keep[k]);
+    if (pts.length >= 2) out.push({ pts, nrm, e: [chain[0].e, chain[chain.length - 1].e] });
+  }
+  return out;
+}
+function sofCut(model, cut, opt = {}) {
+  const F = sofFrame(model, cut), warn = [];
+  if (!F) return { parts: [], strips: [], warnings: ["the cut line is too short"] };
+  const { O, eu, ev, m } = F, to2 = P => { const q = V3.sub(P, O); return [V3.dot(q, eu), V3.dot(q, ev)]; };
+  const skip = opt.skip || new Set(), flip = opt.flip || new Set(), off = opt.off || new Set();
+  const strips = [];
+  for (const a of model.sars) {
+    if (skip.has(a.no) || off.has(a.grp)) continue;
+    let pos = false, neg = false;
+    for (const P of a.outer) { if (V3.dot(V3.sub(P, O), m) >= 0) pos = true; else neg = true; }
+    if (!pos || !neg) continue;
+    const sg = flip.has(a.no) ? -1 : 1, n = V3.mul(a.n, sg);
+    for (const pc of sofPieces(a, F, n)) {
+      const nrm = pc.nrm.map(q => V3.mul(q, sg === 1 || !a.curved ? 1 : -1));
+      let P2 = pc.pts.map(to2), E = pc.e.slice(), N3 = nrm, P3 = pc.pts;
+      const runs = [];
+      if (F.L !== null) {                                            // keep to the length of the cut line
+        let cur = null;
+        const inside = q => q[0] >= 0 && q[0] <= F.L, at = (p, q, u) => { const f = (u - p[0]) / (q[0] - p[0]); return f; };
+        for (let k = 0; k < P2.length; k++) {
+          const q = P2[k];
+          if (inside(q)) {
+            if (!cur) {
+              cur = { p: [], n: [], P: [], e: [k === 0 ? E[0] : null, null] };
+              if (k > 0) { const pr = P2[k - 1], u = pr[0] < 0 ? 0 : F.L, f = at(pr, q, u); cur.p.push([u, pr[1] + f * (q[1] - pr[1])]); cur.n.push(N3[k]); cur.P.push(V3.add(P3[k - 1], V3.mul(V3.sub(P3[k], P3[k - 1]), f))); }
+            }
+            cur.p.push(q); cur.n.push(N3[k]); cur.P.push(P3[k]);
+            if (k === P2.length - 1) { cur.e[1] = E[1]; runs.push(cur); cur = null; }
+          } else {
+            const pr = k > 0 ? P2[k - 1] : null;
+            if (cur && pr) { const u = q[0] < 0 ? 0 : F.L, f = at(pr, q, u); cur.p.push([u, pr[1] + f * (q[1] - pr[1])]); cur.n.push(N3[k - 1]); cur.P.push(V3.add(P3[k - 1], V3.mul(V3.sub(P3[k], P3[k - 1]), f))); runs.push(cur); cur = null; }
+            else if (!cur && pr && (pr[0] < 0) !== (q[0] < 0) && !inside(pr)) {   // passes right through the range
+              const u0 = pr[0] < 0 ? 0 : F.L, u1 = u0 === 0 ? F.L : 0, f0 = at(pr, q, u0), f1 = at(pr, q, u1);
+              const L3 = f => V3.add(P3[k - 1], V3.mul(V3.sub(P3[k], P3[k - 1]), f));
+              runs.push({ p: [[u0, pr[1] + f0 * (q[1] - pr[1])], [u1, pr[1] + f1 * (q[1] - pr[1])]], n: [N3[k], N3[k]], P: [L3(f0), L3(f1)], e: [null, null] });
+            }
+          }
+        }
+      } else runs.push({ p: P2, n: N3, P: P3, e: E });
+      for (const R of runs) {
+        if (R.p.length < 2) continue;
+        const rng = t => a.qref === "ABOV" ? [-t, 0] : a.qref === "BELO" ? [0, t] : [-t / 2, t / 2];
+        const r = R.P.map(P => sofThick(a, P));
+        if (r.some(t => !(t > 0))) { warn.push(`SAR ${a.no} has no thickness`); continue; }
+        const nu = R.n.map(q => { const x = V3.dot(q, eu), y = V3.dot(q, ev), c2 = x * x + y * y; return c2 > 1e-6 ? [x / c2, y / c2] : null; });
+        if (nu.some(q => !q)) continue;
+        const endDir = (e, q) => {                                   // the side face of the area through that boundary edge, in the cut
+          if (!e) return null;
+          const w = V3.unit(V3.cross(V3.cross(e, q), m)), wn = V3.dot(w, q);
+          if (!isFinite(wn) || Math.abs(wn) < 0.25) return null;
+          return [V3.dot(w, eu) / wn, V3.dot(w, ev) / wn];
+        };
+        const segN = [], segK = [];
+        for (let k = 0; k + 1 < R.p.length; k++) {
+          const q = V3.unit(V3.add(R.n[k], R.n[k + 1])), x = V3.dot(q, eu), y = V3.dot(q, ev), c = Math.hypot(x, y) || 1;
+          segN.push([x / c, y / c]); segK.push(1 / c);
+        }
+        strips.push({ no: a.no, grp: a.grp, p: R.p.map(q => q.slice()), r: r.map(rng), nu, w: [endDir(R.e[0], R.n[0]), endDir(R.e[1], R.n[R.n.length - 1])],
+          cut: [!R.e[0], !R.e[R.e.length - 1]], segN, segK });
+      }
+    }
+  }
+  /* close the corners where areas meet at a common line (their mid-surfaces meet there, so the faces leave notches) */
+  if (opt.joints !== false) {
+    const ext = strips.map(() => [0, 0]), tol = Math.max(1, model.tol);
+    strips.forEach((S, si) => [0, 1].forEach(ei => {
+      if (S.cut[ei]) return;
+      const k = ei ? S.p.length - 1 : 0, E = S.p[k], nb = S.p[ei ? k - 1 : 1];
+      const d0 = [E[0] - nb[0], E[1] - nb[1]], dl0 = Math.hypot(d0[0], d0[1]);
+      if (dl0 < 1e-6) return;
+      const d = [d0[0] / dl0, d0[1] / dl0];
+      let best = 0;
+      strips.forEach((S2, sj) => {
+        if (sj === si) return;
+        for (let j = 0; j + 1 < S2.p.length; j++) {
+          const a = S2.p[j], b = S2.p[j + 1], ab = [b[0] - a[0], b[1] - a[1]], l2 = ab[0] * ab[0] + ab[1] * ab[1];
+          if (l2 < 1e-9) continue;
+          const t = ((E[0] - a[0]) * ab[0] + (E[1] - a[1]) * ab[1]) / l2;
+          if (t < -1e-6 || t > 1 + 1e-6) continue;
+          if (Math.hypot(a[0] + t * ab[0] - E[0], a[1] + t * ab[1] - E[1]) > tol) continue;
+          const dn = d[0] * S2.segN[j][0] + d[1] * S2.segN[j][1];
+          if (Math.abs(dn) < 0.2) continue;
+          const r = S2.r[j].map((x, q) => x + t * (S2.r[j + 1][q] - x));
+          let lam = 0;
+          for (const f of r) lam = Math.max(lam, f * S2.segK[j] / dn);
+          best = Math.max(best, Math.min(lam, 3 * Math.max(Math.abs(r[0]), Math.abs(r[1])) * S2.segK[j]));
+        }
+      });
+      ext[si][ei] = best;
+    }));
+    strips.forEach((S, si) => [0, 1].forEach(ei => {
+      const lam = ext[si][ei]; if (!lam) return;
+      const k = ei ? S.p.length - 1 : 0, nb = S.p[ei ? k - 1 : 1], E = S.p[k], d0 = [E[0] - nb[0], E[1] - nb[1]], l = Math.hypot(d0[0], d0[1]) || 1;
+      S.p[k] = [E[0] + d0[0] / l * lam, E[1] + d0[1] / l * lam];
+    }));
+  }
+  const polys = [];
+  for (const S of strips) {
+    const last = S.p.length - 1;
+    const off = (k, s) => { const w = (k === 0 && S.w[0]) || (k === last && S.w[1]) || S.nu[k]; return [S.p[k][0] + s * w[0], S.p[k][1] + s * w[1]]; };
+    S.pts = [...S.p.map((_, k) => off(k, S.r[k][0])), ...S.p.map((_, k) => off(k, S.r[k][1])).reverse()];
+    let g = polyOf(S.pts);
+    if (!g.isValid()) {                                              // skew ends crossed on a very short piece: square them
+      S.w = [null, null];
+      S.pts = [...S.p.map((_, k) => off(k, S.r[k][0])), ...S.p.map((_, k) => off(k, S.r[k][1])).reverse()];
+      g = polyOf(S.pts);
+    }
+    if (!g.isValid()) {                                              // still crossing itself: join the strip piece by piece
+      const qs = [];
+      for (let k = 0; k < last; k++) {
+        const q = polyOf([off(k, S.r[k][0]), off(k + 1, S.r[k + 1][0]), off(k + 1, S.r[k + 1][1]), off(k, S.r[k][1])]);
+        qs.push(q.isValid() ? q : q.buffer(0));
+      }
+      g = gf().createGeometryCollection(qs).union();
+    }
+    if (!g.isEmpty() && g.getArea() > 1e-3) polys.push(g);
+  }
+  if (!polys.length) return { parts: [], strips, warnings: warn.concat(["the cut does not pass through any area"]), frame: F };
+  let U = gf().createGeometryCollection(polys).union();
+  U = buf(buf(U, 0.5, "mitre"), -0.5, "mitre");                      // fuse hairline gaps between pieces that touch
+  U = jsts.simplify.TopologyPreservingSimplifier.simplify(U, 0.5);
+  const parts = polysOf(U).map(p => ({ outer: ringCCW(p.getExteriorRing()), holes: Array.from({ length: p.getNumInteriorRing() }, (_, i) => ringCCW(p.getInteriorRingN(i))), area: p.getArea() }))
+    .filter(p => p.area > 1).sort((p, q) => q.area - p.area);
+  return { parts, strips, warnings: warn, frame: F };
+}
+/* a part of a cut as text for the custom section: outline lines and "poly …" openings, moved so the lowest left corner is at 0, 0 */
+function sofPartText(part) {
+  const xs = part.outer.map(p => p[0]), ys = part.outer.map(p => p[1]), x0 = Math.min(...xs), y0 = Math.min(...ys);
+  const R = v => Math.round(v);
+  const outline = part.outer.map(p => `${R(p[0] - x0)}, ${R(p[1] - y0)}`).join("\n");
+  const openings = part.holes.map(h => "poly " + h.map(p => `${R(p[0] - x0)} ${R(p[1] - y0)}`).join(" ")).join("\n");
+  return { outline, openings, origin: [x0, y0], size: [Math.max(...xs) - x0, Math.max(...ys) - y0] };
+}
+
+if (typeof module !== "undefined") module.exports = { sofModel, sofCut, sofPartText, textPlace, stdSection, buildCustom, makeStyle, specDefaults, STD_SPECS, STYLE_SPEC, TEMPLATES, defaultCustom, newItem, exportSVG, exportPDF, exportDXF, primitives, UserError };
 </script>
 
 <script id="app">
@@ -2608,6 +3525,7 @@ function defaultState() {
   return { mode: "standard", stdType: STD_TYPES[0],
     std: Object.fromEntries(STD_TYPES.map(t => [t, specDefaults(STD_SPECS[t])])),
     custom: defaultCustom(), style: specDefaults([...STYLE_SPEC, ...ANCH_SPEC]), page: "sketch", anchOv: {}, ui: {},
+    sof: { units: { len: "m", t: "auto", up: "auto" }, off: [], skip: [], flip: [], cuts: [], joints: true, sel: null, file: "" },
     tab: { standard: "section", custom: "geometry" }, sel: null, annot: {}, draw: { mode: "pencil", color: "#b3261e", width: "m" },
     textStyle: null, rebar: { mode: "row", d: "16", dist: "spacing", val: "150", ls: "200" }, cut: { len: "1000", depth: "300" }, snap: true };
 }
@@ -2629,7 +3547,8 @@ function mergeState(data) {
   if (data.cut && typeof data.cut === "object") Object.assign(s.cut, data.cut);
   if (data.textStyle && typeof data.textStyle === "object") s.textStyle = data.textStyle;
   if (data.snap === false) s.snap = false;
-  if (data.page === "anch") s.page = "anch";
+  if (data.page === "anch" || data.page === "sofi") s.page = data.page;
+  if (data.sof && typeof data.sof === "object") s.sof = { ...s.sof, ...data.sof, units: { ...s.sof.units, ...(data.sof.units || {}) }, cuts: Array.isArray(data.sof.cuts) ? data.sof.cuts : [] };
   if (data.ui && typeof data.ui === "object") s.ui = data.ui;
   if (data.anchOv && typeof data.anchOv === "object") for (const [k, v] of Object.entries(data.anchOv)) if (v && typeof v === "object") s.anchOv[k] = v;
   if (data.annot && typeof data.annot === "object") for (const [k, a] of Object.entries(data.annot)) {
@@ -2900,6 +3819,8 @@ function renderAll() {
   if (pickReq) endPick(false);
   const body = $("#body"), where = state.mode + "/" + cur, keep = renderAll.where === where ? body.scrollTop : 0;
   body.replaceChildren(); body.scrollTop = 0;
+  if (state.mode !== "custom") customNote = false;
+  if (customNote) body.append(customNoteBox());
   ({ section: renderStd, drawing: renderDrawingTab, geometry: renderGeo, reinforcement: renderReinf })[cur](body);
   renderAll.where = where; body.scrollTop = keep;
   schedule();
@@ -2932,12 +3853,20 @@ function renderDrawingTab(body) {
         el("button", { type: "button", class: "linkbtn", onclick: () => setPage("anch") }, "a page of their own"), ".")));
 }
 function renderGeo(body) {
-  const tpl = el("select", { "aria-label": "Load a template shape" }, el("option", { value: "" }, "Load a template shape…"), Object.keys(TEMPLATES).map(n => el("option", { value: n }, n)));
+  const T = Object.keys(TEMPLATES);
+  const tpl = el("select", { "aria-label": "Start a new section or change the shape" }, el("option", { value: "" }, "New section or shape…"),
+    el("optgroup", { label: "New section (clears the bars and additions)" }, T.map(n => el("option", { value: "new:" + n }, n === "Rectangle" ? "Blank rectangle" : n))),
+    el("optgroup", { label: "Copy a standard section (with its bars)" }, STD_TYPES.map(n => el("option", { value: "std:" + n }, n))),
+    el("optgroup", { label: "Change the shape only (keeps the bars)" }, T.map(n => el("option", { value: "shape:" + n }, n))));
   tpl.addEventListener("change", () => {
-    const n = tpl.value; if (!n) return;
-    if (state.custom.items.length && !confirm("Replace the outline and openings? The reinforcement list is kept.")) { tpl.value = ""; return; }
+    const v = tpl.value; if (!v) return;
+    const [k, ...r] = v.split(":"), n = r.join(":");
+    if (k === "new") return blankCustom(n);
+    if (k === "std") return stdToCustom(n);
+    histCommit();
     [state.custom.outline, state.custom.openings] = TEMPLATES[n];
-    persist(); renderAll();
+    persist(); histCommit(); userView = false; renderAll();
+    toast("Shape replaced; the bars are kept. Undo (Ctrl+Z) brings the old shape back.");
   });
   body.append(el("div", { class: "toolbar" }, tpl));
   const on = tool === "edit";
@@ -2953,6 +3882,10 @@ function renderGeo(body) {
       const t = String(state.custom.openings || "").replace(/\s+$/, "");
       state.custom.openings = (t ? t + "\n" : "") + `rect ${fmt(x)} ${fmt(y)} ${fmt(w)} ${fmt(h)}`; renderAll();
     }, b))));
+  const sc = state.custom.sofCut && sofCutOf(state.custom.sofCut);
+  if (sc) body.append(el("p", { class: "hint" }, `Section ${sc.name}-${sc.name} from the SOFiSTiK model. ` + (state.custom.sofStale
+    ? "Its outline was changed here, so it no longer follows the cut." : "Moving the cut on the SOFiSTiK page updates this outline, until you change it here."),
+    el("button", { type: "button", class: "linkbtn", onclick: () => setPage("sofi") }, "Open the SOFiSTiK page")));
   buildForm(body, CUSTOM_GEO_SPEC, state.custom, changed);
   body.append(el("p", { class: "hint" }, OUTLINE_HELP));
 }
@@ -2994,17 +3927,47 @@ function renderReinf(body) {
     requestAnimationFrame(() => list.querySelector('[aria-pressed="true"]')?.scrollIntoView({ block: "nearest" }));
   } else if (items.length) body.append(el("p", { class: "hint" }, "Select an item to edit it."));
 }
-function stdToCustom() {
+/* the custom section is one slot that is kept while you work on standard sections; these replace it (undo brings it back) */
+var customNote = false;                  // offer a fresh start when coming from a different standard section
+const customFrom = () => { const s = state.custom.src; return STD_TYPES.includes(s) ? s : null; };
+function stdToCustom(type = state.stdType) {
+  if (typeof type !== "string") type = state.stdType;
   let cs;
-  try { cs = stdSection(state.stdType, state.std[state.stdType]).toCustom(); }
+  try { cs = stdSection(type, state.std[type]).toCustom(); }
   catch (e) { toast(e instanceof UserError ? `Cannot copy: ${e.message}` : `Cannot copy: ${e}`); return; }
-  if (state.custom.items.length && !confirm("Replace the current custom section with this one?")) return;
-  const fromAnnot = state.annot["std:" + state.stdType];
+  const had = state.custom.items.length > 0;
+  histCommit();
+  sofStash();
+  const fromAnnot = state.annot["std:" + type];
   if (fromAnnot) state.annot.custom = clone(fromAnnot); else delete state.annot.custom;
-  const fromOv = (state.anchOv || {})["std:" + state.stdType];
+  const fromOv = (state.anchOv || {})["std:" + type];
   if (fromOv) state.anchOv.custom = clone(fromOv); else if (state.anchOv) delete state.anchOv.custom;
-  state.custom = cs; state.mode = "custom"; state.tab.custom = "reinforcement"; state.sel = null; userView = false;
-  persist(); renderAll();
+  cs.src = type;
+  state.custom = cs; state.mode = "custom"; state.tab.custom = "reinforcement"; state.sel = null; userView = false; customNote = false;
+  persist(); histCommit(); renderAll();
+  if (had) toast("Custom section replaced. Undo (Ctrl+Z) brings the old one back.");
+}
+function blankCustom(tpl = "Rectangle") {             // a template shape without bars or additions
+  histCommit();
+  sofStash();
+  const c = state.custom;
+  state.custom = { ...specDefaults(CUSTOM_GEO_SPEC), cover: c.cover, dg: c.dg, auto_dims: c.auto_dims, name: tpl === "Rectangle" ? "Custom section" : tpl,
+    outline: TEMPLATES[tpl][0], openings: TEMPLATES[tpl][1], items: [], src: "template" };
+  delete state.annot.custom; if (state.anchOv) delete state.anchOv.custom;
+  state.mode = "custom"; state.tab.custom = "geometry"; state.sel = null; userView = false; customNote = false;
+  persist(); histCommit(); renderAll();
+  toast("New section. Undo (Ctrl+Z) brings the old one back.");
+}
+function customNoteBox() {
+  const from = customFrom(), cur = state.stdType, nm = state.custom.name || "Custom section";
+  const sc = state.custom.src === "sofistik" && sofCutOf(state.custom.sofCut);
+  const what = from ? `still the copy of ${from}` : sc ? `section ${sc.name}-${sc.name} from the SOFiSTiK model` : state.custom.src === "example" ? "the example section" : "the one you worked on last";
+  return el("div", { class: "cnote", role: "status" },
+    el("p", {}, `Your custom section (${nm}) is ${what}. It is kept while you work on standard sections.`),
+    el("div", { class: "row" },
+      el("button", { type: "button", class: "btn", onclick: () => { customNote = false; renderAll(); } }, "Keep working on it"),
+      el("button", { type: "button", class: "btn", onclick: () => blankCustom() }, "Start blank"),
+      el("button", { type: "button", class: "btn", onclick: () => stdToCustom(cur) }, `Copy ${cur} instead`)));
 }
 
 /* ------------------------------------------------------------------ preview */
@@ -3165,16 +4128,21 @@ $("#panelShow").onclick = () => { state.ui = state.ui || {}; state.ui.panelHidde
 })();
 let apSel = null;
 function setPage(p, save = true) {
-  state.page = p === "anch" ? "anch" : "sketch";
+  state.page = p === "anch" || p === "sofi" ? p : "sketch";
   if (save) persist();
   document.body.classList.toggle("page-anch", state.page === "anch");
+  document.body.classList.toggle("page-sofi", state.page === "sofi");
   $("#anchPage").hidden = state.page !== "anch";
+  $("#sofPage").hidden = state.page !== "sofi";
   document.querySelectorAll("#pageSeg [data-page]").forEach(b => b.setAttribute("aria-pressed", String(b.dataset.page === state.page)));
   if (state.page === "anch") {
     closePop(true); closeRebarPop();
     const f = $("#apForm"); f.replaceChildren();
     buildForm(f, ANCH_SPEC, state.style, changed);
     if (job) { clearTimeout(job); redraw(); } else renderAnchPage();
+  } else if (state.page === "sofi") {
+    closePop(true); closeRebarPop(); if (pickReq) endPick(false);
+    renderSofPage();
   } else if (!userView) requestAnimationFrame(fitView);
 }
 document.querySelectorAll("#pageSeg [data-page]").forEach(b => b.addEventListener("click", () => setPage(b.dataset.page)));
@@ -3473,7 +4441,7 @@ $("#apPrint").onclick = () => {
 /* ------------------------------------------------------------------ drawing tools */
 let tool = "pan", meas = null, ink = null, rb = null, cutp = null, mdrag = null, cursor = null, snapCache = null, hotKey = null, spaceDown = false, popState = null;
 /* history: every change to the document (forms, drawing, bar list, anchorage) can be undone and redone */
-const DOC_KEYS = ["mode", "stdType", "std", "custom", "style", "annot", "anchOv"];
+const DOC_KEYS = ["mode", "stdType", "std", "custom", "style", "annot", "anchOv", "sof"];
 const docJSON = () => JSON.stringify(DOC_KEYS.map(k => state[k] ?? null));
 var hist = { undo: [], redo: [], cur: null, timer: null };      // var: persist() may run before this line
 function histInit() { clearTimeout(hist.timer); hist.cur = docJSON(); hist.undo = []; hist.redo = []; refreshToolbar(); }
@@ -3495,6 +4463,7 @@ function applyDoc(j) {
   persist(); userView = true;
   renderAll();
   if (state.page === "anch") setPage("anch", false);
+  if (state.page === "sofi") { sofRes = {}; renderSofPage(); }
 }
 function undo() {
   histCommit();
@@ -4780,7 +5749,7 @@ document.addEventListener("keydown", e => {
   const k = e.key.toLowerCase();
   if ((e.ctrlKey || e.metaKey) && ((k === "z" && e.shiftKey) || k === "y")) { e.preventDefault(); redo(); return; }
   if ((e.ctrlKey || e.metaKey) && k === "z") { e.preventDefault(); undo(); return; }
-  if (state.page === "anch") return;
+  if (state.page !== "sketch") return;
   if (e.ctrlKey || e.metaKey || e.altKey) return;
   if (e.key === " " && (e.target === document.body || e.target === svg)) { spaceDown = true; e.preventDefault(); return; }
   if (k === "f") { fitView(); return; }
@@ -4789,6 +5758,570 @@ document.addEventListener("keydown", e => {
 });
 document.addEventListener("keyup", e => { if (e.key === " ") spaceDown = false; });
 setTool("pan");
+
+/* ------------------------------------------------------------------ SOFiSTiK page: a SOFiMSHC model, cut into sections */
+const SOF_LS = LS_KEY + "-sofistik";
+/* sofSrc: { kind: "dat", files: { name: text } } (a main file and the files it includes) or { kind: "saf", name, book } */
+var sofSrc = null, sofM = null, sofMKey = "", sofRes = {}, sofSelA = null, sofDraw = null, sofDrag = null, sofHot = null;
+try {
+  const raw = localStorage.getItem(SOF_LS);
+  if (raw) sofSrc = raw.startsWith('{"kind"') ? JSON.parse(raw) : { kind: "dat", files: { [(state.sof && state.sof.file) || "model.dat"]: raw } };
+} catch (e) { /* private mode */ }
+function sofSave() {
+  try { if (sofSrc) localStorage.setItem(SOF_LS, JSON.stringify(sofSrc)); else localStorage.removeItem(SOF_LS); }
+  catch (e) { toast("The model is too large to keep in this browser; open the files again next time. The sections are kept."); }
+}
+/* the files nothing else includes are the main files */
+function sofRoots(files) {
+  const names = Object.keys(files || {}), inc = new Set();
+  for (const n of names) for (const m of String(files[n]).matchAll(/^\s*#include\s+(\S+)/gim)) { const f = sofFind(files, m[1]); if (f !== null && f !== n) inc.add(f); }
+  const roots = names.filter(n => !inc.has(n));
+  return roots.length ? roots : names;
+}
+const sofSrcName = () => !sofSrc ? "" : sofSrc.kind === "saf" ? sofSrc.name : sofRoots(sofSrc.files).join(", ");
+const SOF_COLORS = ["#1b5fa8", "#2d6a3e", "#b35c00", "#7b3fa0", "#0f7c80", "#a3263f", "#c2185b", "#8a6d00", "#2f4fb3", "#4e7d1e"];
+const sofColor = g => SOF_COLORS[Math.abs(Math.round(g)) % SOF_COLORS.length];
+const sofS = () => {                                                // the document part: units, groups left out, cuts
+  const s = state.sof = state.sof || {};
+  s.units = s.units || { len: "m", t: "auto", up: "auto" }; s.off = s.off || []; s.skip = s.skip || []; s.flip = s.flip || []; s.cuts = s.cuts || [];
+  if (s.joints === undefined) s.joints = true;
+  return s;
+};
+function sofModelNow() {                                            // parse again only when the file or the units change
+  if (!sofSrc) { sofM = null; return null; }
+  const S = sofS(), key = (sofSrc.kind === "saf" ? "saf:" + sofSrc.name + JSON.stringify(sofSrc.book).length : Object.entries(sofSrc.files).map(([n, t]) => n + t.length).join("|")) + JSON.stringify(S.units);
+  if (sofM && key === sofMKey) return sofM;
+  sofMKey = key;
+  try {
+    if (sofSrc.kind === "saf") sofM = sofFromSaf(sofSrc.book, S.units);
+    else { const roots = sofRoots(sofSrc.files); sofM = sofModel(roots.map(r => `#include ${r}`).join("\n"), S.units, sofSrc.files, "your files"); }
+  } catch (e) { sofM = { sars: [], groups: [], warnings: [String(e.message || e)], nPts: 0, nLines: 0, bbox: [0, 0, 0, 0, 0, 0], up: 1, gdir: "NEGZ", tol: 1 }; }
+  return sofM;
+}
+const sofUnitLen = () => sofS().units.len === "mm" ? 1 : 1000;
+const sofFmt = v => { const f = sofUnitLen(), x = v / f; return f === 1 ? String(Math.round(x)) : String(Math.round(x * 1000) / 1000); };
+const sofUnitName = () => sofS().units.len === "mm" ? "mm" : "m";
+const sofCutOf = id => sofS().cuts.find(c => c.id === id) || null;
+function sofNextName() {
+  const used = new Set(sofS().cuts.map(c => c.name));
+  for (let i = 0; i < 26 * 27; i++) { const n = i < 26 ? String.fromCharCode(65 + i) : String.fromCharCode(64 + Math.floor(i / 26)) + String.fromCharCode(65 + i % 26); if (!used.has(n)) return n; }
+  return "X";
+}
+/* the cut through the model, and its outline as text for the custom section */
+function sofCompute(c) {
+  const M = sofModelNow(), S = sofS();
+  if (!M) return null;
+  const res = sofCut(M, c.kind === "level" ? { kind: "level", z: c.z } : { kind: "plan", p1: c.p1, p2: c.p2 },
+    { skip: new Set(S.skip), flip: new Set(S.flip), off: new Set(S.off), joints: S.joints });
+  sofRes[c.id] = res;
+  const k = Math.min(c.part || 0, Math.max(0, res.parts.length - 1)), part = res.parts[k];
+  const geo = part ? { ...sofPartText(part), nparts: res.parts.length, part: k, holes: part.holes.length } : { outline: "", openings: "", nparts: 0, part: 0, holes: 0, size: [0, 0], origin: [0, 0] };
+  geo.warn = res.warnings.slice(0, 6);
+  if (part) geo.outline = `# ${c.name}-${c.name} from ${S.file || "the SOFiSTiK model"}\n` + geo.outline;
+  const old = c.geo;
+  c.geo = geo;
+  if (old && old.outline !== geo.outline) sofFollow(c, old);
+  return res;
+}
+/* a section opened in the editor follows its cut, unless its outline was changed by hand */
+function sofFollow(c, old) {
+  const live = state.mode === "custom" && state.custom.sofCut === c.id ? state.custom : null, cs = live || (c.work && c.work.custom);
+  if (!cs || !c.geo.outline) return;
+  if (cs.outline === cs.sofBase && (cs.openings || "") === (cs.sofBaseO || "")) {
+    cs.outline = cs.sofBase = c.geo.outline; cs.openings = cs.sofBaseO = c.geo.openings; cs.sofStale = false;
+    if (cs.items && cs.items.length) toast(`Section ${c.name}-${c.name} follows the new cut; check its bars.`);
+  } else cs.sofStale = true;
+}
+function sofRefreshAll() { for (const c of sofS().cuts) sofCompute(c); }
+/* keep the work on a section with its cut when another section takes the custom editor */
+function sofStash() {
+  const id = state.custom && state.custom.sofCut, c = id && sofCutOf(id);
+  if (!c) return;
+  c.work = { custom: clone(state.custom), annot: state.annot.custom ? clone(state.annot.custom) : null, anchOv: state.anchOv && state.anchOv.custom ? clone(state.anchOv.custom) : null };
+}
+function sofOpen(id) {
+  const c = sofCutOf(id);
+  if (!c || !c.geo || !c.geo.outline) { toast("This cut has no outline yet: it does not pass through any area."); return; }
+  histCommit();
+  if (state.custom.sofCut !== id) {
+    sofStash();
+    if (c.work) {
+      state.custom = clone(c.work.custom);
+      if (c.work.annot) state.annot.custom = clone(c.work.annot); else delete state.annot.custom;
+      if (c.work.anchOv) { state.anchOv = state.anchOv || {}; state.anchOv.custom = clone(c.work.anchOv); } else if (state.anchOv) delete state.anchOv.custom;
+    } else {
+      const old = state.custom;
+      state.custom = { ...specDefaults(CUSTOM_GEO_SPEC), cover: old.cover, dg: old.dg, auto_dims: true, name: `${c.name}-${c.name}` + (sofS().file ? ` (${sofS().file.replace(/\.[^.]+$/, "")})` : ""),
+        outline: c.geo.outline, openings: c.geo.openings, items: [], src: "sofistik", sofCut: id, sofBase: c.geo.outline, sofBaseO: c.geo.openings };
+      delete state.annot.custom; if (state.anchOv) delete state.anchOv.custom;
+    }
+    state.custom.sofCut = id;
+  }
+  state.mode = "custom"; state.tab.custom = state.custom.items.length ? "reinforcement" : "geometry"; state.sel = null; customNote = false; userView = false;
+  /* a scale that puts the section on paper at a sensible size (about 100-300 mm across) */
+  const big = Math.max(...(c.geo.size || [0, 0])), sc = +String(state.style.scale).replace(",", ".") || 10;
+  let note = "";
+  if (big && (big / sc > 320 || big / sc < 60)) {
+    const nice = [5, 10, 20, 25, 50, 75, 100, 200, 250, 500], want = big / 220;
+    const ns = nice.reduce((a, b) => Math.abs(Math.log(b / want)) < Math.abs(Math.log(a / want)) ? b : a);
+    if (ns !== sc) { state.style.scale = String(ns); note = ` Drawing scale set to 1:${ns}.`; }
+  }
+  persist(); histCommit();
+  setPage("sketch"); renderAll();
+  if (note) toast(`Section ${c.name}-${c.name}.` + note);
+}
+function sofUpdateFromModel(c) {
+  const live = state.mode === "custom" && state.custom.sofCut === c.id ? state.custom : null, cs = live || (c.work && c.work.custom);
+  if (!cs) return;
+  histCommit();
+  cs.outline = cs.sofBase = c.geo.outline; cs.openings = cs.sofBaseO = c.geo.openings; cs.sofStale = false;
+  persist(); histCommit(); renderSofPage();
+}
+function sofItemsOf(c) {
+  if (state.mode === "custom" && state.custom.sofCut === c.id) return { n: state.custom.items.length, live: true, stale: !!state.custom.sofStale };
+  if (c.work) return { n: c.work.custom.items.length, live: false, stale: !!c.work.custom.sofStale };
+  return null;
+}
+
+/* ---- the page */
+function sofLoaded(what) {
+  sofM = null; sofRes = {}; sofSelA = null;
+  sofSave();
+  const S = sofS();
+  histCommit();
+  S.file = sofSrcName();
+  const M = sofModelNow();
+  if (M) {
+    sofRefreshAll();
+    if (!S.cuts.length && M.sars.length) sofView.fit = true;
+    const miss = (M.missing || []).length;
+    toast(M.sars.length ? `Read ${M.sars.length} areas from ${what}.` + (miss ? ` ${miss} included file${miss === 1 ? " is" : "s are"} not open.` : "")
+      : miss ? `No areas yet: ${what} includes files that are not open. Add them too.` : `No structural areas (SAR) were found in ${what}.`);
+  }
+  persist(); histCommit();
+  renderSofPage();
+}
+async function sofReadFiles(list) {
+  const fs = [...(list || [])];
+  if (!fs.length) return;
+  const x = fs.find(f => /\.xlsx$/i.test(f.name));
+  try {
+    if (x) {                                                         // SAF: one workbook holds the whole model
+      sofSrc = { kind: "saf", name: x.name, book: await sofXlsx(await x.arrayBuffer()) };
+      sofLoaded(x.name); return;
+    }
+    if (!sofSrc || sofSrc.kind !== "dat") sofSrc = { kind: "dat", files: {} };
+    for (const f of fs) {
+      const buf = await f.arrayBuffer();
+      let text = new TextDecoder("utf-8").decode(buf);
+      if (text.includes("\ufffd")) text = new TextDecoder("windows-1252").decode(buf);   // SOFiSTiK files are often ANSI
+      sofSrc.files[f.name] = text;
+    }
+    sofLoaded(fs.map(f => f.name).join(", "));
+  } catch (e) { toast(`Could not read ${fs.map(f => f.name).join(", ")}: ${e.message || e}`); }
+}
+function sofRemoveFile(name) {
+  if (!sofSrc) return;
+  if (sofSrc.kind === "saf" || Object.keys(sofSrc.files).length <= 1) sofSrc = null; else delete sofSrc.files[name];
+  sofLoaded(name);
+}
+function renderSofPage() {
+  if (state.page !== "sofi") return;
+  const S = sofS(), M = sofModelNow(), side = $("#sfSide");
+  const keepScroll = side.scrollTop;
+  side.replaceChildren();
+  const sec = (title, open, ...kids) => {
+    const d = el("details", { class: "fsec" }, el("summary", {}, title), el("div", { class: "fsec-body" }, ...kids));
+    d.open = uiOpen("sof:" + title, open); d.addEventListener("toggle", () => setUiOpen("sof:" + title, d.open));
+    return d;
+  };
+  const fin = el("input", { type: "file", accept: ".dat,.txt,.inp,.xlsx,text/plain", multiple: true, hidden: true });
+  fin.addEventListener("change", () => { const f = [...fin.files]; fin.value = ""; sofReadFiles(f); });
+  side.append(el("h2", {}, "SOFiSTiK model"),
+    el("p", { class: "hint" }, "Read the structural areas (SAR) of a SOFiSTiK model and cut sections through them. Open the .dat input files (the main file and the files it includes, such as a Geometry.dat), or a SAF file (.xlsx) exported from SOFiSTiK. Each section can be opened in the custom editor to draw its bars, and keeps them."),
+    el("div", { class: "toolbar" },
+      el("button", { type: "button", class: "btn primary", onclick: () => fin.click() }, !sofSrc ? "Open .dat or SAF files…" : sofSrc.kind === "dat" ? "Add .dat files…" : "Open other files…"),
+      sofSrc ? el("button", { type: "button", class: "btn", title: "Forget the model; the sections are kept", onclick: () => { sofSrc = null; sofLoaded("—"); } }, "Close the model") : null, fin));
+  if (!sofSrc) side.append(el("p", { class: "hint" }, "You can also drop the files on this page. Pick several .dat files at once with Ctrl or Shift."));
+  if (sofSrc) {
+    const roots = sofSrc.kind === "dat" ? sofRoots(sofSrc.files) : [];
+    const names = sofSrc.kind === "saf" ? [sofSrc.name] : Object.keys(sofSrc.files);
+    side.append(el("ul", { class: "sf-files" }, names.map(n => el("li", {}, el("span", { class: "nm" }, n),
+      el("span", { class: "sum" }, sofSrc.kind === "saf" ? "SAF" : roots.includes(n) ? "main" : "included"),
+      el("button", { type: "button", class: "x", title: `Remove ${n}`, "aria-label": `Remove ${n}`, onclick: () => sofRemoveFile(n) }, "×")))));
+    const miss = (M && M.missing) || [], needed = M && (!M.sars.length || M.warnings.some(w => /is missing|no outer boundary/.test(w)));
+    if (miss.length && needed) side.append(el("div", { class: "sf-miss" },
+      el("p", {}, el("b", {}, "Included files that are not open"), el("br"), ...miss.flatMap((m, i) => [i ? el("br") : null, `${m.name} (from ${m.from})`])),
+      el("p", { class: "hint" }, M.sars.length ? "Some areas use points or lines that are not read yet; they are probably in these files." : "The areas use points and lines from these files. Add them to read the model."),
+      el("button", { type: "button", class: "btn small", onclick: () => fin.click() }, "Add files…")));
+  }
+  if (M) {
+    const nCur = M.sars.filter(a => a.curved).length;
+    const bb = M.bbox, ext = M.sars.length ? [bb[3] - bb[0], bb[4] - bb[1], bb[5] - bb[2]].map(v => v >= 10000 ? (v / 1000).toFixed(1) : (v / 1000).toFixed(2)).join(" × ") + " m" : "";
+    side.append(el("p", { class: "sf-file" }, el("b", {}, sofSrcName() || "Model"), el("br"),
+      `${M.sars.length} areas in ${M.groups.length} group${M.groups.length === 1 ? "" : "s"}, ` + (M.saf ? `${M.nPts} nodes` : `${M.nLines} lines, ${M.nPts} points`) + (nCur ? `; ${nCur} curved or warped` : ""),
+      ext ? el("br") : null, ext ? `Size x × y × z: ${ext}` : null));
+    const sel = (label, key, opts, help) => {
+      const s = el("select", { title: help || null }, opts.map(([v, t]) => el("option", { value: v, selected: S.units[key] === v }, t)));
+      s.addEventListener("change", () => { histCommit(); S.units[key] = s.value; sofRefreshAll(); persist(); histCommit(); renderSofPage(); });
+      return el("div", { class: "fcell" }, el("label", {}, label), s);
+    };
+    const jb = el("input", { type: "checkbox", id: "sfJoints", checked: S.joints });
+    jb.addEventListener("change", () => { histCommit(); S.joints = jb.checked; sofRefreshAll(); persist(); histCommit(); renderSofPage(); });
+    side.append(sec("Units and direction", false,
+      el("div", { class: "fgrid" },
+        sel("Coordinates in", "len", [["m", "m"], ["mm", "mm"]], "The unit of x, y, z where the file does not say"),
+        sel("Thickness T in", "t", [["auto", `auto (${M.tUnit})`], ["m", "m"], ["mm", "mm"]], "The unit of T where the file does not say; auto guesses from the values"),
+        sel("Up is", "up", [["auto", `from GDIR ${M.gdir}${M.gdirFile ? "" : " (default)"}`], ["+Z", "+Z"], ["-Z", "−Z"]], "Gravity points down; GDIR in SYST sets it")),
+      el("div", { class: "fcell wide check" }, jb, el("label", { for: "sfJoints", title: "Areas modelled at their mid-surfaces meet at a line; this fills the notches their faces leave at the corners" }, "Close the corners where areas meet"))));
+    const grp = el("div", { class: "sf-groups" });
+    for (const G of M.groups) {
+      const id = "sfg" + G.grp, cb = el("input", { type: "checkbox", id, checked: !S.off.includes(G.grp) });
+      cb.addEventListener("change", () => { histCommit(); S.off = cb.checked ? S.off.filter(g => g !== G.grp) : [...S.off, G.grp]; sofRefreshAll(); persist(); histCommit(); renderSofPage(); });
+      const tt = G.tmin === Infinity ? "no T" : G.tmin === G.tmax ? `t ${Math.round(G.tmin)}` : `t ${Math.round(G.tmin)}–${Math.round(G.tmax)}`;
+      grp.append(el("label", { for: id, class: "sf-grp" }, cb, el("span", { class: "sw", style: `background:${sofColor(G.grp)}` }), G.name || `Group ${G.grp}`, el("span", { class: "sum" }, ` ${G.n} area${G.n === 1 ? "" : "s"}, ${tt} mm`)));
+    }
+    side.append(sec("Groups in the cuts", M.groups.length <= 12, grp));
+    if (M.warnings.length) side.append(sec(`Notes from reading the file (${M.warnings.length})`, false, el("ul", { class: "sf-warn" }, M.warnings.slice(0, 40).map(w => el("li", {}, w)))));
+    if (sofSelA !== null) {
+      const a = M.sars.find(q => q.no === sofSelA);
+      if (a) {
+        const sk = el("input", { type: "checkbox", id: "sfSkip", checked: S.skip.includes(a.no) }), fl = el("input", { type: "checkbox", id: "sfFlip", checked: S.flip.includes(a.no), disabled: a.qref === "CENT" });
+        const tog = (arr, on) => { histCommit(); S[arr] = on ? [...S[arr], a.no] : S[arr].filter(x => x !== a.no); sofRefreshAll(); persist(); histCommit(); renderSofPage(); };
+        sk.addEventListener("change", () => tog("skip", sk.checked)); fl.addEventListener("change", () => tog("flip", fl.checked));
+        side.append(el("div", { class: "sf-area" },
+          el("div", { class: "sf-areahead" }, el("b", {}, `Area SAR ${a.no}`), el("button", { type: "button", class: "linkbtn", onclick: () => { sofSelA = null; renderSofPage(); } }, "close")),
+          el("p", { class: "hint" }, `Group ${a.grp} · t = ${a.samples.length ? "varies" : Math.round(a.t) + " mm"} · ${{ CENT: "centred on its surface", ABOV: "above its surface (QREF ABOV)", BELO: "below its surface (QREF BELO)" }[a.qref]}${a.curved ? " · curved" : ""}${a.title ? " · " + a.title : ""}`),
+          el("div", { class: "fcell wide check" }, sk, el("label", { for: "sfSkip" }, "Leave it out of the cuts")),
+          el("div", { class: "fcell wide check" }, fl, el("label", { for: "sfFlip", title: a.qref === "CENT" ? "A centred area has no side to flip" : "Puts the thickness on the other side of the surface" }, "Put its thickness on the other side"))));
+      }
+    }
+  }
+  /* the sections */
+  const list = el("ol", { class: "items sf-cuts" });
+  if (!S.cuts.length) list.append(el("li", { class: "empty" }, M ? "No sections yet. Draw a cut across the structure on the plan." : "No sections yet."));
+  S.cuts.forEach(c => {
+    const g = c.geo, w = sofItemsOf(c);
+    const what = !g || !g.nparts ? "no area cut" : `${sofFmtSize(g.size)}${g.holes ? `, ${g.holes} opening${g.holes === 1 ? "" : "s"}` : ""}`;
+    list.append(el("li", {}, el("button", { type: "button", "aria-pressed": String(c.id === S.sel), onclick: () => { S.sel = c.id; persist(); renderSofPage(); } },
+      el("span", { class: "no" }, `${c.name}-${c.name}`), el("span", {}, c.kind === "level" ? `level ${sofFmt(c.z)}` : "vertical"),
+      el("span", { class: "sum" }, what + (w ? ` · ${w.n} item${w.n === 1 ? "" : "s"}${w.live ? " (in the editor)" : ""}` : "")))));
+  });
+  const addBar = el("div", { class: "toolbar" },
+    el("button", { type: "button", class: "btn", disabled: !M, onclick: () => sofStartDraw(), title: "Click two points across the structure on the plan" }, "Draw a cut on the plan"),
+    el("button", { type: "button", class: "btn", disabled: !M, onclick: () => sofAddLevel(), title: "A horizontal cut, for walls and columns" }, "Add a level cut"));
+  const det = el("div", { class: "sf-det" });
+  const c = sofCutOf(S.sel);
+  if (c) {
+    const field = (label, get, set, wide) => {
+      const inp = el("input", { type: "text", value: get(), inputmode: "decimal", autocomplete: "off" });
+      numInput(inp, "float", v => { const x = parseFloat(String(v).replace(",", ".")); if (!isFinite(x)) return; set(x * sofUnitLen()); sofCompute(c); persist(); sofDrawAll(); });
+      inp.addEventListener("change", () => { histCommit(); renderSofPage(); });
+      return el("div", { class: "fcell" + (wide ? " wide" : "") }, el("label", {}, label), inp);
+    };
+    const nm = el("input", { type: "text", value: c.name, maxlength: 4 });
+    nm.addEventListener("input", () => { const v = nm.value.trim().toUpperCase(); if (!v) return; c.name = v; sofCompute(c); persist(); sofDrawAll(); });
+    nm.addEventListener("change", () => { histCommit(); renderSofPage(); });
+    const u = sofUnitName();
+    det.append(el("div", { class: "itemhead" }, `Section ${c.name}-${c.name}`),
+      el("div", { class: "fgrid" }, el("div", { class: "fcell" }, el("label", {}, "Name"), nm),
+        ...(c.kind === "level" ? [field(`Level z [${u}]`, () => sofFmt(c.z), v => { c.z = v; })]
+          : [field(`Point 1 x [${u}]`, () => sofFmt(c.p1[0]), v => { c.p1[0] = v; }), field(`Point 1 y [${u}]`, () => sofFmt(c.p1[1]), v => { c.p1[1] = v; }),
+             field(`Point 2 x [${u}]`, () => sofFmt(c.p2[0]), v => { c.p2[0] = v; }), field(`Point 2 y [${u}]`, () => sofFmt(c.p2[1]), v => { c.p2[1] = v; })])));
+    if (c.geo && c.geo.nparts > 1) {
+      const ps = el("select", {}, Array.from({ length: c.geo.nparts }, (_, i) => el("option", { value: i, selected: i === c.geo.part }, i === 0 ? "Part 1 (largest)" : `Part ${i + 1}`)));
+      ps.addEventListener("change", () => { histCommit(); c.part = +ps.value; sofCompute(c); persist(); histCommit(); renderSofPage(); });
+      det.append(el("div", { class: "fcell wide" }, el("label", {}, `The cut has ${c.geo.nparts} separate parts; the section uses`), ps));
+    }
+    const w = sofItemsOf(c);
+    if (w && w.stale) det.append(el("p", { class: "hint" }, "Its outline was changed in the editor, so it no longer follows the cut. ",
+      el("button", { type: "button", class: "linkbtn", onclick: () => sofUpdateFromModel(c) }, "Take the outline from the cut again")));
+    det.append(el("div", { class: "toolbar" },
+      el("button", { type: "button", class: "btn primary", disabled: !c.geo || !c.geo.outline, onclick: () => sofOpen(c.id) }, w ? "Open it in the editor" : "Draw its bars in the editor"),
+      c.kind === "plan" ? el("button", { type: "button", class: "btn", title: "Look at the section from the other side", onclick: () => { histCommit(); [c.p1, c.p2] = [c.p2, c.p1]; sofCompute(c); persist(); histCommit(); renderSofPage(); } }, "Reverse") : null,
+      el("button", { type: "button", class: "btn", onclick: () => {
+        histCommit();
+        if (state.custom.sofCut === c.id) state.custom.sofCut = null;
+        S.cuts = S.cuts.filter(q => q !== c); S.sel = S.cuts.length ? S.cuts[S.cuts.length - 1].id : null;
+        persist(); histCommit(); renderSofPage();
+        toast(`Section ${c.name}-${c.name} deleted. Undo (Ctrl+Z) brings it back.`);
+      } }, "Delete")));
+  }
+  side.append(sec("Sections", true, list, addBar, det));
+  side.scrollTop = keepScroll;
+  sofDrawAll();
+}
+const sofFmtSize = s => `${Math.round(s[0])} × ${Math.round(s[1])} mm`;
+function sofAddLevel() {
+  const M = sofModelNow(); if (!M) return;
+  const S = sofS(), z = Math.round((M.bbox[2] + M.bbox[5]) / 2 / 100) * 100;
+  histCommit();
+  const c = { id: newId(), name: sofNextName(), kind: "level", z, part: 0 };
+  S.cuts.push(c); S.sel = c.id; sofCompute(c);
+  persist(); histCommit(); renderSofPage();
+}
+
+/* ---- the views: plan and 3D, and the section */
+const sofView = { mode: "plan", vb: null, fit: true, yaw: -50, pitch: 28, pvb: null };
+const sofV = P => sofModelNow() && sofModelNow().up < 0 ? [P[0], -P[1], -P[2]] : P;     // Z down: turned so that up is up
+function sofProj(P) {                                                // screen x, screen y (down), depth
+  const q = sofV(P);
+  if (sofView.mode === "plan") return [q[0], -q[1], q[2]];
+  const y = sofView.yaw * Math.PI / 180, p = sofView.pitch * Math.PI / 180;
+  const r = [-Math.sin(y), Math.cos(y), 0], c = [-Math.sin(p) * Math.cos(y), -Math.sin(p) * Math.sin(y), Math.cos(p)], f = [Math.cos(p) * Math.cos(y), Math.cos(p) * Math.sin(y), Math.sin(p)];
+  return [q[0] * r[0] + q[1] * r[1], -(q[0] * c[0] + q[1] * c[1] + q[2] * c[2]), q[0] * f[0] + q[1] * f[1] + q[2] * f[2]];
+}
+function sofBounds() {
+  const M = sofModelNow(); if (!M || !M.sars.length) return null;
+  const b = [Infinity, Infinity, -Infinity, -Infinity];
+  const add = P => { const s = sofProj(P); b[0] = Math.min(b[0], s[0]); b[1] = Math.min(b[1], s[1]); b[2] = Math.max(b[2], s[0]); b[3] = Math.max(b[3], s[1]); };
+  for (const a of M.sars) for (const P of a.outer) add(P);
+  if (sofView.mode === "plan") for (const c of sofS().cuts) if (c.kind === "plan") { add([...c.p1, 0]); add([...c.p2, 0]); }
+  return b;
+}
+function sofFit() {
+  const svgEl = $("#sfView"), b = sofBounds(); if (!b || !svgEl.clientWidth) return;
+  const W = svgEl.clientWidth, H = svgEl.clientHeight, top = 70, pad = 30;
+  let w = ((b[2] - b[0]) || 1000) * 1.08, h = ((b[3] - b[1]) || 1000) * 1.08;
+  const k = Math.max(w / (W - 2 * pad), h / (H - top - pad));
+  sofView.vb = { x: (b[0] + b[2]) / 2 - W / 2 * k, y: (b[1] + b[3]) / 2 - (top + (H - top - pad) / 2) * k, w: W * k, h: H * k };
+  sofView.fit = false;
+}
+const sofK = () => sofView.vb ? sofView.vb.w / ($("#sfView").clientWidth || 1) : 1;
+function sofDrawAll() { sofDrawView(); sofDrawPrev(); }
+function sofDrawView() {
+  const svgEl = $("#sfView"), M = sofModelNow(), S = sofS();
+  if (!svgEl || state.page !== "sofi") return;
+  document.querySelectorAll("#sfViewSeg [data-v]").forEach(b => b.setAttribute("aria-pressed", String(b.dataset.v === sofView.mode)));
+  $("#sfEmpty").hidden = !!(M && M.sars.length);
+  if (!M || !M.sars.length) { svgEl.innerHTML = ""; sofHint(""); return; }
+  if (sofView.fit || !sofView.vb) sofFit();
+  const vb = sofView.vb, k = sofK();
+  svgEl.setAttribute("viewBox", `${vb.x} ${vb.y} ${vb.w} ${vb.h}`);
+  const skip = new Set(S.skip), off = new Set(S.off);
+  const polys = M.sars.map(a => {
+    const rings = [a.outer, ...a.holes].map(r => r.map(sofProj)), depth = rings[0].reduce((s0, q) => s0 + q[2], 0) / rings[0].length;
+    return { a, rings, depth };
+  }).sort((p, q) => p.depth - q.depth);
+  let o = "";
+  const L = sofView.mode === "3d" ? (() => { const y = sofView.yaw * Math.PI / 180, p = sofView.pitch * Math.PI / 180; return V3.unit([Math.cos(p) * Math.cos(y) + 0.3, Math.cos(p) * Math.sin(y) + 0.2, Math.sin(p) + 0.6]); })() : null;
+  for (const { a, rings } of polys) {
+    const d = rings.map(r => "M" + r.map(q => `${q[0].toFixed(1)} ${q[1].toFixed(1)}`).join("L") + "Z").join(""), out = skip.has(a.no) || off.has(a.grp);
+    let op = out ? 0.06 : 0.28;
+    if (L) op = out ? 0.08 : 0.25 + 0.55 * Math.abs(V3.dot(sofV(a.n), L));
+    const sel = a.no === sofSelA, col = sofColor(a.grp);
+    o += `<path d="${d}" fill="${col}" fill-opacity="${op.toFixed(2)}" fill-rule="evenodd" stroke="${sel ? "#b3261e" : col}" stroke-opacity="${out ? 0.25 : 0.8}" stroke-width="${(sel ? 2.4 : 0.8) * k}" data-sar="${a.no}"><title>SAR ${a.no} · group ${a.grp} · t ${a.samples.length ? "varies" : Math.round(a.t) + " mm"}</title></path>`;
+  }
+  /* cuts */
+  const zb = [M.bbox[2], M.bbox[5]];
+  for (const c of S.cuts) {
+    const on = c.id === S.sel, col = on ? "#b3261e" : "#d0736c";
+    if (c.kind === "level") {
+      if (sofView.mode !== "3d") continue;
+      const b = M.bbox, R = [[b[0], b[1], c.z], [b[3], b[1], c.z], [b[3], b[4], c.z], [b[0], b[4], c.z]].map(sofProj);
+      o += `<path d="M${R.map(q => `${q[0]} ${q[1]}`).join("L")}Z" fill="${col}" fill-opacity=".12" stroke="${col}" stroke-width="${1.5 * k}" stroke-dasharray="${8 * k} ${5 * k}"/>`;
+      o += `<text x="${R[0][0]}" y="${R[0][1] - 6 * k}" font-size="${13 * k}" fill="${col}" font-weight="600">${escXml(c.name)}</text>`;
+      continue;
+    }
+    if (sofView.mode === "3d") {
+      const R = [[...c.p1, zb[0]], [...c.p2, zb[0]], [...c.p2, zb[1]], [...c.p1, zb[1]]].map(sofProj);
+      o += `<path d="M${R.map(q => `${q[0]} ${q[1]}`).join("L")}Z" fill="${col}" fill-opacity=".12" stroke="${col}" stroke-width="${1.5 * k}"/>`;
+      o += `<text x="${R[3][0]}" y="${R[3][1] - 6 * k}" font-size="${13 * k}" fill="${col}" font-weight="600">${escXml(c.name)}</text>`;
+      continue;
+    }
+    const A = sofProj([...c.p1, 0]), B = sofProj([...c.p2, 0]), dx = B[0] - A[0], dy = B[1] - A[1], l = Math.hypot(dx, dy) || 1, ux = dx / l, uy = dy / l;
+    const nx = uy, ny = -ux, ar = 14 * k;                            // arrows: the direction it is seen in
+    o += `<g data-cut="${c.id}"><path d="M${A[0]} ${A[1]}L${B[0]} ${B[1]}" stroke="transparent" stroke-width="${14 * k}" class="sf-hitcut"/>`
+      + `<path d="M${A[0]} ${A[1]}L${B[0]} ${B[1]}" stroke="${col}" stroke-width="${(on ? 2.4 : 1.6) * k}" stroke-dasharray="${16 * k} ${5 * k} ${3 * k} ${5 * k}"/>`;
+    for (const [P, sg] of [[A, -1], [B, 1]]) {
+      o += `<path d="M${P[0]} ${P[1]}l${nx * ar} ${ny * ar}" stroke="${col}" stroke-width="${2 * k}" marker-end="url(#sfArr${on ? "On" : ""})"/>`;
+      o += `<text x="${P[0] + ux * sg * 12 * k + nx * ar * 0.5}" y="${P[1] + uy * sg * 12 * k + ny * ar * 0.5 + 5 * k}" font-size="${14 * k}" font-weight="700" fill="${col}" text-anchor="middle">${escXml(c.name)}</text>`;
+    }
+    o += `</g>`;
+    if (on) for (const [P, w] of [[A, 1], [B, 2]]) o += `<rect x="${P[0] - 5 * k}" y="${P[1] - 5 * k}" width="${10 * k}" height="${10 * k}" fill="#fff" stroke="${col}" stroke-width="${1.6 * k}" data-end="${w}" class="sf-end"/>`;
+  }
+  if (sofDraw && sofDraw.p1 && sofDraw.cur) {
+    const A = sofProj([...sofDraw.p1, 0]), B = sofProj([...sofDraw.cur, 0]);
+    o += `<path d="M${A[0]} ${A[1]}L${B[0]} ${B[1]}" stroke="#b3261e" stroke-width="${2 * k}" stroke-dasharray="${10 * k} ${5 * k}"/>`
+      + `<circle cx="${A[0]}" cy="${A[1]}" r="${3.5 * k}" fill="#b3261e"/>`;
+  }
+  if (sofDraw && sofDraw.cur && sofDraw.snap) { const P = sofProj([...sofDraw.cur, 0]); o += `<rect x="${P[0] - 5 * k}" y="${P[1] - 5 * k}" width="${10 * k}" height="${10 * k}" fill="none" stroke="#b3261e" stroke-width="${1.5 * k}"/>`; }
+  /* the axes, bottom left */
+  const ax = sofView.mode === "plan" ? [[1, 0, 0, "x"], [0, 1, 0, "y"]] : [[1, 0, 0, "x"], [0, 1, 0, "y"], [0, 0, 1, "z"]];
+  const o0 = [vb.x + 40 * k, vb.y + vb.h - 40 * k];
+  let axo = "";
+  for (const [x, y, z, t] of ax) {
+    const p0 = sofProj([0, 0, 0]), p1 = sofProj([x, y, z]), dx = p1[0] - p0[0], dy = p1[1] - p0[1], l = Math.hypot(dx, dy);
+    if (l < 1e-6) continue;
+    const ex = o0[0] + dx / l * 26 * k * Math.min(1, l), ey = o0[1] + dy / l * 26 * k * Math.min(1, l);
+    axo += `<path d="M${o0[0]} ${o0[1]}L${ex} ${ey}" stroke="#5b6670" stroke-width="${1.4 * k}"/><text x="${ex + dx / l * 8 * k}" y="${ey + dy / l * 8 * k + 4 * k}" font-size="${11 * k}" fill="#5b6670" text-anchor="middle">${t}</text>`;
+  }
+  o += axo;
+  svgEl.innerHTML = `<defs><marker id="sfArr" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M0 0L10 5L0 10z" fill="#5b6670"/></marker><marker id="sfArrOn" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M0 0L10 5L0 10z" fill="#b3261e"/></marker></defs>` + o;
+  sofHint(sofDraw ? (sofDraw.p1 ? `Click the second point${sofDraw.cur ? ` · ${(dist(sofDraw.p1, sofDraw.cur) / sofUnitLen()).toFixed(sofUnitLen() === 1 ? 0 : 2)} ${sofUnitName()}` : ""}. Shift keeps it square to x or y. Esc cancels.` : "Click the first point of the cut, beside the structure. It snaps to the corners of the areas.")
+    : sofView.mode === "3d" ? "Drag to turn the model, Shift+drag or the middle button to pan, scroll to zoom. Click an area to see it." : S.sel && sofCutOf(S.sel) && sofCutOf(S.sel).kind === "plan" ? "Drag the ends of the red cut line, or the line itself, to move the cut. Click an area to see it." : "");
+}
+function sofHint(t) { const h = $("#sfHint"); h.hidden = !t; h.innerHTML = t; h.classList.toggle("act", !!sofDraw); }
+function sofDrawPrev() {
+  const S = sofS(), c = sofCutOf(S.sel), svgEl = $("#sfPrev"), head = $("#sfPrevTitle"), info = $("#sfInfo"), ob = $("#sfOpen");
+  if (!svgEl || state.page !== "sofi") return;
+  if (!c) { head.textContent = "Section"; svgEl.innerHTML = ""; info.replaceChildren(el("p", { class: "hint" }, S.cuts.length ? "Select a section in the list." : "Draw a cut on the plan to see its section here.")); ob.hidden = true; return; }
+  head.textContent = `Section ${c.name}-${c.name}`;
+  ob.hidden = false; ob.disabled = !c.geo || !c.geo.outline; ob.onclick = () => sofOpen(c.id);
+  ob.textContent = sofItemsOf(c) ? "Open it in the editor" : "Draw its bars in the editor";
+  let res = sofRes[c.id];
+  if (!res && sofModelNow()) res = sofCompute(c);
+  const parts = res ? res.parts : [], k0 = c.geo ? c.geo.part : 0;
+  let shapes = parts.map((p, i) => ({ outer: p.outer, holes: p.holes, i }));
+  if (!res && c.geo && c.geo.outline) {                               // no model at hand: draw the stored outline
+    try { const [vv] = parseOutline(c.geo.outline); shapes = [{ outer: vv.map(q => [q[0], q[1]]), holes: parseOpenings(c.geo.openings).map(h => h.map(q => [q[0], q[1]])), i: k0 }]; } catch (e) { shapes = []; }
+  }
+  if (!shapes.length) { svgEl.innerHTML = ""; info.replaceChildren(el("p", { class: "warn" }, "The cut does not pass through any area."), ...((c.geo && c.geo.warn) || []).map(w => el("p", { class: "warn" }, "⚠ " + w))); return; }
+  const all = shapes.flatMap(s => s.outer), xs = all.map(q => q[0]), ys = all.map(q => q[1]);
+  const b = [Math.min(...xs), Math.min(...ys), Math.max(...xs), Math.max(...ys)];
+  const W = svgEl.clientWidth || 400, H = svgEl.clientHeight || 300, pad = 46;
+  const k = Math.max((b[2] - b[0]) / (W - 2 * pad), (b[3] - b[1]) / (H - 2 * pad), 1e-6);
+  const vb = { x: (b[0] + b[2]) / 2 - W / 2 * k, y: -(b[1] + b[3]) / 2 - H / 2 * k, w: W * k, h: H * k };
+  svgEl.setAttribute("viewBox", `${vb.x} ${vb.y} ${vb.w} ${vb.h}`);
+  let o = "";
+  const ring = r => "M" + r.map(q => `${q[0].toFixed(1)} ${(-q[1]).toFixed(1)}`).join("L") + "Z";
+  if (res && $("#sfStrips").checked) for (const st of res.strips) if (st.pts) o += `<path d="${ring(st.pts)}" fill="${sofColor(st.grp)}" fill-opacity=".14" stroke="${sofColor(st.grp)}" stroke-width="${0.8 * k}"><title>SAR ${st.no} · group ${st.grp}</title></path>`;
+  for (const s0 of shapes) {
+    const on = s0.i === k0;
+    o += `<path d="${ring(s0.outer)}${s0.holes.map(ring).join("")}" fill="${on ? "#d9dcdf" : "#eef0f2"}" fill-opacity="${$("#sfStrips").checked ? 0.55 : 1}" fill-rule="evenodd" stroke="#1c2126" stroke-width="${(on ? 1.6 : 0.8) * k}" ${on ? "" : `stroke-dasharray="${5 * k} ${4 * k}"`} data-part="${s0.i}" class="sf-part"><title>${on ? "This part is the section" : "Click to use this part"}</title></path>`;
+  }
+  /* overall size of the section part */
+  const P = shapes.find(s0 => s0.i === k0) || shapes[0], px = P.outer.map(q => q[0]), py = P.outer.map(q => q[1]);
+  const x0 = Math.min(...px), x1 = Math.max(...px), y0 = Math.min(...py), y1 = Math.max(...py), fs = 11 * k, g = 16 * k;
+  o += `<g stroke="#5b6670" stroke-width="${k}" fill="none"><path d="M${x0} ${-y0 + g}H${x1}M${x0} ${-y0 + g - 4 * k}v${8 * k}M${x1} ${-y0 + g - 4 * k}v${8 * k}"/><path d="M${x1 + g} ${-y0}V${-y1}M${x1 + g - 4 * k} ${-y0}h${8 * k}M${x1 + g - 4 * k} ${-y1}h${8 * k}"/></g>`
+    + `<text x="${(x0 + x1) / 2}" y="${-y0 + g + 14 * k}" font-size="${fs}" text-anchor="middle" fill="#3b444c">${Math.round(x1 - x0)}</text>`
+    + `<text x="${x1 + g + 5 * k}" y="${-(y0 + y1) / 2 + 4 * k}" font-size="${fs}" fill="#3b444c">${Math.round(y1 - y0)}</text>`;
+  svgEl.innerHTML = o;
+  svgEl.querySelectorAll(".sf-part").forEach(p => p.addEventListener("click", () => {
+    const i = +p.dataset.part; if (i === c.part || !res) return;
+    histCommit(); c.part = i; sofCompute(c); persist(); histCommit(); renderSofPage();
+  }));
+  const g0 = c.geo || {}, u = sofUnitName();
+  const where = c.kind === "level" ? `Horizontal cut at z = ${sofFmt(c.z)} ${u}, seen from above.`
+    : `Vertical cut from (${sofFmt(c.p1[0])}, ${sofFmt(c.p1[1])}) to (${sofFmt(c.p2[0])}, ${sofFmt(c.p2[1])}) ${u}, seen in the direction of the arrows.`;
+  const org = g0.origin ? (c.kind === "level" ? `x = ${sofFmt(g0.origin[0])}, y = ${sofFmt(g0.origin[1] * (sofModelNow() && sofModelNow().up < 0 ? -1 : 1))} ${u}` : `${sofFmt(g0.origin[0])} ${u} along the cut from point 1, z = ${sofFmt(g0.origin[1] * (sofModelNow() && sofModelNow().up < 0 ? -1 : 1))} ${u}`) : "";
+  info.replaceChildren(el("p", {}, el("b", {}, g0.size ? sofFmtSize(g0.size) : ""), g0.holes ? ` · ${g0.holes} opening${g0.holes === 1 ? "" : "s"}` : "", g0.nparts > 1 ? ` · part ${g0.part + 1} of ${g0.nparts} (click another to use it)` : ""),
+    el("p", { class: "hint" }, where + (org ? ` The section's 0, 0 (its lowest left corner) is at ${org}.` : "")),
+    ...(g0.warn || []).map(w => el("p", { class: "warn" }, "⚠ " + w)), ...(res ? [] : [el("p", { class: "hint" }, "The model is not loaded, so this is the outline that was kept.")]));
+}
+
+/* ---- pointer work on the model view */
+function sofModelAt(e) {                                             // the plan point (model x, y) under the pointer
+  const svgEl = $("#sfView"), r = svgEl.getBoundingClientRect(), vb = sofView.vb, k = sofK();
+  const sx = vb.x + (e.clientX - r.left) * k, sy = vb.y + (e.clientY - r.top) * k;
+  const M = sofModelNow(), up = M && M.up < 0 ? -1 : 1;
+  return [sx, up > 0 ? -sy : sy];
+}
+function sofSnap(P, e) {
+  const M = sofModelNow(); if (!M || e.altKey) return { p: P, snap: false };
+  const r = 10 * sofK();
+  let best = null, bd = r;
+  for (const a of M.sars) for (const q of a.outer) { const d = Math.hypot(q[0] - P[0], q[1] - P[1]); if (d < bd) { bd = d; best = q; } }
+  return best ? { p: [best[0], best[1]], snap: true } : { p: [Math.round(P[0] / 10) * 10, Math.round(P[1] / 10) * 10], snap: false };
+}
+function sofStartDraw() {
+  if (sofView.mode !== "plan") { sofView.mode = "plan"; sofView.fit = true; }
+  sofDraw = { p1: null, cur: null };
+  $("#sfView").classList.add("picking");
+  sofDrawView();
+}
+function sofEndDraw() { sofDraw = null; $("#sfView").classList.remove("picking"); sofDrawView(); }
+function sofSarAt(e) {
+  const t = document.elementsFromPoint(e.clientX, e.clientY).find(n => n.dataset && n.dataset.sar);
+  return t ? +t.dataset.sar : null;
+}
+(() => {
+  const svgEl = $("#sfView");
+  svgEl.addEventListener("wheel", e => {
+    e.preventDefault(); if (!sofView.vb) return;
+    const r = svgEl.getBoundingClientRect(), vb = sofView.vb, k = sofK(), f = Math.exp(Math.max(-60, Math.min(60, e.deltaY)) * 0.004);
+    const px = vb.x + (e.clientX - r.left) * k, py = vb.y + (e.clientY - r.top) * k;
+    sofView.vb = { x: px - (px - vb.x) * f, y: py - (py - vb.y) * f, w: vb.w * f, h: vb.h * f };
+    sofDrawView();
+  }, { passive: false });
+  svgEl.addEventListener("contextmenu", e => e.preventDefault());
+  svgEl.addEventListener("pointerdown", e => {
+    if (!sofView.vb) return;
+    const S = sofS();
+    if (sofDraw && e.button === 2) { sofEndDraw(); return; }
+    if (sofDraw && e.button === 0) {
+      let P = sofSnap(sofModelAt(e), e).p;
+      if (sofDraw.p1 && e.shiftKey) P = Math.abs(P[0] - sofDraw.p1[0]) > Math.abs(P[1] - sofDraw.p1[1]) ? [P[0], sofDraw.p1[1]] : [sofDraw.p1[0], P[1]];
+      if (!sofDraw.p1) { sofDraw.p1 = P; sofDrawView(); return; }
+      if (dist(P, sofDraw.p1) < 5 * sofK()) return;
+      histCommit();
+      const c = { id: newId(), name: sofNextName(), kind: "plan", p1: sofDraw.p1.map(Math.round), p2: P.map(Math.round), part: 0 };
+      S.cuts.push(c); S.sel = c.id; sofCompute(c);
+      persist(); histCommit();
+      sofDraw = null; svgEl.classList.remove("picking");
+      renderSofPage();
+      return;
+    }
+    const end = e.target.closest && e.target.closest(".sf-end"), cutG = e.target.closest && e.target.closest("[data-cut]");
+    if (e.button === 0 && sofView.mode === "plan" && (end || cutG)) {
+      const c = end ? sofCutOf(S.sel) : sofCutOf(cutG.dataset.cut);
+      if (!c) return;
+      if (!end && S.sel !== c.id) { S.sel = c.id; persist(); renderSofPage(); }
+      histCommit();
+      sofDrag = { kind: end ? "end" + end.dataset.end : "line", c, start: sofModelAt(e), p1: c.p1.slice(), p2: c.p2.slice(), moved: false };
+      svgEl.setPointerCapture(e.pointerId); e.preventDefault();
+      return;
+    }
+    if (e.button === 1 || e.button === 0) {
+      sofDrag = { kind: sofView.mode === "3d" && e.button === 0 && !e.shiftKey ? "turn" : "pan", x: e.clientX, y: e.clientY, x0: e.clientX, y0: e.clientY, moved: false, sar: sofSarAt(e) };
+      svgEl.setPointerCapture(e.pointerId); e.preventDefault();
+    }
+  });
+  let raf = null;
+  svgEl.addEventListener("pointermove", e => {
+    if (sofDraw) {
+      let P = sofSnap(sofModelAt(e), e);
+      if (sofDraw.p1 && e.shiftKey) { const q = P.p; P = { p: Math.abs(q[0] - sofDraw.p1[0]) > Math.abs(q[1] - sofDraw.p1[1]) ? [q[0], sofDraw.p1[1]] : [sofDraw.p1[0], q[1]], snap: false }; }
+      sofDraw.cur = P.p; sofDraw.snap = P.snap;
+      sofDrawView(); return;
+    }
+    if (!sofDrag) return;
+    if (sofDrag.kind === "pan" || sofDrag.kind === "turn") {
+      const dx = e.clientX - sofDrag.x, dy = e.clientY - sofDrag.y;
+      if (Math.hypot(e.clientX - sofDrag.x0, e.clientY - sofDrag.y0) > 3) sofDrag.moved = true;
+      sofDrag.x = e.clientX; sofDrag.y = e.clientY;
+      if (sofDrag.kind === "pan") { const k = sofK(); sofView.vb = { ...sofView.vb, x: sofView.vb.x - dx * k, y: sofView.vb.y - dy * k }; }
+      else { sofView.yaw -= dx * 0.4; sofView.pitch = Math.max(-89, Math.min(89, sofView.pitch + dy * 0.4)); }
+      sofDrawView(); return;
+    }
+    const P = sofModelAt(e), d = [P[0] - sofDrag.start[0], P[1] - sofDrag.start[1]], c = sofDrag.c;
+    if (sofDrag.kind === "line") { c.p1 = [Math.round(sofDrag.p1[0] + d[0]), Math.round(sofDrag.p1[1] + d[1])]; c.p2 = [Math.round(sofDrag.p2[0] + d[0]), Math.round(sofDrag.p2[1] + d[1])]; }
+    else { let q = sofSnap(P, e).p; const o = sofDrag.kind === "end1" ? c.p2 : c.p1; if (e.shiftKey) q = Math.abs(q[0] - o[0]) > Math.abs(q[1] - o[1]) ? [q[0], o[1]] : [o[0], q[1]]; if (sofDrag.kind === "end1") c.p1 = q.map(Math.round); else c.p2 = q.map(Math.round); }
+    sofDrag.moved = true;
+    if (!raf) raf = requestAnimationFrame(() => { raf = null; if (sofDrag && sofDrag.c) { sofCompute(sofDrag.c); sofDrawAll(); } });
+  });
+  const up = () => {
+    const d = sofDrag; sofDrag = null;
+    if (!d) return;
+    if (d.c) { if (d.moved) { sofCompute(d.c); persist(); histCommit(); renderSofPage(); } return; }
+    if (!d.moved) { sofSelA = d.sar === sofSelA ? null : d.sar; renderSofPage(); }
+  };
+  svgEl.addEventListener("pointerup", up);
+  svgEl.addEventListener("pointercancel", () => { if (sofDrag && sofDrag.c) { applyDoc(hist.cur); } sofDrag = null; });
+  $("#sfPrevBox").addEventListener("change", e => { if (e.target.id === "sfStrips") sofDrawPrev(); });
+  document.querySelectorAll("#sfViewSeg [data-v]").forEach(b => b.addEventListener("click", () => { sofView.mode = b.dataset.v; sofView.fit = true; if (sofDraw && sofView.mode !== "plan") sofEndDraw(); sofDrawView(); }));
+  $("#sfFit").onclick = () => { sofView.fit = true; sofDrawView(); };
+  const page = $("#sofPage");
+  page.addEventListener("dragover", e => { e.preventDefault(); page.classList.add("drop"); });
+  page.addEventListener("dragleave", e => { if (e.target === page || !page.contains(e.relatedTarget)) page.classList.remove("drop"); });
+  page.addEventListener("drop", e => { e.preventDefault(); page.classList.remove("drop"); sofReadFiles(e.dataTransfer.files); });
+  new ResizeObserver(() => { if (state.page === "sofi") { if (sofView.vb) { const svg2 = $("#sfView"), r = svg2.clientWidth / Math.max(1, svg2.clientHeight); sofView.vb.h = sofView.vb.w / r; } sofDrawAll(); } }).observe($("#sfView"));
+  document.addEventListener("keydown", e => {
+    if (state.page !== "sofi" || typing(e)) return;
+    if (e.key === "Escape") { if (sofDraw) sofEndDraw(); else if (sofSelA !== null) { sofSelA = null; renderSofPage(); } }
+    else if (!e.ctrlKey && !e.metaKey && !e.altKey && e.key.toLowerCase() === "f") { sofView.fit = true; sofDrawView(); }
+  });
+})();
 
 /* ------------------------------------------------------------------ files */
 function download(name, data, type) {
@@ -4848,17 +6381,28 @@ function exportAs(kind) {
   } catch (e) { console.error(e); toast(`Export failed: ${e.message}`); }
 }
 document.querySelectorAll("[data-exp]").forEach(b => b.addEventListener("click", () => exportAs(b.dataset.exp)));
-document.querySelectorAll(".seg [data-mode]").forEach(b => b.addEventListener("click", () => { state.mode = b.dataset.mode; state.sel = null; userView = false; persist(); renderAll(); }));
+document.querySelectorAll(".seg [data-mode]").forEach(b => b.addEventListener("click", () => {
+  const to = b.dataset.mode;
+  if (to === state.mode) return;
+  customNote = to === "custom" && customFrom() !== state.stdType;
+  state.mode = to; state.sel = null; userView = false; persist(); renderAll();
+}));
 $("#bSave").onclick = () => {
   const name = slug(state.mode === "custom" ? state.custom.name : state.std[state.stdType].name || "project");
-  download(name + ".json", JSON.stringify({ app: "rebar-sketch-studio", version: 1, ...state, sel: null, ui: undefined }, null, 2), "application/json");
+  download(name + ".json", JSON.stringify({ app: "rebar-sketch-studio", version: 1, ...state, sel: null, ui: undefined, sofSrc: sofSrc || undefined }, null, 2), "application/json");
   toast(`Saved ${name}.json`);
 };
 $("#bOpen").onclick = () => $("#fileIn").click();
 $("#fileIn").addEventListener("change", async e => {
   const f = e.target.files[0]; e.target.value = "";
   if (!f) return;
-  try { const ui = state.ui; state = mergeState(JSON.parse(await f.text())); state.ui = ui; state.sel = null; userView = false; persist(); renderAll(); if (state.page === "anch") setPage("anch", false); toast(`Opened ${f.name}`); }
+  try {
+    const ui = state.ui, data = JSON.parse(await f.text());
+    state = mergeState(data); state.ui = ui; state.sel = null; userView = false;
+    sofSrc = data.sofSrc && typeof data.sofSrc === "object" ? data.sofSrc : typeof data.sofText === "string" ? { kind: "dat", files: { [(data.sof && data.sof.file) || "model.dat"]: data.sofText } } : null;
+    sofM = null; sofRes = {}; sofSelA = null; sofView.fit = true; sofSave();
+    persist(); renderAll(); setPage(state.page, false); toast(`Opened ${f.name}`);
+  }
   catch (err) { toast(`Could not read ${f.name}: it is not a project file.`); }
 });
 const b64url = bytes => { let s = ""; bytes.forEach(b => s += String.fromCharCode(b)); return btoa(s).replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/, ""); };
@@ -4878,7 +6422,7 @@ async function unpackState(s) {
 }
 $("#bShare").onclick = async () => {
   const url = location.href.split("#")[0] + "#p=" + await packState();
-  try { await navigator.clipboard.writeText(url); toast("Link copied. Anyone who opens it sees this section."); }
+  try { await navigator.clipboard.writeText(url); toast(sofSrc ? "Link copied. The SOFiSTiK model itself is not in the link; its sections are." : "Link copied. Anyone who opens it sees this section."); }
   catch (e) { prompt("Copy this link:", url); }
 };
 $("#bHelp").onclick = () => $("#guide").showModal();
