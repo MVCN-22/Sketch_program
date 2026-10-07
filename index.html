@@ -51,13 +51,49 @@ button, input, select, textarea { font: inherit; color: inherit; }
 .bar button.b.primary:hover { background: #2169b8; }
 
 /* layout */
-main { flex: 1; display: grid; grid-template-columns: minmax(360px, 440px) 1fr; min-height: 0; }
-aside { display: flex; flex-direction: column; min-height: 0; border-right: 1px solid var(--rule); background: var(--panel); }
+main { flex: 1; display: grid; grid-template-columns: var(--panel-w, 420px) 1fr; min-height: 0; }
+aside { position: relative; display: flex; flex-direction: column; min-height: 0; border-right: 1px solid var(--rule); background: var(--panel); }
+body.panel-hidden main { grid-template-columns: 1fr; }
+body.panel-hidden main > aside { display: none; }
+.modebar { display: flex; gap: 8px; align-items: center; padding: 10px 12px 0; }
+.seg.modeseg { flex: 1; border-color: var(--rule); background: #fff; }
+.seg.modeseg button { flex: 1; color: var(--muted); padding: 5px 8px; }
+.seg.modeseg button[aria-pressed="true"] { background: var(--accent); color: var(--accent-ink); }
+.iconbtn { width: 30px; height: 30px; border: 1px solid var(--rule); background: #fff; border-radius: 6px; cursor: pointer; color: var(--muted); font-size: 15px; line-height: 1; }
+.iconbtn:hover { color: var(--accent); border-color: var(--accent); }
+.resizer { position: absolute; top: 0; right: -4px; bottom: 0; width: 8px; cursor: col-resize; z-index: 5; }
+.resizer:hover, .resizer.on { background: linear-gradient(to right, transparent 3px, var(--accent) 3px, var(--accent) 5px, transparent 5px); }
+#panelShow { font-size: 15px; font-weight: 600; color: var(--accent); }
+.bar .grp.hist .b { display: inline-flex; align-items: center; gap: 5px; }
+.bar .b.icon svg { width: 15px; height: 15px; fill: none; stroke: currentColor; stroke-width: 1.5; stroke-linecap: round; stroke-linejoin: round; }
+.bar button.b:disabled { opacity: .4; cursor: default; }
+.bar button.b:disabled:hover { background: #2c343b; }
 .tabs { display: flex; gap: 2px; padding: 10px 12px 0; border-bottom: 1px solid var(--rule); }
 .tabs button { background: none; border: 0; border-bottom: 2px solid transparent; padding: 7px 10px 8px; cursor: pointer; color: var(--muted); }
 .tabs button[aria-selected="true"] { color: var(--ink); border-bottom-color: var(--accent); font-weight: 500; }
 .body { overflow: auto; padding: 14px 16px 40px; flex: 1; }
 
+/* forms: groups, two numbers per row, labels above the boxes */
+.fgrid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px 12px; align-items: end; }
+.fcell { display: flex; flex-direction: column; gap: 3px; min-width: 0; }
+.fcell.wide { grid-column: 1 / -1; }
+.fcell > label { font-size: 12.5px; color: #3b444c; line-height: 1.25; }
+.fcell.check { flex-direction: row; align-items: center; gap: 8px; }
+.fcell.check > label { font-size: 13.5px; color: var(--ink); }
+.fcell input[type=text], .fcell select { width: 100%; }
+.fcell fieldset.layers { margin: 2px 0 0; }
+.qm { display: inline-flex; align-items: center; justify-content: center; width: 13px; height: 13px; margin-left: 4px; border-radius: 50%; border: 1px solid #9aa6b0; color: #6b7680; font-size: 9.5px; font-weight: 600; cursor: help; vertical-align: 1px; }
+.fsec { border-top: 1px solid var(--rule); margin-top: 8px; }
+.fsec > summary { cursor: pointer; font-weight: 600; font-size: 13px; padding: 8px 0 6px; list-style: none; display: flex; align-items: center; gap: 6px; user-select: none; }
+.fsec > summary::-webkit-details-marker { display: none; }
+.fsec > summary::before { content: ""; width: 0; height: 0; border-left: 5px solid #6b7680; border-top: 4px solid transparent; border-bottom: 4px solid transparent; transition: transform .12s; }
+.fsec[open] > summary::before { transform: rotate(90deg); }
+.fsec > summary:hover { color: var(--accent); }
+.fsec > .fgrid, .fsec > .fsec-body { padding: 2px 0 10px; }
+.fsec-body .hint { margin-top: 0; }
+.form > .fsec:first-child { border-top: 0; margin-top: 0; }
+input.bad, input.bad:hover { border-color: var(--err); background: #fde9e7; box-shadow: inset 0 0 0 1px var(--err); }
+input.bad:focus-visible { outline-color: var(--err); }
 /* forms */
 .row { display: grid; grid-template-columns: 1fr 150px; gap: 10px; align-items: center; padding: 3px 0; }
 .row label { color: var(--ink); }
@@ -140,6 +176,8 @@ ol.items .sum { color: var(--muted); overflow: hidden; text-overflow: ellipsis; 
 .tools button[aria-pressed="true"], .tools button[aria-pressed="true"]:hover { background: var(--accent); color: var(--accent-ink); }
 .tools button:disabled { opacity: .4; cursor: default; }
 .tools .sep { width: 1px; height: 20px; background: var(--rule); margin: 0 3px; }
+.stage.narrow .tools button span { display: none; }
+.stage.narrow .tools button { padding: 0 7px; }
 #tRestore { color: var(--accent); }
 .toolopts { display: flex; flex-wrap: wrap; gap: 8px 10px; align-items: center; background: rgba(255,255,255,.94); border: 1px solid var(--rule); border-radius: 8px; padding: 4px 8px; font-size: 13px; }
 .toolopts select { width: auto; padding: 3px 6px; }
@@ -193,6 +231,9 @@ ol.items .sum { color: var(--muted); overflow: hidden; text-overflow: ellipsis; 
 .status { border-top: 1px solid var(--rule); background: #fbfcfc; padding: 8px 14px; font-size: 13px; min-height: 38px; max-height: 30vh; overflow: auto; }
 .status .ok { color: var(--ok); }
 .status .zone { color: var(--ink); font-variant-numeric: tabular-nums; }
+.status .srow { display: flex; gap: 12px; align-items: baseline; justify-content: space-between; }
+.status .stog { flex: none; background: none; border: 0; color: var(--accent); cursor: pointer; font: inherit; font-size: 12.5px; padding: 0; }
+.status .stog:hover { text-decoration: underline; }
 .anchbox { margin-top: 6px; }
 .anchbox summary { cursor: pointer; color: var(--accent); font-weight: 500; }
 .anchbox .hint { margin: 4px 0; max-width: none; }
@@ -209,7 +250,7 @@ table.anch .num { text-align: right; }
 
 /* anchorage page */
 .anchpage { grid-column: 1 / -1; display: grid; grid-template-columns: minmax(320px, 400px) 1fr; min-height: 0; background: var(--paper); }
-body.page-anch main > aside, body.page-anch main > .stage, body.page-anch #expGrp, body.page-anch .seg:not(#pageSeg) { display: none; }
+body.page-anch main > aside, body.page-anch main > .stage, body.page-anch #expGrp { display: none; }
 .ap-side { background: var(--panel); border-right: 1px solid var(--rule); overflow: auto; padding: 14px 16px 40px; }
 .ap-side h2, .ap-head h2 { font-size: 16px; margin: 0 0 4px; }
 .ap-main { overflow: auto; padding: 16px 22px 48px; min-width: 0; }
@@ -220,7 +261,17 @@ table.anch.pick tbody tr { cursor: pointer; }
 table.anch.pick tbody tr:hover { background: #f4f7fa; }
 table.anch.pick tbody tr[aria-selected="true"] { background: #e3edf8; box-shadow: inset 3px 0 0 var(--accent); }
 table.anch td.ovr { color: var(--accent); font-weight: 600; }
-.ap-detail { display: grid; grid-template-columns: minmax(200px, 300px) 1fr; gap: 20px; margin-top: 18px; border-top: 1px solid var(--rule); padding-top: 14px; }
+.ap-detail { display: grid; grid-template-columns: minmax(260px, 340px) 1fr; gap: 20px; margin-top: 12px; }
+.ap-tabs { display: flex; gap: 2px; align-items: flex-end; border-bottom: 1px solid var(--rule); margin: 14px 0 0; }
+.ap-tabs .ap-sel { font-weight: 600; margin-right: auto; padding: 0 0 7px; }
+.ap-tabs button { background: none; border: 0; border-bottom: 2px solid transparent; padding: 6px 12px 7px; cursor: pointer; color: var(--muted); font: inherit; }
+.ap-tabs button[aria-selected="true"] { color: var(--ink); border-bottom-color: var(--accent); font-weight: 500; }
+.ap-result { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 10px; margin-top: 12px; }
+.ap-result > div { background: var(--panel); border: 1px solid var(--rule); border-radius: 6px; padding: 6px 10px; }
+.ap-result .rl { display: block; font-size: 11.5px; color: var(--muted); }
+.ap-result b { font-size: 15px; font-variant-numeric: tabular-nums; }
+.ap-ctrl legend .lval { font-weight: 400; color: var(--accent); margin-left: 6px; font-size: 12px; }
+table.anch.pick { margin-bottom: 0; }
 .ap-detail h3 { margin: 0 0 8px; font-size: 14.5px; }
 .ap-prev { width: 100%; height: auto; max-height: 320px; background: #fff; border: 1px solid var(--rule); border-radius: 6px; }
 .ap-ctrls { margin: 10px 0; }
@@ -230,7 +281,7 @@ table.anch td.ovr { color: var(--accent); font-weight: 600; }
 .ap-ctrl .ap-full { grid-column: 1 / -1; display: flex; gap: 6px; flex-wrap: wrap; }
 .btn.small { padding: 2px 8px; font-size: 12.5px; }
 .ap-h3 { font-size: 14.5px; margin: 18px 0 6px; }
-.ap-elevbox { border: 1px solid var(--rule); border-radius: 6px; background: #fff; padding: 4px; overflow-x: auto; }
+.ap-elevbox { border: 1px solid var(--rule); border-radius: 6px; background: #fff; padding: 4px; overflow-x: auto; margin-top: 12px; }
 .ap-elev { display: block; width: 100%; min-width: 640px; height: auto; }
 .wk { display: grid; grid-template-columns: minmax(150px, max-content) 1fr auto; gap: 4px 14px; padding: 4px 0; border-bottom: 1px solid #edf0f2; font-size: 13.5px; }
 .wk .wl { font-weight: 500; white-space: nowrap; }
@@ -242,6 +293,7 @@ table.anch td.ovr { color: var(--accent); font-weight: 600; }
 .ap-print { display: none; }
 .linkbtn { background: none; border: 0; padding: 0 0 0 6px; color: var(--accent); cursor: pointer; font: inherit; text-decoration: underline; }
 @media (max-width: 900px) {
+  .ap-result { grid-template-columns: 1fr 1fr; }
   .anchpage { display: block; }
   .ap-detail { grid-template-columns: 1fr; }
 }
@@ -267,6 +319,14 @@ dialog p, dialog li { max-width: 68ch; }
 dialog ul { padding-left: 20px; margin: 4px 0; }
 dialog code { background: var(--panel-2); padding: 1px 4px; border-radius: 3px; font-size: 13px; }
 
+@media (max-width: 1340px) {
+  .bar .grp.hist .b span { display: none; }
+  .bar .grp.hist .b { padding: 5px 8px; }
+  .bar { gap: 10px; }
+}
+@media (max-width: 1200px) {
+  .brand .bname, .bar .grp > span { display: none; }
+}
 @media (max-width: 700px) {
   .tools button span { display: none; }
   .tools button { padding: 0 7px; }
@@ -278,6 +338,7 @@ dialog code { background: var(--panel-2); padding: 1px 4px; border-radius: 3px; 
   main { display: flex; flex-direction: column; }
   .stage { order: -1; height: 62vh; border-bottom: 1px solid var(--rule); }
   aside { border-right: 0; }
+  .resizer, #panelHide { display: none; }
   .body { overflow: visible; }
   .row { grid-template-columns: 1fr 130px; }
 }
@@ -288,17 +349,17 @@ dialog code { background: var(--panel-2); padding: 1px 4px; border-radius: 3px; 
 <header class="bar">
   <div class="brand">
     <svg viewBox="0 0 32 32" aria-hidden="true"><rect x="3" y="3" width="26" height="26" rx="2" fill="#e3e7ea"/><rect x="7.5" y="7.5" width="17" height="17" rx="3" fill="none" stroke="#1b5fa8" stroke-width="2"/><circle cx="10.5" cy="21.5" r="2" fill="#1c2126"/><circle cx="16" cy="21.5" r="2" fill="#1c2126"/><circle cx="21.5" cy="21.5" r="2" fill="#1c2126"/><circle cx="10.5" cy="10.5" r="1.5" fill="#1c2126"/><circle cx="21.5" cy="10.5" r="1.5" fill="#1c2126"/></svg>
-    Rebar Sketch Studio
+    <span class="bname">Rebar Sketch Studio</span>
   </div>
   <div class="seg" id="pageSeg" role="group" aria-label="Page">
     <button type="button" data-page="sketch" title="The cross-section sketch">Section</button>
     <button type="button" data-page="anch" title="Anchorage and lap lengths for the bars of this section">Anchorage and laps</button>
   </div>
-  <div class="seg" role="group" aria-label="Section kind">
-    <button type="button" data-mode="standard">Standard</button>
-    <button type="button" data-mode="custom">Custom</button>
-  </div>
   <div class="spacer"></div>
+  <div class="grp hist">
+    <button type="button" class="b icon" id="tUndo" title="Undo (Ctrl+Z): any change, in the forms or on the drawing" aria-label="Undo" disabled><svg viewBox="0 0 16 16" aria-hidden="true"><path d="M5 3.5 2 6.5l3 3M2 6.5h7.5a4 4 0 010 8H7"/></svg><span>Undo</span></button>
+    <button type="button" class="b icon" id="tRedo" title="Redo (Ctrl+Y or Ctrl+Shift+Z)" aria-label="Redo" disabled><svg viewBox="0 0 16 16" aria-hidden="true"><path d="M11 3.5l3 3-3 3M14 6.5H6.5a4 4 0 000 8H9"/></svg><span>Redo</span></button>
+  </div>
   <div class="grp">
     <button type="button" class="b" id="bOpen">Open…</button>
     <button type="button" class="b" id="bSave">Save project</button>
@@ -315,7 +376,15 @@ dialog code { background: var(--panel-2); padding: 1px 4px; border-radius: 3px; 
 </header>
 
 <main>
-  <aside>
+  <aside id="aside">
+    <div class="modebar">
+      <div class="seg modeseg" role="group" aria-label="Section kind">
+        <button type="button" data-mode="standard" title="A standard section: fill in the dimensions and the bars">Standard section</button>
+        <button type="button" data-mode="custom" title="Your own outline, with bars placed item by item">Custom section</button>
+      </div>
+      <button type="button" class="iconbtn" id="panelHide" title="Hide the panel to give the drawing more room" aria-label="Hide the panel">«</button>
+    </div>
+    <div class="resizer" id="resizer" title="Drag to make the panel wider or narrower; double-click for the default width" aria-hidden="true"></div>
     <nav class="tabs" role="tablist" id="tabs"></nav>
     <div class="body" id="body"></div>
   </aside>
@@ -337,6 +406,7 @@ dialog code { background: var(--panel-2); padding: 1px 4px; border-radius: 3px; 
     </svg>
     <div class="toolstack" id="toolstack">
     <div class="tools" role="toolbar" aria-label="Drawing tools">
+      <button type="button" id="panelShow" hidden title="Show the panel" aria-label="Show the panel">»</button>
       <button type="button" data-tool="pan" title="Move (H): drag a label, text, dimension or drawing to move it; drag the background to pan; scroll to zoom"><svg viewBox="0 0 16 16" aria-hidden="true"><path d="M8 1.5v13M1.5 8h13M8 1.5 6 3.5M8 1.5l2 2M8 14.5l-2-2M8 14.5l2-2M1.5 8l2-2M1.5 8l2 2M14.5 8l-2-2M14.5 8l-2 2"/></svg><span>Move</span></button>
       <button type="button" data-tool="measure" title="Add a measurement (M): click two points, then place the dimension line"><svg viewBox="0 0 16 16" aria-hidden="true"><rect x="1" y="3.5" width="9" height="9" rx="2"/><circle cx="5.5" cy="8" r="1.8"/><path d="M10 10.5h5v2h-5M12 10.5v1M14 10.5v1"/></svg><span>Measure</span></button>
       <button type="button" data-tool="text" title="Add text (T): click where the text should go"><svg viewBox="0 0 16 16" aria-hidden="true"><path d="M3 3.5h10M8 3.5v10M6 13.5h4"/></svg><span>Text</span></button>
@@ -345,8 +415,6 @@ dialog code { background: var(--panel-2); padding: 1px 4px; border-radius: 3px; 
       <button type="button" data-tool="rebar" title="Rebar (B): draw a row of bars or a bar along a line"><svg viewBox="0 0 16 16" aria-hidden="true"><circle cx="3" cy="11.5" r="1.6"/><circle cx="8" cy="11.5" r="1.6"/><circle cx="13" cy="11.5" r="1.6"/><path d="M2 5.5h10.5v3"/></svg><span>Rebar</span></button>
       <button type="button" data-tool="cut" title="Cut (C): draw a cut line A–A to show the member lengthwise"><svg viewBox="0 0 16 16" aria-hidden="true"><path d="M8 1.5v2M8 5.5v2M8 9.5v2M8 13.5v1.5M8 1.5H4.5M8 15H4.5M5.5 .5 4 1.5l1.5 1M5.5 14 4 15l1.5 1"/></svg><span>Cut</span></button>
       <button type="button" data-tool="erase" title="Remove a text, label, dimension or drawing (R)"><svg viewBox="0 0 16 16" aria-hidden="true"><path d="M6.5 14h7.5M2.5 10.5l6.5-6.5 4.5 4.5-5.5 5.5H6z"/></svg><span>Remove</span></button>
-      <span class="sep" aria-hidden="true"></span>
-      <button type="button" id="tUndo" title="Undo the last drawing change (Ctrl+Z)" disabled><svg viewBox="0 0 16 16" aria-hidden="true"><path d="M5 3.5 2 6.5l3 3M2 6.5h7.5a4 4 0 010 8H7"/></svg><span>Undo</span></button>
       <button type="button" id="tRestore" hidden title="Bring back all removed or changed predefined text on this section"></button>
     </div>
     <div class="toolopts" id="measureOpts" hidden>
@@ -460,6 +528,13 @@ dialog code { background: var(--panel-2); padding: 1px 4px; border-radius: 3px; 
 <dialog id="guide">
   <h2>Guide</h2>
   <p>Everything is in millimetres, with the origin at the bottom left. The preview updates as you type; scroll to zoom and drag to pan. The grid shows 1 cm and 5 cm on paper at the drawing scale.</p>
+  <h4>Working with the app</h4>
+  <ul>
+    <li><b>Undo and redo</b> (top bar, Ctrl+Z and Ctrl+Y) cover every change: values in the forms, the bar list, the drawing and the anchorage page. Typing in one box counts as one step.</li>
+    <li><b>Forms</b> are grouped; click a group heading to fold it, and the app remembers which groups you keep open. Greyed-out text in a box is what a blank box means; hover a <b>?</b> for an explanation. In number boxes ↑ and ↓ step the value (Shift ×10, Alt ×0.1); a value that is not a number turns red.</li>
+    <li><b>The panel</b> on the left: drag its right edge to make it wider or narrower (double-click for the default), or hide it with « to give the drawing the whole width (» brings it back).</li>
+    <li><b>The status bar</b> shows the bars and areas on one line; <em>Top / bottom, anchorage</em> opens the rest. Warnings are always shown.</li>
+  </ul>
   <h4>Standard sections</h4>
   <p>Pick a type and fill in the fields. Layer tables take one row per layer, from the outer face inwards; <em>gap</em> is the clear distance to the layer before it (blank = the minimum spacing). <em>Edit as custom</em> copies the section, reinforcement included, into the custom editor as a starting point.</p>
   <h4>Custom sections</h4>
@@ -469,6 +544,7 @@ dialog code { background: var(--panel-2); padding: 1px 4px; border-radius: 3px; 
     <li><b>Layer</b>: bars parallel to a face. Bottom and top give horizontal layers, left and right vertical ones. With a blank offset, layers from the same face stack inwards at the minimum spacing.</li>
     <li><b>Perimeter</b>: bars around the outline or the openings, with a bar in every corner.</li>
     <li><b>Link</b>: follows the outline, the part inside a rectangle or polygon, or runs around an opening. Links are numbered in list order; bars with <em>Inside link no.</em> stay inside that link.</li>
+    <li><b>List and drawing</b>: the item selected in the list is shown in blue on the drawing, and hovering an item lights up its bars. With <em>Edit</em>, clicking a bar on the drawing opens its item; with <em>Remove</em>, it deletes the item.</li>
     <li><b>Row, circle pattern, single bar, line bar, dimension, text</b>: free placement.</li>
   </ul>
   <h4>Measuring and editing the drawing</h4>
@@ -483,7 +559,7 @@ dialog code { background: var(--panel-2); padding: 1px 4px; border-radius: 3px; 
     <li><b>Changing a bar you drew</b>: with <em>Edit</em>, click the bar. A box opens with its Ø, spacing or number and its coordinates; drag the blue points on the drawing to move the ends or corners, or drag the bar itself to move all of it, and the coordinates follow (in the reinforcement list as well). <em>Remove</em> deletes it. <em>Move</em> never picks up bars, so dragging a label or text next to a bar cannot shift the bar. This works for rows, single bars and line bars from the reinforcement list too.</li>
     <li><b>Cut</b>: click two points across the section. A section along the member (A–A, B–B …) appears beside the drawing, showing the concrete with break lines, longitudinal bars as lines, links at their spacing and in-plane bars as dots. Drag the cut line to move the cut, or drag the view to place it.</li>
     <li><b>Remove</b>: click a label, title, dimension or drawing to take it off the drawing. <em>Restore</em> brings back the predefined ones; <em>Undo</em> reverses the last change.</li>
-    <li>Scroll to zoom in any mode; drag with the middle mouse button (or hold Space) to pan while measuring. Shortcuts: H move, M measure, T text, E edit, D draw, B rebar, C cut, R remove, Ctrl+Z undo.</li>
+    <li>Scroll to zoom in any mode; drag with the middle mouse button (or hold Space) to pan while measuring. Shortcuts: H move, M measure, T text, E edit, D draw, B rebar, C cut, R remove, F fit the drawing, Ctrl+Z undo, Ctrl+Y redo.</li>
     <li>Measurements belong to the section they were drawn on and appear in every export. They stay where you put them, so check them after changing the geometry.</li>
   </ul>
   <h4>Saving and sharing</h4>
@@ -1466,7 +1542,8 @@ function meshRows(rows) {
   return out;
 }
 function stdSection(t, v) {
-  const F = k => fnum(v[k], k), O = k => onum(v[k], k);
+  const lab = k => { const f = (STD_SPECS[t] || []).find(q => q[0] === k); return f ? f[1] : k; };   // messages name the field as the form does
+  const F = k => fnum(v[k], lab(k)), O = k => onum(v[k], lab(k));
   const common = { name: v.name || t, cover: F("cover"), dg: F("dg") };
   if (t.startsWith("Rect"))
     return rectSection({ ...common, b: F("b"), h: F("h"), link_d: F("link_d"), link_s: O("link_s"), bottom: barsRows(v.bottom), top: barsRows(v.top), sides: barsRows(v.sides), hooks: truthy(v.hooks), hook_len: O("hook_len"), mandrel: O("mandrel") });
@@ -1863,8 +1940,10 @@ function buildCustom(cs, st, pickable = true) {
   items.forEach((it, i) => {
     if (it.type !== "Link") return;
     nlink++;
+    const n0 = dr.items.length;
     try { links.set(nlink, buildLink(dr, P, holes, it, cover, maxr.get(nlink) || 0, nlink)); }
     catch (e) { if (e instanceof UserError) dr.warn(`item ${i + 1} (Link ${nlink}) skipped: ${e.message}`); else throw e; }
+    if (pickable) for (let j = n0; j < dr.items.length; j++) if (dr.items[j].k === "steel") dr.items[j].key = "i:" + i;
   });
   const stacks = new Map();
   items.forEach((it, i) => {
@@ -1904,8 +1983,8 @@ function buildCustom(cs, st, pickable = true) {
         dr.text(fnum(it.x, "x"), fnum(it.y, "y"), String(it.text || ""), "left", "bottom", 0, fnum(it.size ?? 2.5, "size"));
       }
     } catch (e) { if (e instanceof UserError) dr.warn(`item ${idx} (${t}) skipped: ${e.message}`); else throw e; }
-    // bars placed freely can be picked on the drawing (Edit, Move, Remove)
-    if (pickable && FREE_BARS.has(t)) for (let j = n0; j < dr.items.length; j++) if (dr.items[j].k === "bar" || dr.items[j].k === "steel") dr.items[j].key = "i:" + i;
+    // the bars of an item can be picked on the drawing: Edit selects the item (or opens the bar editor), Remove deletes it
+    if (pickable) for (let j = n0; j < dr.items.length; j++) if (dr.items[j].k === "bar" || dr.items[j].k === "steel") dr.items[j].key = "i:" + i;
   });
   if (cs.auto_dims === undefined || truthy(cs.auto_dims)) {
     const [minx, miny, maxx, maxy] = env(P);
@@ -2159,91 +2238,99 @@ function exportDXF(dr) {
 /* ------------------------------------------------------------------ specs */
 const BARS_COLS = [["n", "3.2em", null, "2"], ["Ø", "3.8em", null, "16"], ["gap", "4.2em", null, ""]];
 const MESH_COLS = [["Ø", "3.4em", null, "10"], ["s", "3.8em", null, "200"], ["kind", "5.2em", ["dots", "line"], "dots"], ["note", "1fr", null, ""], ["gap", "3.6em", null, ""]];
-const LINK_F = [["link_d", "Link Ø", "float", "10"], ["link_s", "Link spacing (for the label, blank = none)", "optfloat", "150"],
-  ["mandrel", "Link mandrel Ø (blank = 4Ø)", "optfloat", ""], ["hooks", "Draw 135° hooks", "bool", true],
-  ["hook_len", "Hook tail (blank = max(5Ø, 50))", "optfloat", ""]];
-const FLANGE_F = [["ft_d", "Flange top transverse Ø (blank = none)", "optfloat", "12"], ["ft_s", "Flange top transverse spacing", "optfloat", "200"],
-  ["fb_d", "Flange bottom transverse Ø (blank = none)", "optfloat", "10"], ["fb_s", "Flange bottom transverse spacing", "optfloat", "200"],
-  ["fl_d", "Flange longitudinal Ø in outstands (blank = none)", "optfloat", "10"], ["fl_s", "Flange longitudinal spacing", "optfloat", "200"],
+/* form specs: [key, label, kind, default, choices or rows, {ph: placeholder, help: tooltip, wide}];
+   ["#", title, open] starts a collapsible group (its open state is remembered) */
+const H = (t, open = true) => ["#", t, open];
+const NONE = { ph: "none", help: "Leave blank for none" };
+const LINK_F = [["link_d", "Link Ø", "float", "10"], ["link_s", "Link spacing", "optfloat", "150", { ph: "none", help: "Only used in the label; leave blank for none" }]];
+const HOOK_F = [H("Link bends and hooks", false), ["hooks", "Draw 135° hooks", "bool", true],
+  ["mandrel", "Mandrel Ø", "optfloat", "", { ph: "4Ø", help: "Leave blank for 4 × the link Ø" }],
+  ["hook_len", "Hook tail", "optfloat", "", { ph: "max(5Ø, 50)", help: "Leave blank for max(5Ø, 50 mm)" }]];
+const FLANGE_F = [H("Flange"), ["ft_d", "Top transverse Ø", "optfloat", "12", NONE], ["ft_s", "Top transverse spacing", "optfloat", "200"],
+  ["fb_d", "Bottom transverse Ø", "optfloat", "10", NONE], ["fb_s", "Bottom transverse spacing", "optfloat", "200"],
+  ["fl_d", "Longitudinal Ø in outstands", "optfloat", "10", NONE], ["fl_s", "Longitudinal spacing", "optfloat", "200"],
   ["breaks", "Break lines at the flange ends", "bool", true]];
-const DG_F = ["dg", "Max. aggregate size d_g (spacing check)", "float", "16"];
+const DG_F = ["dg", "Max. aggregate d_g", "float", "16", { help: "Maximum aggregate size, for the clear-spacing check" }];
 const STD_SPECS = {
-  "Rectangle (beam / column)": [["name", "Name", "str", "Beam B1"], ["b", "Width b", "float", "300"], ["h", "Height h", "float", "600"],
-    ["cover", "Cover to link c_nom", "float", "35"], ...LINK_F,
-    ["bottom", "Bottom layers, outer to inner", "bars", [["4", "25"], ["2", "20"]]],
+  "Rectangle (beam / column)": [H("Section"), ["name", "Name", "str", "Beam B1"], ["b", "Width b", "float", "300"], ["h", "Height h", "float", "600"],
+    H("Cover and links"), ["cover", "Cover to link c_nom", "float", "35"], DG_F, ...LINK_F,
+    H("Bars"), ["bottom", "Bottom layers, outer to inner", "bars", [["4", "25"], ["2", "20"]]],
     ["top", "Top layers, outer to inner", "bars", [["2", "16"]]],
-    ["sides", "Side layers: bars per face, outer to inner", "bars", [["1", "12"]]], DG_F],
-  "T-beam": [["name", "Name", "str", "T-beam TB1"], ["b_w", "Web width b_w", "float", "300"], ["h", "Total height h", "float", "700"],
+    ["sides", "Side layers: bars per face, outer to inner", "bars", [["1", "12"]]], ...HOOK_F],
+  "T-beam": [H("Section"), ["name", "Name", "str", "T-beam TB1"], ["b_w", "Web width b_w", "float", "300"], ["h", "Total height h", "float", "700"],
     ["b_f", "Flange width b_f", "float", "1200"], ["h_f", "Flange thickness h_f", "float", "200"],
-    ["cover", "Cover to outermost bar c_nom", "float", "35"], ...LINK_F,
-    ["bottom", "Web bottom layers, outer to inner", "bars", [["4", "25"]]], ["top", "Web top layers, outer to inner", "bars", [["2", "12"]]],
-    ["sides", "Web side layers: bars per face", "bars", []], ...FLANGE_F, DG_F],
-  "L-beam": [["name", "Name", "str", "L-beam LB1"], ["flange", "Flange sticks out to the", "choice", "right", ["right", "left"]],
+    H("Cover and links"), ["cover", "Cover to outermost bar c_nom", "float", "35"], DG_F, ...LINK_F,
+    H("Web bars"), ["bottom", "Web bottom layers, outer to inner", "bars", [["4", "25"]]], ["top", "Web top layers, outer to inner", "bars", [["2", "12"]]],
+    ["sides", "Web side layers: bars per face", "bars", []], ...FLANGE_F, ...HOOK_F],
+  "L-beam": [H("Section"), ["name", "Name", "str", "L-beam LB1"], ["flange", "Flange sticks out to the", "choice", "right", ["right", "left"]],
     ["b_w", "Web width b_w", "float", "300"], ["h", "Total height h", "float", "600"], ["b_f", "Flange width b_f (incl. web)", "float", "800"],
-    ["h_f", "Flange thickness h_f", "float", "180"], ["cover", "Cover to outermost bar c_nom", "float", "35"], ...LINK_F,
-    ["bottom", "Web bottom layers, outer to inner", "bars", [["3", "20"]]], ["top", "Web top layers, outer to inner", "bars", [["2", "12"]]],
-    ["sides", "Web side layers: bars per face", "bars", []], ...FLANGE_F, DG_F],
-  "Circular (column / pile)": [["name", "Name", "str", "Pile P1"], ["D", "Diameter D", "float", "600"],
-    ["cover", "Cover to hoop / spiral c_nom", "float", "75"], ["link_d", "Hoop / spiral Ø", "float", "10"],
-    ["link_s", "Pitch (for the label, blank = none)", "optfloat", "150"], ["spiral", "Spiral (unticked = hoops)", "bool", true],
-    ["rings", "Bar rings, outer to inner", "bars", [["8", "20"]]], DG_F],
-  "Slab": [["name", "Name", "str", "Slab S1"], ["t", "Thickness t", "float", "250"], ["length", "Length of strip shown", "float", "1000"],
-    ["cover", "Cover to outermost bar c_nom", "float", "30"],
-    ["face1", "Bottom layers, outer to inner", "mesh", [["12", "150", "dots", "(main)"], ["10", "250", "line", ""]]],
-    ["face2", "Top layers, outer to inner", "mesh", [["10", "200", "dots", ""], ["10", "250", "line", ""]]],
-    ["breaks", "Break lines at the ends", "bool", true], DG_F],
-  "Wall": [["name", "Name", "str", "Wall W1"], ["view", "View", "choice", "vertical section", ["vertical section", "plan section"]],
-    ["t", "Thickness t", "float", "300"], ["length", "Length of strip shown", "float", "1000"], ["cover", "Cover to outermost bar c_nom", "float", "35"],
-    ["face1", "Face 1 layers (left / bottom), outer to inner", "mesh", [["10", "200", "dots", "(hor.)"], ["12", "150", "line", "(vert.)"]]],
-    ["face2", "Face 2 layers (right / top), outer to inner", "mesh", [["10", "200", "dots", "(hor.)"], ["12", "150", "line", "(vert.)"]]],
-    ["breaks", "Break lines at the ends", "bool", true], DG_F],
-  "Bridge edge beam": [["name", "Name", "str", "Edge beam EB1"],
-    ["b_e", "Edge beam width", "float", "600"], ["h_up", "Height above the deck top (kerb)", "float", "450"],
-    ["h_down", "Downstand below the deck soffit", "float", "150"], ["L_s", "Deck cantilever length shown", "float", "1200"],
-    ["t_root", "Deck thickness at the break line", "float", "300"], ["t_tip", "Deck thickness at the edge beam", "float", "250"],
-    ["batter", "Outer face inclination (bottom set back by)", "float", "0"], ["chamfer", "Chamfer on the edge beam corners", "float", "25"],
-    ["drip", "Drip groove under the edge beam", "bool", true], ["t_pav", "Surfacing thickness on the deck (0 = none)", "float", "80"],
-    ["cover", "Cover to outermost bar c_nom", "float", "40"],
-    ["link_d", "Edge beam link Ø", "float", "12"], ["link_s", "Edge beam link spacing", "optfloat", "150"],
-    ["long_d", "Edge beam longitudinal Ø", "float", "16"], ["long_s", "Edge beam longitudinal max. spacing", "float", "150"],
-    ["top_d", "Deck top transverse Ø, bent down into the beam (blank = none)", "optfloat", "16"], ["top_s", "Deck top transverse spacing", "optfloat", "150"],
-    ["bot_d", "Deck bottom transverse Ø (blank = none)", "optfloat", "12"], ["bot_s", "Deck bottom transverse spacing", "optfloat", "150"],
-    ["dl_d", "Deck longitudinal Ø (blank = none)", "optfloat", "12"], ["dl_s", "Deck longitudinal spacing", "optfloat", "200"], DG_F],
+    ["h_f", "Flange thickness h_f", "float", "180"],
+    H("Cover and links"), ["cover", "Cover to outermost bar c_nom", "float", "35"], DG_F, ...LINK_F,
+    H("Web bars"), ["bottom", "Web bottom layers, outer to inner", "bars", [["3", "20"]]], ["top", "Web top layers, outer to inner", "bars", [["2", "12"]]],
+    ["sides", "Web side layers: bars per face", "bars", []], ...FLANGE_F, ...HOOK_F],
+  "Circular (column / pile)": [H("Section"), ["name", "Name", "str", "Pile P1"], ["D", "Diameter D", "float", "600"], DG_F,
+    H("Hoop or spiral"), ["cover", "Cover to hoop c_nom", "float", "75"], ["link_d", "Hoop / spiral Ø", "float", "10"],
+    ["link_s", "Pitch", "optfloat", "150", { ph: "none", help: "Only used in the label; leave blank for none" }], ["spiral", "Spiral (unticked = hoops)", "bool", true],
+    H("Bars"), ["rings", "Bar rings, outer to inner", "bars", [["8", "20"]]]],
+  "Slab": [H("Section"), ["name", "Name", "str", "Slab S1"], ["t", "Thickness t", "float", "250"], ["length", "Strip length shown", "float", "1000"],
+    ["cover", "Cover to outermost bar c_nom", "float", "30"], DG_F, ["breaks", "Break lines at the ends", "bool", true],
+    H("Bars"), ["face1", "Bottom layers, outer to inner", "mesh", [["12", "150", "dots", "(main)"], ["10", "250", "line", ""]]],
+    ["face2", "Top layers, outer to inner", "mesh", [["10", "200", "dots", ""], ["10", "250", "line", ""]]]],
+  "Wall": [H("Section"), ["name", "Name", "str", "Wall W1"], ["view", "View", "choice", "vertical section", ["vertical section", "plan section"]],
+    ["t", "Thickness t", "float", "300"], ["length", "Strip length shown", "float", "1000"], ["cover", "Cover to outermost bar c_nom", "float", "35"], DG_F,
+    ["breaks", "Break lines at the ends", "bool", true],
+    H("Bars"), ["face1", "Face 1 layers (left / bottom), outer to inner", "mesh", [["10", "200", "dots", "(hor.)"], ["12", "150", "line", "(vert.)"]]],
+    ["face2", "Face 2 layers (right / top), outer to inner", "mesh", [["10", "200", "dots", "(hor.)"], ["12", "150", "line", "(vert.)"]]]],
+  "Bridge edge beam": [H("Edge beam"), ["name", "Name", "str", "Edge beam EB1"],
+    ["b_e", "Width", "float", "600"], ["h_up", "Height above deck top", "float", "450", { help: "Kerb height above the top of the deck" }],
+    ["h_down", "Downstand below soffit", "float", "150"], ["chamfer", "Corner chamfer", "float", "25"],
+    ["batter", "Outer face batter", "float", "0", { help: "How far the bottom of the outer face is set back" }], ["drip", "Drip groove under the edge beam", "bool", true],
+    H("Deck"), ["L_s", "Cantilever length shown", "float", "1200"], ["t_pav", "Surfacing thickness", "float", "80", { help: "0 = no surfacing" }],
+    ["t_root", "Thickness at the break line", "float", "300"], ["t_tip", "Thickness at the edge beam", "float", "250"],
+    H("Cover"), ["cover", "Cover to outermost bar c_nom", "float", "40"], DG_F,
+    H("Edge beam bars"), ["link_d", "Link Ø", "float", "12"], ["link_s", "Link spacing", "optfloat", "150", { ph: "none" }],
+    ["long_d", "Longitudinal Ø", "float", "16"], ["long_s", "Longitudinal max. spacing", "float", "150"],
+    H("Deck bars"), ["top_d", "Top transverse Ø", "optfloat", "16", { ph: "none", help: "Bent down into the edge beam; leave blank for none" }], ["top_s", "Top transverse spacing", "optfloat", "150"],
+    ["bot_d", "Bottom transverse Ø", "optfloat", "12", NONE], ["bot_s", "Bottom transverse spacing", "optfloat", "150"],
+    ["dl_d", "Longitudinal Ø", "optfloat", "12", NONE], ["dl_s", "Longitudinal spacing", "optfloat", "200"]],
 };
-const LABEL_F = [["note", "Note (added to the label)", "str", ""], ["ltext", "Label text (blank = automatic)", "str", ""],
+const LABEL_F = [H("Label and position", false), ["note", "Note added to the label", "str", ""], ["ltext", "Label text", "str", "", { ph: "automatic", help: "Leave blank for the automatic text" }],
   ["label", "Label side", "choice", "right", ["right", "left", "none"]]];
-const ZONE_F = ["zone", "Top or bottom reinforcement (auto = from the face or the position)", "choice", "auto", ["auto", "top", "bottom", "side", "flange top", "flange bottom", "deck top", "deck bottom", "none"]];
+const ZONE_F = ["zone", "Top or bottom", "choice", "auto", ["auto", "top", "bottom", "side", "flange top", "flange bottom", "deck top", "deck bottom", "none"], { help: "Which reinforcement this is; auto takes the face of a layer, or the position" }];
 const DIST_CHOICES = ["count", "spacing (exact)", "max spacing"];
 const ITEM_SPECS = {
   "Layer": [["face", "Parallel to face", "choice", "bottom", ["bottom", "top", "left", "right"]],
-    ["kind", "Bars (dots = cut, line = in the plane)", "choice", "dots", ["dots", "line"]], ["d", "Bar Ø", "float", "20"],
-    ["dist", "Distribution", "choice", "count", DIST_CHOICES], ["n", "Number of bars n (per segment)", "int", "4"], ["s", "Spacing s", "float", "150"],
+    ["kind", "Bars", "choice", "dots", ["dots", "line"], { help: "dots = cut by the section, line = lying in the section plane" }], ["d", "Bar Ø", "float", "20"],
+    ["dist", "Distribution", "choice", "count", DIST_CHOICES], ["n", "Number of bars n", "int", "4", { help: "Per segment of the layer" }], ["s", "Spacing s", "float", "150"],
+    ["link", "Inside link no.", "int", "1", { help: "0 = not inside a link" }],
     ["skip_ends", "Skip the end bars (intermediate bars only)", "bool", false],
-    ["offset", "Offset from face to bar centre (blank = stack automatically)", "optfloat", ""],
-    ["gap", "Clear gap to the previous layer on this face (blank = minimum)", "optfloat", ""],
-    ["link", "Inside link no. (0 = none)", "int", "1"], ["ranges", "Only within ranges along the layer, e.g. 0:450; 750:1200", "str", ""], ...LABEL_F, ZONE_F],
+    H("Placement", false), ["offset", "Offset face → bar centre", "optfloat", "", { ph: "auto", help: "Leave blank to stack the layers automatically" }],
+    ["gap", "Clear gap to previous layer", "optfloat", "", { ph: "minimum", help: "On the same face; leave blank for the minimum spacing" }],
+    ["ranges", "Only within ranges along the layer", "str", "", { ph: "e.g. 0:450; 750:1200" }], ...LABEL_F, ZONE_F],
   "Perimeter": [["ring", "Along", "choice", "outer", ["outer", "openings", "all"]], ["d", "Bar Ø", "float", "16"],
-    ["dist", "Distribution", "choice", "max spacing", DIST_CHOICES], ["n", "Number of bars n (per ring)", "int", "8"], ["s", "Spacing s", "float", "150"],
-    ["corners", "Bar in every corner", "bool", true], ["link", "Inside link no. (0 = none)", "int", "1"], ...LABEL_F, ZONE_F],
+    ["dist", "Distribution", "choice", "max spacing", DIST_CHOICES], ["n", "Number of bars n", "int", "8", { help: "Per ring" }], ["s", "Spacing s", "float", "150"],
+    ["link", "Inside link no.", "int", "1", { help: "0 = not inside a link" }], ["corners", "Bar in every corner", "bool", true], ...LABEL_F, ZONE_F],
   "Circle pattern": [["cx", "Centre x", "float", "300"], ["cy", "Centre y", "float", "300"], ["r", "Radius to bar centres", "float", "200"],
-    ["n", "Number of bars", "int", "8"], ["start", "Start angle [°]", "float", "0"], ["sweep", "Sweep [°] (360 = full circle)", "float", "360"],
+    ["n", "Number of bars", "int", "8"], ["start", "Start angle [°]", "float", "0"], ["sweep", "Sweep [°]", "float", "360", { help: "360 = full circle" }],
     ["d", "Bar Ø", "float", "20"], ...LABEL_F, ZONE_F],
   "Row": [["x1", "Start x", "float", "100"], ["y1", "Start y", "float", "100"], ["x2", "End x", "float", "500"], ["y2", "End y", "float", "100"],
     ["d", "Bar Ø", "float", "16"], ["dist", "Distribution", "choice", "count", DIST_CHOICES], ["n", "Number of bars n", "int", "4"],
     ["s", "Spacing s", "float", "150"], ["skip_ends", "Skip the end bars", "bool", false], ...LABEL_F, ZONE_F],
   "Single bar": [["x", "x", "float", "100"], ["y", "y", "float", "100"], ["d", "Bar Ø", "float", "16"], ...LABEL_F, ZONE_F],
-  "Line bar": [["points", "Points x, y (one per line)", "text", "100, 100\n100, 400\n400, 400", 4], ["closed", "Closed", "bool", false],
-    ["d", "Bar Ø", "float", "12"], ["s", "Spacing (for the label, blank = none)", "optfloat", ""], ...LABEL_F, ZONE_F],
+  "Line bar": [["points", "Points x, y (one per line)", "text", "100, 100\n100, 400\n400, 400", 4], ["d", "Bar Ø", "float", "12"],
+    ["s", "Spacing", "optfloat", "", { ph: "none", help: "Only used in the label; leave blank for none" }], ["closed", "Closed (a link of your own shape)", "bool", false], ...LABEL_F, ZONE_F],
   "Link": [["region", "Follows", "choice", "outline", ["outline", "rectangle", "polygon", "around opening"]],
     ["x0", "Rectangle x0", "float", "0"], ["y0", "Rectangle y0", "float", "0"], ["x1", "Rectangle x1", "float", "300"], ["y1", "Rectangle y1", "float", "600"],
     ["points", "Polygon points x, y (one per line)", "text", "", 3], ["opening", "Opening no.", "int", "1"],
-    ["d", "Link Ø", "float", "10"], ["s", "Spacing (for the label)", "optfloat", "200"], ["cover", "Cover (blank = section cover)", "optfloat", ""],
-    ["mandrel", "Mandrel Ø (blank = 4Ø)", "optfloat", ""], ["hooks", "Draw 135° hooks", "bool", true],
-    ["hook_len", "Hook tail (blank = max(5Ø, 50))", "optfloat", ""],
+    ["d", "Link Ø", "float", "10"], ["s", "Spacing", "optfloat", "200", { ph: "none", help: "Only used in the label" }],
+    ["cover", "Cover", "optfloat", "", { ph: "section cover", help: "Leave blank to use the cover of the section" }],
     ["clip", "Cut the region to the section outline", "bool", true],
-    ["name", "Label word", "choice", "link", ["link", "stirrup", "hoop", "spiral", "tie"]], ...LABEL_F],
+    H("Bends and hooks", false), ["hooks", "Draw 135° hooks", "bool", true], ["mandrel", "Mandrel Ø", "optfloat", "", { ph: "4Ø" }],
+    ["hook_len", "Hook tail", "optfloat", "", { ph: "max(5Ø, 50)" }],
+    ...LABEL_F, ["name", "Label word", "choice", "link", ["link", "stirrup", "hoop", "spiral", "tie"]]],
   "Dimension": [["x1", "Point 1 x", "float", "0"], ["y1", "Point 1 y", "float", "0"], ["x2", "Point 2 x", "float", "300"], ["y2", "Point 2 y", "float", "0"],
-    ["orient", "Direction", "choice", "h", ["h", "v"]], ["pos", "Dimension line at (y for h, x for v)", "float", "-150"], ["dtext", "Text (blank = measured length)", "str", ""]],
+    ["orient", "Direction", "choice", "h", ["h", "v"]], ["pos", "Dimension line at", "float", "-150", { help: "y for a horizontal dimension, x for a vertical one" }],
+    ["dtext", "Text", "str", "", { ph: "measured length" }]],
   "Text": [["x", "x", "float", "0"], ["y", "y", "float", "0"], ["text", "Text", "str", "Note"], ["size", "Text height on paper [mm]", "float", "2.5"]],
 };
 const SP = ["spacing (exact)", "max spacing"];
@@ -2265,11 +2352,11 @@ const ITEM_HELP = {
   "Dimension": "A dimension line between two points.",
   "Text": "Free text in the drawing.",
 };
-const CUSTOM_GEO_SPEC = [["name", "Name", "str", "Custom section"], ["cover", "Default cover c_nom", "float", "35"], DG_F,
+const CUSTOM_GEO_SPEC = [H("Section"), ["name", "Name", "str", "Custom section"], ["cover", "Default cover c_nom", "float", "35"], DG_F,
   ["auto_dims", "Overall dimensions", "bool", true],
-  ["outline", "Outline: one vertex per line, x, y [, arc°] [brk]", "text", "", 11],
-  ["openings", "Openings: rect x y w h, circle cx cy D or poly x1 y1 x2 y2 …", "text", "", 4],
-  ["extras", "Surfacing and other non-structural layers (drawn lighter, not counted): rect, circle or poly as above", "text", "", 3]];
+  H("Outline"), ["outline", "One vertex per line: x, y [, arc°] [brk]", "text", "", 11, { help: "arc° is the angle of an arc to the next vertex (+ counter-clockwise); brk draws the edge to the next vertex as a break line" }],
+  H("Openings and surfacing"), ["openings", "Openings: rect x y w h, circle cx cy D or poly x1 y1 x2 y2 …", "text", "", 4],
+  ["extras", "Surfacing and other layers that are drawn lighter and not counted (rect, circle or poly)", "text", "", 3]];
 const OUTLINE_HELP = "arc° is the angle of an arc to the next vertex: + counter-clockwise, − clockwise, 180 for a half circle. brk draws the edge to the next vertex as a break line. Separate values with commas or spaces; use ; or tabs if you write decimal commas. Lines starting with # are ignored.";
 /* ---------------------------------------------- anchorage and laps, EN 1992-1-1 8.4 and 8.7 */
 const CONCRETE_FCTK = { "C12/15": 1.1, "C16/20": 1.3, "C20/25": 1.5, "C25/30": 1.8, "C30/37": 2.0, "C35/45": 2.2, "C40/50": 2.5,
@@ -2355,31 +2442,31 @@ function segDist(q, a, b) {
   const t = L2 ? Math.max(0, Math.min(1, ((q[0] - a[0]) * vx + (q[1] - a[1]) * vy) / L2)) : 0;
   return Math.hypot(q[0] - a[0] - vx * t, q[1] - a[1] - vy * t);
 }
-const STYLE_SPEC = [["scale", "Drawing scale 1:", "float", "10"], ["text_h", "Text height on paper [mm]", "float", "2.5"],
+const STYLE_SPEC = [H("Paper and text"), ["scale", "Drawing scale 1:", "float", "10"], ["text_h", "Text height [mm on paper]", "float", "2.5"],
   ["font", "Font", "choice", "Sans-serif", ["Sans-serif", "Serif", "Monospace"]],
   ["dpi", "PNG resolution [dpi]", "int", "300"],
-  ["concrete_fill", "Concrete colour", "color", "#eeeeee"], ["steel", "Bar colour", "color", "#1a1a1a"],
+  H("Show on the drawing"), ["show_labels", "Bar labels", "bool", true], ["face_labels", "Top / bottom in the bar labels", "bool", true],
+  ["show_zones", "Top and bottom reinforcement under the title", "bool", true], ["show_dims", "Automatic dimensions", "bool", true],
+  H("Colours and lines", false), ["concrete_fill", "Concrete colour", "color", "#eeeeee"], ["steel", "Bar colour", "color", "#1a1a1a"],
   ["link_color", "Link colour", "color", "#1a1a1a"],
-  ["outline_lw", "Concrete outline width [mm on paper]", "float", "0.5"],
-  ["actual_d", "Draw bars at their actual outer diameter (ribs included) instead of the nominal diameter", "bool", false],
-  ["dfactor", "Outer Ø ÷ nominal Ø", "float", "1.15"],
-  ["show_labels", "Show bar labels", "bool", true], ["face_labels", "Say top / bottom in the bar labels", "bool", true],
-  ["show_zones", "Top and bottom reinforcement under the title", "bool", true], ["show_dims", "Show automatic dimensions", "bool", true]];
+  ["outline_lw", "Outline width [mm on paper]", "float", "0.5"],
+  H("Bar diameter", false), ["actual_d", "Draw bars at their actual outer diameter (ribs included)", "bool", false, { help: "Bars and links are drawn and placed at their outer diameter, so the cover is measured to the ribs and the spacing check uses the real gaps. Labels and A_s keep the nominal diameter. Ribbed bars are typically 1.1 to 1.2 × nominal." }],
+  ["dfactor", "Outer Ø ÷ nominal Ø", "float", "1.15"]];
 /* settings of the anchorage page (kept with the drawing style, so projects and links carry them) */
 const ANCH_SPEC = [
-  ["concrete", "Concrete class", "choice", "C35/45", Object.keys(CONCRETE_FCTK)],
+  H("Materials"), ["concrete", "Concrete class", "choice", "C35/45", Object.keys(CONCRETE_FCTK)],
   ["fyk", "Reinforcement f_yk [MPa]", "float", "550"],
-  ["util", "Steel stress σ_sd ÷ f_yd (1 = fully stressed)", "float", "1"],
-  ["lap_share", "Share lapped in one section ρ1 [%] (α6)", "float", "100"],
+  ["gamma_c", "Partial factor γ_c", "float", "1.5"], ["gamma_s", "Partial factor γ_s", "float", "1.15"],
+  ["alpha_ct", "α_ct", "float", "1", { help: "Long-term effects on the tensile strength, 3.1.6(2); 1.0 recommended" }],
+  H("Assumptions for all bars"), ["util", "Steel stress σ_sd ÷ f_yd", "float", "1", { help: "1 = fully stressed bars" }],
+  ["lap_share", "Lapped in one section ρ1 [%]", "float", "100", { help: "Share of the bars lapped within 0.65 l0 of a lap centre; sets α6" }],
   ["bond", "Bond conditions", "choice", BOND_CHOICES[0], BOND_CHOICES],
   ["axis", "Bars cut by the section run", "choice", "auto", AXIS_CHOICES],
-  ["use_cd", "Reduce for cover and spacing (α2, measured on the drawing)", "bool", true],
-  ["gamma_c", "Partial factor γ_c", "float", "1.5"], ["gamma_s", "Partial factor γ_s", "float", "1.15"],
-  ["alpha_ct", "α_ct", "float", "1"],
-  ["mem_len", "Lap layout: member length [mm]", "float", "20000"],
-  ["stock", "Lap layout: bar length (stock length) [mm]", "float", "12000"],
-  ["ends", "Lap layout: member ends", "choice", "bars anchored at both ends", ["bars anchored at both ends", "member continues (break lines)"]],
-  ["anch_on_dwg", "Also put a summary table on the section drawing", "bool", false]];
+  ["use_cd", "Reduce for cover and spacing (α2 measured on the drawing)", "bool", true],
+  H("Lap layout"), ["mem_len", "Member length [mm]", "float", "20000"],
+  ["stock", "Bar (stock) length [mm]", "float", "12000"],
+  ["ends", "Member ends", "choice", "bars anchored at both ends", ["bars anchored at both ends", "member continues (break lines)"]],
+  H("Section drawing", false), ["anch_on_dwg", "Also put a summary table on the section drawing", "bool", false]];
 const STYLE_SHOW = { dfactor: ["actual_d", [true]] };
 const TEMPLATES = {
   "Rectangle": ["0, 0\n300, 0\n300, 600\n0, 600", ""],
@@ -2393,7 +2480,7 @@ const TEMPLATES = {
   "Rectangle with rounded ends": ["150, 0\n850, 0, 180\n850, 300\n150, 300, 180", ""],
   "Slab strip with breaks": ["0, 0\n1000, 0, 0, brk\n1000, 250\n0, 250, 0, brk", ""],
 };
-const specDefaults = spec => Object.fromEntries(spec.map(f => [f[0], clone(f[3])]));
+const specDefaults = spec => Object.fromEntries(spec.filter(f => f[0] !== "#").map(f => [f[0], clone(f[3])]));
 function newItem(t, kw = {}) {
   const it = { type: t, ...specDefaults(ITEM_SPECS[t]) };
   for (const [k, v] of Object.entries(kw)) it[k] = (typeof v === "boolean") ? v : fmt(v);
@@ -2478,7 +2565,7 @@ function el(tag, attrs = {}, ...kids) {
 function defaultState() {
   return { mode: "standard", stdType: STD_TYPES[0],
     std: Object.fromEntries(STD_TYPES.map(t => [t, specDefaults(STD_SPECS[t])])),
-    custom: defaultCustom(), style: specDefaults([...STYLE_SPEC, ...ANCH_SPEC]), page: "sketch", anchOv: {},
+    custom: defaultCustom(), style: specDefaults([...STYLE_SPEC, ...ANCH_SPEC]), page: "sketch", anchOv: {}, ui: {},
     tab: { standard: "section", custom: "geometry" }, sel: null, annot: {}, draw: { mode: "pencil", color: "#b3261e", width: "m" },
     textStyle: null, rebar: { mode: "row", d: "16", dist: "spacing", val: "150", ls: "200" }, cut: { len: "1000", depth: "300" }, snap: true };
 }
@@ -2501,6 +2588,7 @@ function mergeState(data) {
   if (data.textStyle && typeof data.textStyle === "object") s.textStyle = data.textStyle;
   if (data.snap === false) s.snap = false;
   if (data.page === "anch") s.page = "anch";
+  if (data.ui && typeof data.ui === "object") s.ui = data.ui;
   if (data.anchOv && typeof data.anchOv === "object") for (const [k, v] of Object.entries(data.anchOv)) if (v && typeof v === "object") s.anchOv[k] = v;
   if (data.annot && typeof data.annot === "object") for (const [k, a] of Object.entries(data.annot)) {
     if (!a || typeof a !== "object") continue;
@@ -2516,14 +2604,41 @@ state.sel = null;
 let saveJob = null;
 addEventListener("pagehide", () => { clearTimeout(saveJob); try { localStorage.setItem(LS_KEY, JSON.stringify({ ...state, sel: null })); } catch (e) { /* ignore */ } });
 function persist() {
+  if (typeof hist !== "undefined" && hist && hist.cur !== null) histSoon();
   clearTimeout(saveJob);
   saveJob = setTimeout(() => { try { localStorage.setItem(LS_KEY, JSON.stringify({ ...state, sel: null })); } catch (e) { /* ignore */ } }, 400);
 }
 
 /* ------------------------------------------------------------------ forms */
+/* numbers: invalid values are marked at once, arrow keys step them (Shift ×10, Alt ×0.1) */
+function numOK(v, kind) {
+  const t = String(v ?? "").trim().replace(",", ".");
+  if (t === "") return kind !== "float";
+  const x = Number(t);
+  return isFinite(x) && (kind !== "int" || Number.isInteger(x));
+}
+function stepKey(e, inp, kind) {
+  if ((e.key !== "ArrowUp" && e.key !== "ArrowDown") || e.ctrlKey || e.metaKey) return;
+  const t = String(inp.value).trim().replace(",", "."), x = t === "" ? 0 : Number(t);
+  if (!isFinite(x)) return;
+  e.preventDefault();
+  let v = x + (e.shiftKey ? 10 : e.altKey ? 0.1 : 1) * (e.key === "ArrowUp" ? 1 : -1);
+  v = kind === "int" ? Math.round(v) : Math.round(v * 1000) / 1000;
+  inp.value = String(v);
+  inp.dispatchEvent(new Event("input", { bubbles: true }));
+}
+function numInput(inp, kind, onValue) {
+  const check = () => { const bad = !numOK(inp.value, kind); inp.classList.toggle("bad", bad); inp.setAttribute("aria-invalid", String(bad)); };
+  inp.addEventListener("input", () => { check(); onValue(inp.value); });
+  inp.addEventListener("keydown", e => stepKey(e, inp, kind));
+  check();
+  return inp;
+}
+const uiOpen = (title, def) => { const v = ((state.ui || {}).sec || {})[title]; return v === undefined ? def : v; };
+function setUiOpen(title, open) { state.ui = state.ui || {}; state.ui.sec = state.ui.sec || {}; state.ui.sec[title] = open; persist(); }
 function buildForm(host, spec, values, onChange, showIf = {}) {
   const ctrls = new Set(Object.values(showIf).map(c => c[0]));
-  for (const f of spec) if (!(f[0] in values)) values[f[0]] = clone(f[3]);
+  for (const f of spec) if (f[0] !== "#" && !(f[0] in values)) values[f[0]] = clone(f[3]);
   const wrap = el("div", { class: "form" });
   host.append(wrap);
   const set = (k, v) => {
@@ -2532,40 +2647,54 @@ function buildForm(host, spec, values, onChange, showIf = {}) {
     if (ctrls.has(k) && changed) render();
     onChange(k);
   };
-  function field([key, label, kind, def, extra]) {
-    const id = "f" + (++uid), val = values[key];
-    if (["str", "float", "optfloat", "int"].includes(kind)) {
-      const inp = el("input", { type: "text", id, value: String(val ?? ""), inputmode: kind === "str" ? null : "decimal", autocomplete: "off", spellcheck: kind === "str" ? null : "false" });
-      inp.addEventListener("input", () => set(key, inp.value));
-      return el("div", { class: "row" + (kind === "str" && key !== "name" ? "" : "") }, el("label", { for: id }, label), inp);
+  const NUM = ["float", "optfloat", "int"];
+  function field(f) {
+    const [key, label, kind, def, extra] = f, opt = f[5] || (["choice", "text"].includes(kind) ? null : (extra && !Array.isArray(extra) && typeof extra === "object" ? extra : null)) || {};
+    const id = "f" + (++uid), val = values[key], help = opt.help || null;
+    const lab = () => el("label", { for: id, title: help }, label, help ? el("span", { class: "qm", "aria-hidden": "true" }, "?") : null);
+    if (NUM.includes(kind) || kind === "str") {
+      const inp = el("input", { type: "text", id, value: String(val ?? ""), placeholder: opt.ph || null, title: help, inputmode: kind === "str" ? null : "decimal", autocomplete: "off", spellcheck: kind === "str" ? null : "false" });
+      if (kind === "str") inp.addEventListener("input", () => set(key, inp.value)); else numInput(inp, kind, v => set(key, v));
+      return el("div", { class: "fcell" + (kind === "str" || opt.wide ? " wide" : "") }, lab(), inp);
     }
-    if (kind === "color") return colorField(id, label, val, v => set(key, v));
+    if (kind === "color") return el("div", { class: "fcell wide" }, lab(), colorField(id, label, val, v => set(key, v)));
     if (kind === "choice") {
-      const sel = el("select", { id }, extra.map(o => el("option", { value: o, selected: o === val }, o)));
+      const sel = el("select", { id, title: help }, extra.map(o => el("option", { value: o, selected: o === val }, o)));
       sel.addEventListener("change", () => set(key, sel.value));
-      return el("div", { class: "row" }, el("label", { for: id }, label), sel);
+      return el("div", { class: "fcell" + (opt.wide || Math.max(...extra.map(o => String(o).length)) > 16 ? " wide" : "") }, lab(), sel);
     }
     if (kind === "bool") {
       const cb = el("input", { type: "checkbox", id, checked: truthy(val) });
       cb.addEventListener("change", () => set(key, cb.checked));
-      return el("div", { class: "row check" }, cb, el("label", { for: id }, label));
+      return el("div", { class: "fcell wide check" }, cb, lab());
     }
     if (kind === "text") {
-      const ta = el("textarea", { id, rows: extra || 5, spellcheck: "false" });
+      const ta = el("textarea", { id, rows: extra || 5, spellcheck: "false", title: help });
       ta.value = String(val ?? "");
       ta.addEventListener("input", () => set(key, ta.value));
-      return el("div", { class: "row wide" }, el("label", { for: id }, label), ta);
+      return el("div", { class: "fcell wide" }, lab(), ta);
     }
-    if (kind === "bars" || kind === "mesh") return layerTable(label, kind === "bars" ? BARS_COLS : MESH_COLS, val, () => onChange(key));
+    if (kind === "bars" || kind === "mesh") return el("div", { class: "fcell wide" }, layerTable(label, kind === "bars" ? BARS_COLS : MESH_COLS, val, () => onChange(key)));
     return document.createTextNode("");
   }
   function render() {
     wrap.replaceChildren();
+    let grid = el("div", { class: "fgrid" });
+    wrap.append(grid);
     for (const f of spec) {
+      if (f[0] === "#") {
+        const title = f[1], d = el("details", { class: "fsec" }, el("summary", {}, title));
+        d.open = uiOpen(title, f[2] !== false);
+        d.addEventListener("toggle", () => setUiOpen(title, d.open));
+        grid = el("div", { class: "fgrid" });
+        d.append(grid); wrap.append(d);
+        continue;
+      }
       const c = showIf[f[0]];
       if (c && !c[1].includes(values[c[0]])) continue;
-      wrap.append(field(f));
+      grid.append(field(f));
     }
+    wrap.querySelectorAll(".fgrid").forEach(g => { if (!g.children.length) (g.parentElement.tagName === "DETAILS" ? g.parentElement : g).remove(); });
   }
   render();
 }
@@ -2585,7 +2714,8 @@ function layerTable(label, cols, rows, onChange) {
         const aria = `${label}, layer ${i + 1}, ${c[0]}`;
         let w;
         if (c[2]) { w = el("select", { "aria-label": aria }, c[2].map(o => el("option", { value: o, selected: o === r[j] }, o))); w.addEventListener("change", () => { r[j] = w.value; onChange(); }); }
-        else { w = el("input", { type: "text", value: r[j], "aria-label": aria, inputmode: c[0] === "note" ? null : "decimal", autocomplete: "off" }); w.addEventListener("input", () => { r[j] = w.value; onChange(); }); }
+        else if (c[0] === "note") { w = el("input", { type: "text", value: r[j], "aria-label": aria, autocomplete: "off" }); w.addEventListener("input", () => { r[j] = w.value; onChange(); }); }
+        else w = numInput(el("input", { type: "text", value: r[j], "aria-label": aria, inputmode: "decimal", autocomplete: "off", placeholder: c[0] === "gap" ? "min." : null }), c[0] === "n" ? "int" : "optfloat", v => { r[j] = v; onChange(); });
         grid.append(w);
       });
       grid.append(el("button", { type: "button", class: "x", title: "Remove layer", "aria-label": `Remove layer ${i + 1}`, onclick: () => { rows.splice(i, 1); render(); onChange(); } }, "×"));
@@ -2632,7 +2762,7 @@ function colorField(id, label, value, onSet) {
       () => { pop = null; swatch.setAttribute("aria-expanded", "false"); });
   });
   paint();
-  return el("div", { class: "row" }, el("label", { for: id }, label), box);
+  return box;
 }
 function openWheel(anchor, hex, onPick, onClose) {
   document.querySelector(".wheelpop")?.__close?.();
@@ -2704,21 +2834,27 @@ function renderStd(body) {
   sel.addEventListener("change", () => { state.stdType = sel.value; persist(); renderAll(); });
   body.append(el("div", { class: "sectype" }, sel, el("button", { type: "button", class: "btn", onclick: stdToCustom, title: "Copy this section into the custom editor" }, "Edit as custom")));
   if (state.stdType.startsWith("Bridge")) body.append(el("p", { class: "hint" }, "The edge beam sits on the end of the deck cantilever, which is cut off by a break line. Use Edit as custom to change individual bars or the shape."));
-  else body.append(el("p", { class: "hint" }, "Layer tables: one row per layer, from the outer face inwards. Gap is the clear distance to the layer before it; leave it blank for the minimum spacing."));
+  else body.append(el("p", { class: "hint" }, "Layer tables: one row per layer, outer face first. Gap is the clear distance to the layer before (blank = minimum)."));
   buildForm(body, STD_SPECS[state.stdType], state.std[state.stdType], changed);
 }
 function renderDrawingTab(body) {
   buildForm(body, STYLE_SPEC, state.style, changed, STYLE_SHOW);
   const A = annotOf(false), nAdd = A ? A.items.length : 0, nMod = modCount(A);
-  body.append(el("h3", {}, "Measurements and text on this section"),
-    el("p", { class: "hint" }, nAdd || nMod ? `${nAdd} added, ${nMod} predefined text${nMod === 1 ? "" : "s"} removed, moved, re-worded or formatted. Use the tools above the drawing to add more.`
-      : "Use Measure, Add text, Edit text and Remove above the drawing to annotate it."),
-    el("div", { class: "toolbar" },
-      el("button", { type: "button", class: "btn", disabled: !nAdd, onclick: () => { if (confirm("Delete all measurements and text you added to this section?")) { editAnnot(a => { a.items = []; }); renderAll(); } } }, "Delete added"),
-      el("button", { type: "button", class: "btn", disabled: !nMod, onclick: () => { editAnnot(restoreAll); renderAll(); } }, "Restore predefined text")));
-  body.append(el("p", { class: "hint" }, "Actual diameter: bars and links are drawn and placed at their outer diameter, so the cover is measured to the ribs and the spacing check uses the real gaps. Labels and A_s keep the nominal diameter. Ribbed bars are typically 1.1 to 1.2 × nominal; your supplier's data sheet gives the exact figure."));
-  body.append(el("p", { class: "hint" }, "Anchorage and lap lengths have a page of their own: ", el("button", { type: "button", class: "linkbtn", onclick: () => setPage("anch") }, "Anchorage and laps"), "."));
-  body.append(el("p", { class: "hint" }, "The PDF and SVG are true to the drawing scale when printed at 100 %. The DXF is always 1 unit = 1 mm; text and dimension sizes follow the scale. Dimensions in the DXF are drawn as lines and text."));
+  const sec = (title, open, ...kids) => {
+    const d = el("details", { class: "fsec" }, el("summary", {}, title), el("div", { class: "fsec-body" }, ...kids));
+    d.open = uiOpen(title, open); d.addEventListener("toggle", () => setUiOpen(title, d.open));
+    return d;
+  };
+  body.querySelector(".form").append(
+    sec("Your additions on this section", true,
+      el("p", { class: "hint" }, nAdd || nMod ? `${nAdd} added; ${nMod} predefined text${nMod === 1 ? "" : "s"} removed, moved, re-worded or formatted.`
+        : "Nothing yet. Measure, Text, Draw, Rebar and Cut above the drawing add to it."),
+      el("div", { class: "toolbar" },
+        el("button", { type: "button", class: "btn", disabled: !nAdd, onclick: () => { if (confirm("Delete all measurements and text you added to this section?")) { editAnnot(a => { a.items = []; }); renderAll(); } } }, "Delete added"),
+        el("button", { type: "button", class: "btn", disabled: !nMod, onclick: () => { editAnnot(restoreAll); renderAll(); } }, "Restore predefined text"))),
+    sec("About the exports", false,
+      el("p", { class: "hint" }, "The PDF and SVG are true to the drawing scale when printed at 100 %. The DXF is always 1 unit = 1 mm; text and dimension sizes follow the scale, and dimensions are drawn as lines and text. Anchorage and lap lengths have ",
+        el("button", { type: "button", class: "linkbtn", onclick: () => setPage("anch") }, "a page of their own"), ".")));
 }
 function renderGeo(body) {
   const tpl = el("select", { "aria-label": "Load a template shape" }, el("option", { value: "" }, "Load a template shape…"), Object.keys(TEMPLATES).map(n => el("option", { value: n }, n)));
@@ -2755,7 +2891,8 @@ function renderReinf(body) {
   items.forEach((it, i) => {
     const ln = it.type === "Link" ? ++nlink : null;
     const sum = el("span", { class: "sum" }, itemSummary(it, ln)); sums[i] = [sum, ln];
-    list.append(el("li", {}, el("button", { type: "button", "aria-pressed": String(i === state.sel), onclick: () => { state.sel = i; renderAll(); } },
+    list.append(el("li", {}, el("button", { type: "button", "aria-pressed": String(i === state.sel), onclick: () => { state.sel = i; renderAll(); },
+      onmouseenter: () => setHot("i:" + i), onmouseleave: () => setHot(null), title: "Its bars are highlighted on the drawing" },
       el("span", { class: "no" }, String(i + 1)), el("span", {}, it.type), sum)));
   });
   body.append(list);
@@ -2841,7 +2978,7 @@ svg.addEventListener("pointerup", e => { if (hdrag) { endHandle(true); return; }
 svg.addEventListener("pointercancel", () => { if (hdrag) endHandle(false); if (mdrag) endItemDrag(false); endDrag(); ink = null; drawOverlay(); });
 svg.addEventListener("pointerleave", () => { if (!drag && !mdrag) { cursor = null; setHot(null); drawOverlay(); } });
 $("#zFit").onclick = fitView; $("#zIn").onclick = () => zoomAt(1 / 1.3); $("#zOut").onclick = () => zoomAt(1.3);
-new ResizeObserver(() => { if (!userView) fitView(); else if (vb) { const r = svg.clientWidth / svg.clientHeight; setVB({ ...vb, h: vb.w / r }); } }).observe(svg);
+new ResizeObserver(() => { stage.classList.toggle("narrow", stage.clientWidth < 860); if (!userView) fitView(); else if (vb) { const r = svg.clientWidth / svg.clientHeight; setVB({ ...vb, h: vb.w / r }); } }).observe(svg);
 
 function setGrid(scale) {
   const minor = 10 * scale, major = 50 * scale;
@@ -2883,9 +3020,13 @@ function redraw() {
   const key = dr.bounds().map(v => Math.round(v)).join(",") + state.mode;
   if (!userView || !vb) fitView();
   lastBoundsKey = key;
-  status.replaceChildren(el("p", { class: "ok" }, dr.summary()), ...dr.zoneSummary().map(t => el("p", { class: "zone" }, t)),
-    ...dr.warnings.map(w => el("p", { class: "warn" }, "⚠ " + w)), anchDetails(dr));
-  if (typeof refreshRebarPop === "function") refreshRebarPop();
+  const zl = dr.zoneSummary(), more = [...zl.map(t => el("p", { class: "zone" }, t)), anchDetails(dr)].filter(Boolean);
+  const open = !!(state.ui || {}).statusOpen;
+  const tog = more.length ? el("button", { type: "button", class: "stog", "aria-expanded": String(open), title: open ? "Show less" : "Top, bottom and side reinforcement, and anchorage",
+    onclick: () => { state.ui = state.ui || {}; state.ui.statusOpen = !open; persist(); redraw(); } }, open ? "Less ▴" : "Top / bottom, anchorage ▾") : null;
+  status.replaceChildren(el("div", { class: "srow" }, el("p", { class: "ok" }, dr.summary()), tog), ...(open ? more : []),
+    ...dr.warnings.map(w => el("p", { class: "warn" }, "⚠ " + w)));
+  if (typeof refreshRebarPop === "function") { refreshRebarPop(); markRebar(); }
   if (state.page === "anch") renderAnchPage();
 }
 
@@ -2895,6 +3036,28 @@ function anchDetails(dr) {           // one line in the status bar; the details 
   return el("p", { class: "zone" }, `Anchorage and lap lengths: ${dr.anch.length} bar group${dr.anch.length === 1 ? "" : "s"}, from ${Math.min(...dr.anch.map(g => ceil10(g.l0)))} to ${Math.max(...dr.anch.map(g => ceil10(g.l0)))} mm laps.`,
     el("button", { type: "button", class: "linkbtn", onclick: () => setPage("anch") }, "Open the anchorage page"));
 }
+/* the panel: hide it, or drag its edge to make it wider or narrower */
+function applyPanel() {
+  const ui = state.ui || {};
+  document.body.classList.toggle("panel-hidden", !!ui.panelHidden);
+  $("#panelShow").hidden = !ui.panelHidden;
+  document.documentElement.style.setProperty("--panel-w", (ui.panelW || 420) + "px");
+}
+$("#panelHide").onclick = () => { state.ui = state.ui || {}; state.ui.panelHidden = true; persist(); applyPanel(); };
+$("#panelShow").onclick = () => { state.ui = state.ui || {}; state.ui.panelHidden = false; persist(); applyPanel(); };
+(() => {
+  const r = $("#resizer"); let x0 = null, w0 = 0;
+  r.addEventListener("pointerdown", e => { x0 = e.clientX; w0 = $("#aside").getBoundingClientRect().width; r.setPointerCapture(e.pointerId); r.classList.add("on"); e.preventDefault(); });
+  r.addEventListener("pointermove", e => {
+    if (x0 === null) return;
+    state.ui = state.ui || {};
+    state.ui.panelW = Math.round(Math.max(300, Math.min(window.innerWidth - 380, w0 + e.clientX - x0)));
+    applyPanel();
+  });
+  const end = () => { if (x0 === null) return; x0 = null; r.classList.remove("on"); persist(); };
+  r.addEventListener("pointerup", end); r.addEventListener("pointercancel", end);
+  r.addEventListener("dblclick", () => { state.ui = state.ui || {}; delete state.ui.panelW; persist(); applyPanel(); });
+})();
 let apSel = null;
 function setPage(p, save = true) {
   state.page = p === "anch" ? "anch" : "sketch";
@@ -3116,31 +3279,32 @@ function renderAnchPage() {
     s0.addEventListener("change", () => setAnchOv(g.key, { [key]: s0.value }));
     return [el("label", { for: id }, label), s0];
   };
-  const box = (title, ...kids) => el("fieldset", { class: "ap-ctrl" }, el("legend", {}, title), ...kids);
+  const box = (title, val, ...kids) => el("fieldset", { class: "ap-ctrl" }, el("legend", {}, title, el("span", { class: "lval" }, val)), ...kids);
+  const f2 = v => v.toFixed(2);
   const mm = v => isFinite(v) ? String(Math.round(v)) : "none";
   const links = sectionLinks(current);
   const useLink = links.length ? el("div", { class: "ap-full" }, ...links.map(([d, sp]) => el("button", { type: "button", class: "btn small", onclick: () => setAnchOv(g.key, { tD: d, tS: sp, tN: g.ov.tN || 1, K: g.ov.K || "0.1" }) }, `Use link Ø${fmt(d)}/${fmt(sp)}`))) : null;
   const ctrls = el("div", { class: "ap-ctrls" },
-    box("Bond and load",
+    box("Bond and load", `η₁ ${f2(g.eta1)}`,
       ...sel("Bond", "bond", [["", `from the drawing (${g.autoGood ? "good" : "poor"})`], ["good", "good"], ["poor", "poor"]]),
       ...sel("Load", "load", [["", "tension"], ["compression", "compression"]]),
       ...field("σ_sd ÷ f_yd", "util", `page value (${fmt(A.util)})`)),
-    box("α1, α2: bar end and cover (Fig. 8.3)",
+    box("Bar end and cover", `α₁ ${f2(g.a1)} · α₂ ${f2(g.a2)}`,
       ...sel("Bar end", "shape", [["", "straight"], ["bent", "bent or hooked"], ["looped", "looped"]]),
       ...field("a [mm]", "a", `measured: ${mm(g.cdA)}`, g.kind === "plane" ? "clear distance between the bars, s − Ø" : "clear distance to the next bar"),
       ...field("c1 [mm]", "c1", `measured: ${mm(g.cdC)}`, "side cover"),
       ...field("c [mm]", "c", `measured: ${mm(g.cdC)}`, "cover in the other direction")),
-    box("α3: transverse reinforcement (Fig. 8.4)",
+    box("Transverse bars", `α₃ ${f2(g.a3.a3)}` + (g.a3L.a3 !== g.a3.a3 ? ` · lap ${f2(g.a3L.a3)}` : ""),
       ...sel("K", "K", [["", "0 (not counted)"], ["0.05", "0.05: bar along a straight leg"], ["0.1", "0.1: bar in the corner of a link"]]),
       ...field("Transverse Ø [mm]", "tD", "none"),
       ...field("Spacing [mm]", "tS", "–"),
       ...field("Legs per bar", "tN", "1"),
       ...sel("Member", "member", [["", "beam (ΣA_st,min = 0.25 A_s)"], ["slab", "slab (ΣA_st,min = 0)"]]),
       ...(useLink ? [useLink] : [])),
-    box("α4, α5: welded bar and transverse pressure",
+    box("Welded bar, pressure", `α₄ ${f2(g.a4)} · α₅ ${f2(g.a5)}`,
       ...sel("Welded transverse bar", "welded", [["", "no"], ["yes", "yes (α4 = 0.7)"]]),
       ...field("Pressure p [MPa]", "p", "0")),
-    box("α6 and the lap layout",
+    box("Laps", `α₆ ${f2(g.a6)}`,
       ...field("ρ1 lapped in one section [%]", "share", `page value (${fmt(A.rho1)})`),
       ...(g.kind === "cut" ? field("Bar length [mm]", "stock", `page value (${fmt(A.stock)})`) : field("Lap centre along the bar [mm]", "lapAt", `none (bar is ${Math.round(polyLen(expand(g.items[0].verts, false)))} mm)`, "measured from the start of the bar, marked 0 on the picture"))));
   const reset = el("button", { type: "button", class: "btn", disabled: !Object.keys(g.ov).length, onclick: () => { const sk = secKey(); if (state.anchOv[sk]) delete state.anchOv[sk][g.key]; changed(); } }, "Use the page values for this group");
@@ -3149,19 +3313,27 @@ function renderAnchPage() {
   const elev = el("div", { class: "ap-elevbox" }); elev.innerHTML = anchElevation(current, groups, apSel);
   elev.querySelectorAll(".lane").forEach(n => n.addEventListener("click", () => { apSel = n.getAttribute("data-key"); renderAnchPage(); }));
   const planes = groups.filter(q => q.kind === "plane");
+  const apTab = (state.ui || {}).apTab === "layout" ? "layout" : "calc";
+  const tabBtn = (k, t) => el("button", { type: "button", role: "tab", "aria-selected": String(apTab === k), onclick: () => { state.ui = state.ui || {}; state.ui.apTab = k; persist(); renderAnchPage(); } }, t);
+  const result = el("div", { class: "ap-result" },
+    el("div", {}, el("span", { class: "rl" }, "Anchorage l_bd"), el("b", {}, `${lenTxt(g.lbd, g.dn)} mm`)),
+    el("div", {}, el("span", { class: "rl" }, "Lap l₀"), el("b", {}, `${lenTxt(g.l0, g.dn)} mm`)),
+    el("div", {}, el("span", { class: "rl" }, "Bond"), el("b", {}, (g.good ? "good" : "poor") + (g.opt.comp ? ", compression" : ""))),
+    el("div", {}, el("span", { class: "rl" }, "l_b,rqd"), el("b", {}, `${Math.round(g.lbrqd)} mm`)));
+  const calc = el("div", { class: "ap-detail" },
+    el("div", {}, prev,
+      el("p", { class: "hint" }, `${g.kind === "plane" ? "Bar lying in the section plane (its start is marked 0)" : `${g.n} bar${g.n === 1 ? "" : "s"} cut by the section`}, in blue.`),
+      ctrls, reset),
+    el("div", {}, el("h3", {}, "Worked through (EN 1992-1-1)"), work,
+      el("p", { class: "hint" }, "Indicative. The stress is the value given, not taken from an analysis. Bond conditions assume the section is cast as drawn.")));
+  const layout = el("div", {},
+    elev.innerHTML ? elev : el("p", { class: "hint" }, "No bars run along the member in this section."),
+    el("p", { class: "hint" }, `Bars of ${fmt(A.stock)} mm laid from the left end and lapped by l₀; with ρ₁ below 100 % they are split into sets whose laps are staggered by 1.3·l₀. The shaded lengths at the ends are l_bd. Click a lane to pick its group.`
+      + (planes.length ? ` Bars lying in the section plane (${planes.map(anchName).join(", ")}) lap across the member: set the lap position on the group's Calculation tab.` : "")));
   body.replaceChildren(
     anchTableEl(groups, true),
-    el("p", { class: "hint" }, "Click a row (or a lane in the lap layout) to see how its lengths are worked out and to set the parameters for that group (marked ✎). Πα is the product of the reduction factors."),
-    el("h3", { class: "ap-h3" }, "Lap layout along the member"),
-    elev.innerHTML ? elev : el("p", { class: "hint" }, "No bars run along the member in this section."),
-    el("p", { class: "hint" }, `Bars of ${fmt(A.stock)} mm laid from the left end and lapped by l₀; with ρ₁ below 100 % the bars are split into sets whose laps are staggered by 1.3·l₀, so no more than ρ₁ of them are lapped in one section. The shaded lengths at the ends are l_bd.`
-      + (planes.length ? ` Bars lying in the section plane (${planes.map(anchName).join(", ")}) lap across the member: set the lap position on the group and it is drawn on its section picture.` : "")),
-    el("div", { class: "ap-detail" },
-      el("div", {}, el("h3", {}, `${anchName(g)}, ${zoneTxt(g.zone)}`), prev,
-        el("p", { class: "hint" }, `${g.kind === "plane" ? "Bar lying in the section plane (its start is marked 0)" : `${g.n} bar${g.n === 1 ? "" : "s"} cut by the section`}, highlighted in blue.`),
-        ctrls, reset),
-      el("div", {}, el("h3", {}, "Worked through (EN 1992-1-1)"), work,
-        el("p", { class: "hint" }, "Indicative. The stress is the value given, not taken from an analysis. Bond conditions assume the section is cast as drawn."))));
+    el("div", { class: "ap-tabs", role: "tablist" }, el("span", { class: "ap-sel" }, `${anchName(g)}, ${zoneTxt(g.zone)}`), tabBtn("calc", "Calculation"), tabBtn("layout", "Lap layout")),
+    apTab === "calc" ? el("div", {}, result, calc) : layout);
   const tr = body.querySelector('tr[aria-selected="true"]');
   if (tr && document.activeElement && document.activeElement.closest && document.activeElement.closest("table.anch")) tr.focus();
 }
@@ -3195,7 +3367,42 @@ $("#apPrint").onclick = () => {
 
 /* ------------------------------------------------------------------ drawing tools */
 let tool = "pan", meas = null, ink = null, rb = null, cutp = null, mdrag = null, cursor = null, snapCache = null, hotKey = null, spaceDown = false, popState = null;
-const undoStack = [];
+/* history: every change to the document (forms, drawing, bar list, anchorage) can be undone and redone */
+const DOC_KEYS = ["mode", "stdType", "std", "custom", "style", "annot", "anchOv"];
+const docJSON = () => JSON.stringify(DOC_KEYS.map(k => state[k] ?? null));
+var hist = { undo: [], redo: [], cur: null, timer: null };      // var: persist() may run before this line
+function histInit() { clearTimeout(hist.timer); hist.cur = docJSON(); hist.undo = []; hist.redo = []; refreshToolbar(); }
+function histCommit() {                 // record the document as it is now, if it changed since the last record
+  clearTimeout(hist.timer); hist.timer = null;
+  if (hist.cur === null) return;
+  const j = docJSON();
+  if (j === hist.cur) return;
+  hist.undo.push(hist.cur); if (hist.undo.length > 300) hist.undo.shift();
+  hist.cur = j; hist.redo = [];
+  refreshToolbar();
+}
+function histSoon() { clearTimeout(hist.timer); hist.timer = setTimeout(histCommit, 700); refreshToolbar(); }   // typing becomes one step
+function applyDoc(j) {
+  const v = JSON.parse(j);
+  DOC_KEYS.forEach((k, i) => { if (v[i] !== null) state[k] = v[i]; });
+  if (state.mode !== "custom" || (state.sel !== null && state.sel >= state.custom.items.length)) state.sel = null;
+  if (rbEdit && rbEdit.ref.src === "item") { const it = state.mode === "custom" ? state.custom.items[rbEdit.idx] : null; if (it && REBAR_KIND[it.type]) rbEdit.ref.item = it; }
+  persist(); userView = true;
+  renderAll();
+  if (state.page === "anch") setPage("anch", false);
+}
+function undo() {
+  histCommit();
+  if (!hist.undo.length) return;
+  hist.redo.push(hist.cur); hist.cur = hist.undo.pop();
+  applyDoc(hist.cur); refreshToolbar();
+}
+function redo() {
+  histCommit();
+  if (!hist.redo.length) return;
+  hist.undo.push(hist.cur); hist.cur = hist.redo.pop();
+  applyDoc(hist.cur); refreshToolbar();
+}
 const secKey = () => state.mode === "custom" ? "custom" : "std:" + state.stdType;
 function annotOf(create = true) {
   const k = secKey();
@@ -3211,30 +3418,13 @@ function restoreAll(a) {
   for (const k of Object.keys(a.moves || {})) if (!k.startsWith("u:")) delete a.moves[k];
   for (const k of Object.keys(a.styles || {})) if (!k.startsWith("u:")) delete a.styles[k];
 }
-function pushItemsUndo() { undoStack.push({ items: JSON.stringify(state.custom.items) }); if (undoStack.length > 100) undoStack.shift(); }
+const pushItemsUndo = () => histCommit();       // a change to the bar list starts a step of its own
 function editAnnot(fn) {
+  histCommit();
   const a = annotOf(true);
-  undoStack.push({ key: secKey(), json: JSON.stringify(a) });
-  if (undoStack.length > 100) undoStack.shift();
   fn(a);
-  persist(); userView = true; redraw();
+  persist(); histCommit(); userView = true; redraw();
   if (state.tab[state.mode] === "drawing") renderAll();
-}
-function undo() {
-  const u = undoStack.pop();
-  if (!u) return;
-  if (rbEdit) rbEdit.dirty = false;
-  if (u.items) {
-    state.custom.items = JSON.parse(u.items); state.sel = null;
-    persist(); userView = true; redraw();
-    if (state.mode === "custom" && state.tab.custom === "reinforcement") renderAll();
-    return;
-  }
-  state.annot[u.key] = JSON.parse(u.json);
-  persist(); userView = true;
-  if (u.key !== secKey()) toast("Undid a change on another section.");
-  redraw();
-  if ((state.tab[state.mode] || "") === "drawing") renderAll();
 }
 const newId = () => Date.now().toString(36) + Math.random().toString(36).slice(2, 6);
 const pxSize = () => vb && svg.clientWidth ? vb.w / svg.clientWidth : 1;
@@ -3299,9 +3489,11 @@ document.querySelectorAll("[data-draw]").forEach(b => b.addEventListener("click"
 $("#drawWidth").addEventListener("change", e => { state.draw.width = e.target.value; persist(); });
 document.querySelectorAll(".tools [data-tool]").forEach(b => b.addEventListener("click", () => setTool(b.dataset.tool)));
 $("#tUndo").onclick = undo;
+$("#tRedo").onclick = redo;
 $("#tRestore").onclick = () => editAnnot(restoreAll);
 function refreshToolbar() {
-  $("#tUndo").disabled = !undoStack.length;
+  $("#tUndo").disabled = !hist.undo.length && (hist.cur === null || docJSON() === hist.cur);
+  $("#tRedo").disabled = !hist.redo.length;
   const n = modCount(annotOf(false)), r = $("#tRestore");
   r.hidden = !n;
   r.textContent = `Restore (${n})`;
@@ -3426,7 +3618,7 @@ function updateHint() {
       } else msg = "Click the second point.";
     } else msg = "Move to place the dimension line, then click. Esc cancels.";
   } else if (tool === "text") msg = "Click where the text should go.";
-  else if (tool === "edit") msg = rbEdit ? "Drag the blue points to reshape the bar, drag the bar to move it, or edit the values in the box." : "Click a label, title or dimension to change its words or formatting, or a bar you drew to change it.";
+  else if (tool === "edit") msg = rbEdit ? "Drag the blue points to reshape the bar, drag the bar to move it, or edit the values in the box." : state.mode === "custom" ? "Click a label or dimension to change its words, or a bar to open its item in the list." : "Click a label, title or dimension to change its words or formatting, or a bar you drew to change it.";
   else if (tool === "pan") msg = hotKey ? "Drag to move it." : "";
   else if (tool === "rebar") {
     const len = rb && cursor ? ` · <b>${fmtLen(dist(rb.pts[rb.pts.length - 1], [cursor.x, cursor.y]))} mm</b>` : "";
@@ -3453,7 +3645,7 @@ function pickKeyAt(e) {
     if (!dwg.contains(n)) continue;
     const t = n.closest("[data-key]"), key = t && t.getAttribute("data-key");
     if (!key) continue;
-    if (rebarRefOfKey(key)) {
+    if (key.startsWith("i:") || rebarRefOfKey(key)) {
       if (!n.classList.contains("hitT") && !n.classList.contains("hitL")) return key;   // the bar itself is under the pointer
       if (!bar) bar = key;                                                              // only a bar's enlarged click area
     } else if (!first) first = key;
@@ -3677,11 +3869,6 @@ function rebarPut(ref, v) {
 }
 function rebarApply(v) {
   if (!rbEdit) return;
-  if (!rbEdit.dirty) {                    // one undo step per editing session
-    if (rbEdit.ref.src === "item") pushItemsUndo();
-    else { undoStack.push({ key: secKey(), json: JSON.stringify(annotOf(true)) }); if (undoStack.length > 100) undoStack.shift(); }
-    rbEdit.dirty = true;
-  }
   rebarPut(rbEdit.ref, v);
   persist(); userView = true;
   if (rbEdit.ref.src === "item" && state.tab.custom === "reinforcement") { state.sel = state.custom.items.indexOf(rbEdit.ref.item); renderAll(); }
@@ -3729,7 +3916,7 @@ function fillRebarForm(force = false) {
   set("#rbePts", ptsText(v.pts));
   $("#rbePts").rows = Math.min(8, Math.max(2, v.pts.length));
   $("#rbePtsLabel").textContent = v.kind === "row" ? "Start and end of the row, x, y (one per line)" : v.kind === "single" ? "Bar centre x, y" : "Points x, y (one per line)";
-  $("#rbeRevert").disabled = !rbEdit.dirty;
+  $("#rbeRevert").disabled = docJSON() === rbEdit.base;
 }
 function openRebarPop(e, ref) {
   closePop(true);
@@ -3737,7 +3924,8 @@ function openRebarPop(e, ref) {
   closeRebarPop();
   const v = rebarGet(ref);
   if (!v) return;
-  rbEdit = { ref, dirty: false };
+  histCommit();
+  rbEdit = { ref, base: docJSON(), idx: ref.src === "item" ? state.custom.items.indexOf(ref.item) : -1 };
   $("#rbTitle").textContent = { row: "Row of bars", line: "Bar along a line", single: "Single bar" }[v.kind];
   $("#rbWhere").textContent = ref.src === "item" ? `item ${state.custom.items.indexOf(ref.item) + 1} in the list` : "drawn on the section";
   $("#rbeHint").textContent = REBAR_HINT; $("#rbeHint").classList.remove("bad");
@@ -3763,9 +3951,19 @@ function refreshRebarPop() {           // after every redraw: follow the data, o
   fillRebarForm();
   markRebar();
 }
+function selectItem(i) {               // pick an item of the custom bar list from the drawing
+  if (state.mode !== "custom" || !state.custom.items[i]) return;
+  state.sel = i; state.tab.custom = "reinforcement";
+  if ((state.ui || {}).panelHidden) { state.ui.panelHidden = false; applyPanel(); }
+  persist(); renderAll();
+}
 function markRebar(ghost = false) {
   dwg.querySelectorAll(".sel, .ghost").forEach(n => n.classList.remove("sel", "ghost"));
-  if (!rbEdit) return;
+  if (!rbEdit) {                        // the item selected in the bar list is shown on the drawing
+    if (state.mode === "custom" && state.tab.custom === "reinforcement" && state.sel !== null && state.page !== "anch")
+      dwg.querySelectorAll(`[data-key="i:${state.sel}"]:not(.hitL):not(.hitT)`).forEach(n => n.classList.add("sel"));
+    return;
+  }
   const k = rebarKey(rbEdit.ref);
   dwg.querySelectorAll(`[data-key="${CSS.escape(k)}"]:not(.hitL):not(.hitT)`).forEach(n => n.classList.add(ghost ? "ghost" : "sel"));
 }
@@ -3842,14 +4040,16 @@ $("#rbeDist").addEventListener("change", () => {
 $("#rbPop").addEventListener("submit", e => { e.preventDefault(); closeRebarPop(); });
 $("#rbPop").addEventListener("keydown", e => { if (e.key === "Enter" && e.target.tagName !== "TEXTAREA") { e.preventDefault(); closeRebarPop(); } });
 $("#rbeOk").onclick = closeRebarPop;
-$("#rbeRevert").onclick = () => {
-  if (!rbEdit || !rbEdit.dirty) return;
-  const keep = rbEdit, idx = keep.ref.src === "item" ? state.custom.items.indexOf(keep.ref.item) : -1;
-  rbEdit = null;                                  // the undo replaces the list; pick the same item up again afterwards
-  undo();
-  if (idx >= 0) { const it = state.custom.items[idx]; if (it && REBAR_KIND[it.type]) keep.ref.item = it; }
-  keep.dirty = false;
-  if (rebarObj(keep.ref)) { rbEdit = keep; fillRebarForm(true); markRebar(); drawOverlay(); } else $("#rbPop").hidden = true;
+$("#rbeRevert").onclick = () => {             // back to how the bar was when the box opened (itself a step that can be undone)
+  if (!rbEdit || docJSON() === rbEdit.base) return;
+  histCommit();
+  const v = JSON.parse(rbEdit.base);
+  DOC_KEYS.forEach((k, i) => { if (v[i] !== null) state[k] = v[i]; });
+  if (rbEdit.ref.src === "item") rbEdit.ref.item = state.custom.items[rbEdit.idx];
+  persist(); histCommit(); userView = true;
+  if (rbEdit.ref.src === "item" && state.tab.custom === "reinforcement") renderAll();
+  redraw();
+  if (rbEdit) { fillRebarForm(true); markRebar(); drawOverlay(); }
 };
 $("#rbeDel").onclick = () => { if (!rbEdit) return; const k = rebarKey(rbEdit.ref); closeRebarPop(); removeKey(k); };
 function nextCutLetter() {
@@ -3958,6 +4158,7 @@ function toolDown(e) {
     if (ref && rbEdit && rbObjSame(rbEdit.ref, ref)) { startItemDrag(e, key); return; }   // drag the selected bar to move it
     if (ref) { openRebarPop(e, ref); return; }
     closeRebarPop();
+    if (key && key.startsWith("i:")) { selectItem(+key.slice(2)); return; }
     if (!key) return;
     const it = itemOfKey(key), isDim = it && it.k === "dim";
     if (!it) return;
@@ -4055,11 +4256,14 @@ document.addEventListener("keydown", e => {
   }
   if (e.key === "Enter" && rb && !typing(e)) { e.preventDefault(); commitRebar(); return; }
   if (typing(e) || document.querySelector("dialog[open]")) return;
+  const k = e.key.toLowerCase();
+  if ((e.ctrlKey || e.metaKey) && ((k === "z" && e.shiftKey) || k === "y")) { e.preventDefault(); redo(); return; }
+  if ((e.ctrlKey || e.metaKey) && k === "z") { e.preventDefault(); undo(); return; }
   if (state.page === "anch") return;
-  if ((e.ctrlKey || e.metaKey) && !e.shiftKey && e.key.toLowerCase() === "z") { e.preventDefault(); undo(); return; }
   if (e.ctrlKey || e.metaKey || e.altKey) return;
   if (e.key === " " && (e.target === document.body || e.target === svg)) { spaceDown = true; e.preventDefault(); return; }
-  const t = { h: "pan", m: "measure", t: "text", e: "edit", r: "erase", d: "draw", b: "rebar", c: "cut" }[e.key.toLowerCase()];
+  if (k === "f") { fitView(); return; }
+  const t = { h: "pan", m: "measure", t: "text", e: "edit", r: "erase", d: "draw", b: "rebar", c: "cut" }[k];
   if (t) setTool(t);
 });
 document.addEventListener("keyup", e => { if (e.key === " ") spaceDown = false; });
@@ -4126,20 +4330,20 @@ document.querySelectorAll("[data-exp]").forEach(b => b.addEventListener("click",
 document.querySelectorAll(".seg [data-mode]").forEach(b => b.addEventListener("click", () => { state.mode = b.dataset.mode; state.sel = null; userView = false; persist(); renderAll(); }));
 $("#bSave").onclick = () => {
   const name = slug(state.mode === "custom" ? state.custom.name : state.std[state.stdType].name || "project");
-  download(name + ".json", JSON.stringify({ app: "rebar-sketch-studio", version: 1, ...state, sel: null }, null, 2), "application/json");
+  download(name + ".json", JSON.stringify({ app: "rebar-sketch-studio", version: 1, ...state, sel: null, ui: undefined }, null, 2), "application/json");
   toast(`Saved ${name}.json`);
 };
 $("#bOpen").onclick = () => $("#fileIn").click();
 $("#fileIn").addEventListener("change", async e => {
   const f = e.target.files[0]; e.target.value = "";
   if (!f) return;
-  try { state = mergeState(JSON.parse(await f.text())); state.sel = null; userView = false; persist(); renderAll(); toast(`Opened ${f.name}`); }
+  try { const ui = state.ui; state = mergeState(JSON.parse(await f.text())); state.ui = ui; state.sel = null; userView = false; persist(); renderAll(); if (state.page === "anch") setPage("anch", false); toast(`Opened ${f.name}`); }
   catch (err) { toast(`Could not read ${f.name}: it is not a project file.`); }
 });
 const b64url = bytes => { let s = ""; bytes.forEach(b => s += String.fromCharCode(b)); return btoa(s).replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/, ""); };
 const unb64url = str => { const s = atob(str.replace(/-/g, "+").replace(/_/g, "/")); return Uint8Array.from(s, c => c.charCodeAt(0)); };
 async function packState() {
-  const json = JSON.stringify({ ...state, sel: null });
+  const json = JSON.stringify({ ...state, sel: null, ui: undefined });     // panel width and folded groups stay personal
   if ("CompressionStream" in window) {
     const stream = new Blob([json]).stream().pipeThrough(new CompressionStream("deflate"));
     return "z" + b64url(new Uint8Array(await new Response(stream).arrayBuffer()));
@@ -4161,12 +4365,14 @@ $("#bHelp").onclick = () => $("#guide").showModal();
 /* ------------------------------------------------------------------ start */
 (async () => {
   if (location.hash.startsWith("#p=")) {
-    try { state = mergeState(await unpackState(location.hash.slice(3))); state.sel = null; persist(); toast("Opened the shared section."); }
+    try { const ui = state.ui; state = mergeState(await unpackState(location.hash.slice(3))); state.ui = ui || {}; state.sel = null; persist(); toast("Opened the shared section."); }
     catch (e) { toast("The shared link is damaged, so your last section was opened instead."); }
     history.replaceState(null, "", location.pathname + location.search);
   }
+  applyPanel();
   renderAll();
   setPage(state.page || "sketch", false);
+  histInit();
 })();
 </script>
 </body>
