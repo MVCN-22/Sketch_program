@@ -224,9 +224,33 @@ ol.items .sum { color: var(--muted); overflow: hidden; text-overflow: ellipsis; 
 #dwg circle.sel { fill: var(--accent); }
 #dwg path.sel { stroke: var(--accent); }
 #dwg .ghost { opacity: .25; }
-.zoom { position: absolute; top: 12px; right: 12px; display: flex; gap: 4px; }
+.zoom { position: absolute; top: 12px; right: 12px; display: flex; flex-wrap: wrap; justify-content: flex-end; gap: 4px; max-width: 132px; }
+.zoom button.view { order: 2; }
 .zoom button { width: 34px; height: 30px; border: 1px solid var(--rule); background: rgba(255,255,255,.92); border-radius: 6px; cursor: pointer; font-size: 15px; }
 .zoom button.fit { width: auto; padding: 0 10px; font-size: 13px; }
+.zoom button.view { font-weight: 600; color: var(--muted); }
+.zoom button.view svg { width: 16px; height: 16px; fill: none; stroke: currentColor; stroke-width: 1.2; vertical-align: -3px; }
+.zoom button.view[aria-pressed="true"] { background: #e3edf8; color: var(--accent); border-color: #9fbde0; }
+.ruler { position: absolute; background: rgba(250,251,252,.94); pointer-events: none; font-family: var(--font); }
+.ruler.rx { left: 24px; width: calc(100% - 24px); bottom: 0; height: 18px; border-top: 1px solid var(--rule); }
+.ruler.ry { left: 0; top: 0; height: calc(100% - 18px); width: 24px; border-right: 1px solid var(--rule); }
+body:not(.rulers) .ruler { display: none; }
+body.rulers .toolstack { left: 34px; }
+body.rulers .hintpill { bottom: 30px; }
+.coords { position: absolute; left: 32px; bottom: 26px; background: rgba(255,255,255,.94); border: 1px solid var(--rule); border-radius: 6px; padding: 2px 8px; font-size: 12px; font-variant-numeric: tabular-nums; pointer-events: none; color: var(--ink); white-space: nowrap; }
+.coords .k { color: var(--accent); margin-left: 6px; }
+#view.picking, #view.picking * { cursor: crosshair !important; }
+#view.onhandle, #view.onhandle * { cursor: move !important; }
+#hint.act { background: #1b4f8a; }
+.pickbtn { border: 1px solid var(--rule); background: #fff; border-radius: 4px; padding: 0 6px; font-size: 12px; line-height: 17px; color: var(--accent); cursor: pointer; flex: none; }
+.pickbtn:hover { border-color: var(--accent); background: #f1f6fc; }
+.pickbtn.on { background: var(--accent); color: #fff; border-color: var(--accent); }
+.lrow { display: flex; align-items: flex-end; justify-content: space-between; gap: 6px; }
+.lrow > label { font-size: 12.5px; color: #3b444c; line-height: 1.25; }
+.tarow { display: flex; flex-wrap: wrap; gap: 6px; margin: 2px 0 2px; }
+.pickbtn svg { width: 12px; height: 12px; vertical-align: -2px; }
+.geobar .pickbtn { padding: 3px 9px; font-size: 12.5px; line-height: 18px; }
+.geobar { display: flex; flex-wrap: wrap; gap: 6px; margin: 0 0 10px; }
 .zoom button:hover { border-color: var(--accent); color: var(--accent); }
 .status { border-top: 1px solid var(--rule); background: #fbfcfc; padding: 8px 14px; font-size: 13px; min-height: 38px; max-height: 30vh; overflow: auto; }
 .status .ok { color: var(--ok); }
@@ -460,8 +484,13 @@ dialog code { background: var(--panel-2); padding: 1px 4px; border-radius: 3px; 
       <label><input type="checkbox" class="snapbox" id="cSnap" checked> Snap</label>
     </div>
     </div>
+    <svg id="rulerX" class="ruler rx" aria-hidden="true"></svg>
+    <svg id="rulerY" class="ruler ry" aria-hidden="true"></svg>
+    <div class="coords" id="coords" hidden></div>
     <div class="zoom">
-      <button type="button" class="fit" id="zFit" title="Fit the drawing">Fit</button>
+      <button type="button" class="view" id="zNums" title="Point numbers: the outline points numbered as in the Outline box, openings (O1, O2 …) and links (L1, L2 …)" aria-pressed="false">#</button>
+      <button type="button" class="view" id="zRulers" title="Rulers, origin and cursor coordinates" aria-pressed="true"><svg viewBox="0 0 16 16" aria-hidden="true"><path d="M1.5 14.5V1.5h3v13zM1.5 4h2M1.5 6.5h1.2M1.5 9h2M1.5 11.5h1.2M4.5 14.5h10v-3h-10M7 14.5v-2M9.5 14.5v-1.2M12 14.5v-2"/></svg></button>
+      <button type="button" class="fit" id="zFit" title="Fit the drawing (F)">Fit</button>
       <button type="button" id="zIn" title="Zoom in" aria-label="Zoom in">+</button>
       <button type="button" id="zOut" title="Zoom out" aria-label="Zoom out">−</button>
     </div>
@@ -534,6 +563,19 @@ dialog code { background: var(--panel-2); padding: 1px 4px; border-radius: 3px; 
     <li><b>Forms</b> are grouped; click a group heading to fold it, and the app remembers which groups you keep open. Greyed-out text in a box is what a blank box means; hover a <b>?</b> for an explanation. In number boxes ↑ and ↓ step the value (Shift ×10, Alt ×0.1); a value that is not a number turns red.</li>
     <li><b>The panel</b> on the left: drag its right edge to make it wider or narrower (double-click for the default), or hide it with « to give the drawing the whole width (» brings it back).</li>
     <li><b>The status bar</b> shows the bars and areas on one line; <em>Top / bottom, anchorage</em> opens the rest. Warnings are always shown.</li>
+  </ul>
+  <h4>Finding coordinates</h4>
+  <ul>
+    <li><b>Rulers</b> along the bottom and left edge of the drawing give the coordinates in mm, the red arrows mark the origin (0, 0), and the box at the bottom left shows x and y under the mouse. Near a corner or a bar it shows that point's coordinates and names it (on a custom section: <em>outline point 3</em> is the third line of the Outline box). The ruler button next to <em>Fit</em> switches all of this off.</li>
+    <li><b>#</b> numbers the outline points as they appear in the Outline box, the openings O1, O2 … and the links L1, L2 … (custom sections).</li>
+    <li><b>Pick a point</b>: the target button next to an x, y pair in a reinforcement item sets both by clicking on the drawing. <em>Draw on the drawing</em> above a list of points replaces the list with points you click. Points snap to corners, bars and edges, and elsewhere to the grid (the step follows the zoom). Shift keeps a line horizontal or vertical, Alt places a point freely, right-click or Backspace takes the last point back, Enter or a double-click finishes, Esc cancels.</li>
+  </ul>
+  <h4>Editing shapes on the drawing (custom sections, Edit tool)</h4>
+  <ul>
+    <li><b>Outline and openings</b>: with the Geometry tab open, the corners are blue squares. Drag one to move it; drag the + in the middle of an edge to add a corner there; right-click a corner to delete it. Openings can be moved by their centre, rectangles resized by a corner, circles by the diamond on the edge. The Outline and Openings boxes follow, and comments, arcs and break lines on the other lines are kept. Clicking the concrete with Edit opens the Geometry tab.</li>
+    <li><b>Draw a new outline</b> and <b>Add a rectangular opening</b> on the Geometry tab work by clicking on the drawing.</li>
+    <li><b>Reinforcement items</b>: select an item in the list (or click its bars) and drag its blue points: the ends of a row, the points of a line bar or link polygon, the corners of a link rectangle, the centre and radius of a circle pattern (the radius point also sets the start angle), a layer (sideways only, which sets its offset), the line of a dimension and a text. The crosshair point moves the whole item. Items that follow the section, such as a link along the outline, have no points to drag.</li>
+    <li>Dragging snaps to corners, bars and the grid; Alt drags freely, Shift keeps it straight, Esc puts it back. Every change can be undone.</li>
   </ul>
   <h4>Standard sections</h4>
   <p>Pick a type and fill in the fields. Layer tables take one row per layer, from the outer face inwards; <em>gap</em> is the clear distance to the layer before it (blank = the minimum spacing). <em>Edit as custom</em> copies the section, reinforcement included, into the custom editor as a starting point.</p>
@@ -2636,10 +2678,14 @@ function numInput(inp, kind, onValue) {
 }
 const uiOpen = (title, def) => { const v = ((state.ui || {}).sec || {})[title]; return v === undefined ? def : v; };
 function setUiOpen(title, open) { state.ui = state.ui || {}; state.ui.sec = state.ui.sec || {}; state.ui.sec[title] = open; persist(); }
-function buildForm(host, spec, values, onChange, showIf = {}) {
+/* ext.picks: a button next to x, y pairs that picks the point on the drawing; ext.ta[key]: a button that draws a textarea's points */
+const PICK_PAIR = { x: "y", x0: "y0", x1: "y1", x2: "y2", cx: "cy" };
+const PICK_ICON = `<svg viewBox="0 0 12 12" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.4"><circle cx="6" cy="6" r="3.6"/><path d="M6 0v3.2M6 8.8V12M0 6h3.2M8.8 6H12"/></svg>`;
+function buildForm(host, spec, values, onChange, showIf = {}, ext = {}) {
   const ctrls = new Set(Object.values(showIf).map(c => c[0]));
   for (const f of spec) if (f[0] !== "#" && !(f[0] in values)) values[f[0]] = clone(f[3]);
-  const wrap = el("div", { class: "form" });
+  const wrap = el("div", { class: "form" }), keys = new Set(spec.map(f => f[0]));
+  wrap._vals = values;
   host.append(wrap);
   const set = (k, v) => {
     const changed = values[k] !== v;
@@ -2654,12 +2700,21 @@ function buildForm(host, spec, values, onChange, showIf = {}) {
     const lab = () => el("label", { for: id, title: help }, label, help ? el("span", { class: "qm", "aria-hidden": "true" }, "?") : null);
     if (NUM.includes(kind) || kind === "str") {
       const inp = el("input", { type: "text", id, value: String(val ?? ""), placeholder: opt.ph || null, title: help, inputmode: kind === "str" ? null : "decimal", autocomplete: "off", spellcheck: kind === "str" ? null : "false" });
+      inp.dataset.f = key;
       if (kind === "str") inp.addEventListener("input", () => set(key, inp.value)); else numInput(inp, kind, v => set(key, v));
+      const py = ext.picks && PICK_PAIR[key] && keys.has(PICK_PAIR[key]) ? PICK_PAIR[key] : null;
+      if (py) {
+        const b = el("button", { type: "button", class: "pickbtn", title: `Pick ${key}, ${py} on the drawing`, "aria-label": `Pick ${key}, ${py} on the drawing` });
+        b.innerHTML = PICK_ICON;
+        b.addEventListener("click", () => startPick(`${key}, ${py}`, 1, "point", pts => { values[key] = fmt(pts[0][0]); values[py] = fmt(pts[0][1]); onChange(key); renderAll(); }, b));
+        return el("div", { class: "fcell" }, el("div", { class: "lrow" }, lab(), b), inp);
+      }
       return el("div", { class: "fcell" + (kind === "str" || opt.wide ? " wide" : "") }, lab(), inp);
     }
     if (kind === "color") return el("div", { class: "fcell wide" }, lab(), colorField(id, label, val, v => set(key, v)));
     if (kind === "choice") {
       const sel = el("select", { id, title: help }, extra.map(o => el("option", { value: o, selected: o === val }, o)));
+      sel.dataset.f = key;
       sel.addEventListener("change", () => set(key, sel.value));
       return el("div", { class: "fcell" + (opt.wide || Math.max(...extra.map(o => String(o).length)) > 16 ? " wide" : "") }, lab(), sel);
     }
@@ -2670,8 +2725,14 @@ function buildForm(host, spec, values, onChange, showIf = {}) {
     }
     if (kind === "text") {
       const ta = el("textarea", { id, rows: extra || 5, spellcheck: "false", title: help });
-      ta.value = String(val ?? "");
+      ta.value = String(val ?? ""); ta.dataset.f = key;
       ta.addEventListener("input", () => set(key, ta.value));
+      const t = ext.ta && ext.ta[key];
+      if (t) {
+        const b = el("button", { type: "button", class: "pickbtn", title: t.title || null }, t.label);
+        b.addEventListener("click", () => startPick(t.what, t.n || Infinity, t.shape, pts => { t.done(pts); onChange(key); renderAll(); }, b));
+        return el("div", { class: "fcell wide" }, el("div", { class: "lrow" }, lab(), b), ta);
+      }
       return el("div", { class: "fcell wide" }, lab(), ta);
     }
     if (kind === "bars" || kind === "mesh") return el("div", { class: "fcell wide" }, layerTable(label, kind === "bars" ? BARS_COLS : MESH_COLS, val, () => onChange(key)));
@@ -2697,6 +2758,17 @@ function buildForm(host, spec, values, onChange, showIf = {}) {
     wrap.querySelectorAll(".fgrid").forEach(g => { if (!g.children.length) (g.parentElement.tagName === "DETAILS" ? g.parentElement : g).remove(); });
   }
   render();
+}
+/* the panel follows edits made on the drawing without being rebuilt */
+function syncForms() {
+  document.querySelectorAll("#body .form").forEach(w => {
+    const v = w._vals; if (!v) return;
+    w.querySelectorAll("[data-f]").forEach(c => {
+      if (c === document.activeElement) return;
+      const s = String(v[c.dataset.f] ?? "");
+      if (c.value !== s) { c.value = s; c.classList.remove("bad"); }
+    });
+  });
 }
 function layerTable(label, cols, rows, onChange) {
   const box = el("fieldset", { class: "layers" }, el("legend", {}, label));
@@ -2825,8 +2897,11 @@ function renderAll() {
   for (const [key, name] of TABS[state.mode]) {
     tabs.append(el("button", { type: "button", role: "tab", "aria-selected": String(key === cur), onclick: () => { state.tab[state.mode] = key; persist(); renderAll(); } }, name));
   }
-  const body = $("#body"); body.replaceChildren(); body.scrollTop = 0;
+  if (pickReq) endPick(false);
+  const body = $("#body"), where = state.mode + "/" + cur, keep = renderAll.where === where ? body.scrollTop : 0;
+  body.replaceChildren(); body.scrollTop = 0;
   ({ section: renderStd, drawing: renderDrawingTab, geometry: renderGeo, reinforcement: renderReinf })[cur](body);
+  renderAll.where = where; body.scrollTop = keep;
   schedule();
 }
 function renderStd(body) {
@@ -2865,6 +2940,19 @@ function renderGeo(body) {
     persist(); renderAll();
   });
   body.append(el("div", { class: "toolbar" }, tpl));
+  const on = tool === "edit";
+  const gb = (label, title, fn) => { const b = el("button", { type: "button", class: "pickbtn", title }, label); b.addEventListener("click", () => fn(b)); return b; };
+  body.append(el("div", { class: "geobar" },
+    Object.assign(gb(on ? "✓ Editing on the drawing" : "Edit points on the drawing", "Drag the outline and opening points on the drawing (Edit tool, E)", () => setTool(tool === "edit" ? "pan" : "edit")), { id: "geoEdit" }),
+    gb("Draw a new outline", "Click the corners of a new outline on the drawing; it replaces the current one", b => startPick("new outline", Infinity, "poly", pts => {
+      state.custom.outline = ptsLine(pts); toast("New outline. Undo (Ctrl+Z) brings the old one back."); renderAll();
+    }, b)),
+    gb("Add a rectangular opening", "Click two opposite corners on the drawing", b => startPick("rectangular opening", 2, "rect", pts => {
+      const [a, c] = pts, x = Math.min(a[0], c[0]), y = Math.min(a[1], c[1]), w = Math.abs(c[0] - a[0]), h = Math.abs(c[1] - a[1]);
+      if (w < 1 || h < 1) { toast("The opening needs a width and a height."); return; }
+      const t = String(state.custom.openings || "").replace(/\s+$/, "");
+      state.custom.openings = (t ? t + "\n" : "") + `rect ${fmt(x)} ${fmt(y)} ${fmt(w)} ${fmt(h)}`; renderAll();
+    }, b))));
   buildForm(body, CUSTOM_GEO_SPEC, state.custom, changed);
   body.append(el("p", { class: "hint" }, OUTLINE_HELP));
 }
@@ -2899,7 +2987,10 @@ function renderReinf(body) {
   if (has) {
     const it = items[state.sel];
     body.append(el("div", { class: "itemhead" }, `Item ${state.sel + 1}: ${it.type}`), el("p", { class: "hint" }, ITEM_HELP[it.type] || ""));
-    buildForm(body, ITEM_SPECS[it.type], it, () => { const [sp, ln] = sums[state.sel]; sp.textContent = itemSummary(it, ln); changed(); }, SHOW_IF[it.type] || {});
+    if (itemHandles(state.sel).length) body.append(el("p", { class: "hint", id: "itemEditHint" }, tool === "edit" ? "Drag the blue points on the drawing to change it, or pick a point with the target button." : "Choose Edit (E) to drag its points on the drawing, or pick a point with the target button."));
+    const closedPts = it.type === "Link" || truthy(it.closed);
+    const ta = { points: { label: "Draw on the drawing", title: "Click the points on the drawing; they replace the list", what: it.type === "Link" ? "link polygon" : "bar", shape: closedPts ? "poly" : "points", done: pts => { it.points = ptsLine(pts); } } };
+    buildForm(body, ITEM_SPECS[it.type], it, () => { const [sp, ln] = sums[state.sel]; sp.textContent = itemSummary(it, ln); changed(); }, SHOW_IF[it.type] || {}, { picks: true, ta });
     requestAnimationFrame(() => list.querySelector('[aria-pressed="true"]')?.scrollIntoView({ block: "nearest" }));
   } else if (items.length) body.append(el("p", { class: "hint" }, "Select an item to edit it."));
 }
@@ -2925,11 +3016,12 @@ function fitView() {
   const [x0, y0, x1, y1] = current.bounds();
   const W = svg.clientWidth || 800, Hs = svg.clientHeight || 600;
   const tsk = document.getElementById("toolstack");
-  const top = tsk ? tsk.offsetTop + tsk.offsetHeight + 10 : 56, bot = 44, avail = Math.max(80, Hs - top - bot);   // keep clear of the toolbars
+  const rl = document.body.classList.contains("rulers"), L = rl ? 24 : 0, Wa = Math.max(80, W - L);
+  const top = tsk ? tsk.offsetTop + tsk.offsetHeight + 10 : 56, bot = 44 + (rl ? 14 : 0), avail = Math.max(80, Hs - top - bot);   // keep clear of the toolbars and rulers
   let w = (x1 - x0) * 1.06, h = (y1 - y0) * 1.06;
-  if (w / h < W / avail) w = h * W / avail; else h = w * avail / W;
-  const k = w / W, cx = (x0 + x1) / 2, cy = -(y0 + y1) / 2;
-  setVB({ x: cx - w / 2, y: cy - (top + avail / 2) * k, w, h: Hs * k });
+  if (w / h < Wa / avail) w = h * Wa / avail; else h = w * avail / Wa;
+  const k = w / Wa, cx = (x0 + x1) / 2, cy = -(y0 + y1) / 2;
+  setVB({ x: cx - (L + Wa / 2) * k, y: cy - (top + avail / 2) * k, w: W * k, h: Hs * k });
   userView = false;
   if (typeof drawOverlay === "function" && current) try { drawOverlay(); } catch (e) { /* tools not ready yet */ }
 }
@@ -2950,6 +3042,17 @@ svg.addEventListener("pointerdown", e => {
   const ae = document.activeElement;                // leave form fields so the tool shortcuts work again
   if (ae && ae !== document.body && !$("#pop").contains(ae) && ae.blur) ae.blur();
   closePop(true);                                   // clicking elsewhere keeps what was typed
+  if (pickReq && !spaceDown && e.button !== 1) {
+    e.preventDefault();
+    if (e.button === 0) pickDown(e);
+    else if (e.button === 2) { if (pickReq.pts.length) { pickReq.pts.pop(); drawOverlay(); } else endPick(false); }
+    return;
+  }
+  if (!spaceDown && (e.button === 0 || e.button === 2) && shapeMode()) {
+    const h = shapeHandleAt(e);
+    if (h && e.button === 0) { startShapeDrag(e, h); return; }
+    if (h && e.button === 2) { if (h.del) deleteHandle(h); else toast(h.type === "mid" ? "Drag the + to add a point." : "This point cannot be deleted."); return; }
+  }
   if (e.button === 0 && rbEdit && !spaceDown) { const h = handleAt(e); if (h !== null) { startHandle(e, h); return; } }
   if (e.button === 0 && tool === "pan" && !spaceDown) {
     const key = moveKeyAt(e);
@@ -2962,6 +3065,7 @@ svg.addEventListener("pointerdown", e => {
   if (e.button === 0) { if (tool === "text" || tool === "edit") e.preventDefault(); toolDown(e); }
 });
 svg.addEventListener("pointermove", e => {
+  if (sdrag) { moveShapeDrag(e); showCoords(e); return; }
   if (hdrag) { moveHandle(e); return; }
   if (mdrag) { moveItemDrag(e); return; }
   if (drag) {
@@ -2972,13 +3076,14 @@ svg.addEventListener("pointermove", e => {
     return;
   }
   toolMove(e);
+  showCoords(e);
 });
 const endDrag = () => { drag = null; svg.classList.remove("drag"); };
-svg.addEventListener("pointerup", e => { if (hdrag) { endHandle(true); return; } if (mdrag) { endItemDrag(true); return; } endDrag(); if (ink) finishInk(e); });
-svg.addEventListener("pointercancel", () => { if (hdrag) endHandle(false); if (mdrag) endItemDrag(false); endDrag(); ink = null; drawOverlay(); });
-svg.addEventListener("pointerleave", () => { if (!drag && !mdrag) { cursor = null; setHot(null); drawOverlay(); } });
+svg.addEventListener("pointerup", e => { if (sdrag) { endShapeDrag(true); return; } if (hdrag) { endHandle(true); return; } if (mdrag) { endItemDrag(true); return; } endDrag(); if (ink) finishInk(e); });
+svg.addEventListener("pointercancel", () => { if (sdrag) endShapeDrag(false); if (hdrag) endHandle(false); if (mdrag) endItemDrag(false); endDrag(); ink = null; drawOverlay(); });
+svg.addEventListener("pointerleave", () => { if (!drag && !mdrag && !sdrag) { cursor = null; ptr = null; hoverH = null; $("#coords").hidden = true; setHot(null); drawOverlay(); } });
 $("#zFit").onclick = fitView; $("#zIn").onclick = () => zoomAt(1 / 1.3); $("#zOut").onclick = () => zoomAt(1.3);
-new ResizeObserver(() => { stage.classList.toggle("narrow", stage.clientWidth < 860); if (!userView) fitView(); else if (vb) { const r = svg.clientWidth / svg.clientHeight; setVB({ ...vb, h: vb.w / r }); } }).observe(svg);
+new ResizeObserver(() => { stage.classList.toggle("narrow", stage.clientWidth < 860); if (!userView) fitView(); else if (vb) { const r = svg.clientWidth / svg.clientHeight; setVB({ ...vb, h: vb.w / r }); drawRulers(); } }).observe(svg);
 
 function setGrid(scale) {
   const minor = 10 * scale, major = 50 * scale;
@@ -3432,6 +3537,8 @@ function modelAt(e) { const p = toSvgPoint(e); return [p.x, -p.y]; }
 
 function setTool(t) {
   closePop(true);
+  if (pickReq) endPick(false);
+  hoverH = null;
   if (t !== "edit" && t !== "pan") closeRebarPop();
   tool = t; meas = null; ink = null; rb = null; cutp = null; setHot(null);
   svg.dataset.tool = t;
@@ -3444,6 +3551,9 @@ function setTool(t) {
   if (t === "rebar") renderRebarOpts();
   if (t === "cut") { $("#cutLen").value = state.cut.len; $("#cutDepth").value = state.cut.depth; }
   document.querySelectorAll(".snapbox").forEach(cb => { cb.checked = state.snap !== false; });
+  const ge = document.getElementById("geoEdit"), ih = document.getElementById("itemEditHint");
+  if (ge) ge.textContent = t === "edit" ? "✓ Editing on the drawing" : "Edit points on the drawing";
+  if (ih) ih.textContent = t === "edit" ? "Drag the blue points on the drawing to change it, or pick a point with the target button." : "Choose Edit (E) to drag its points on the drawing, or pick a point with the target button.";
   drawOverlay();
 }
 document.querySelectorAll(".snapbox").forEach(cb => cb.addEventListener("change", () => { state.snap = cb.checked; document.querySelectorAll(".snapbox").forEach(o => { o.checked = cb.checked; }); persist(); }));
@@ -3526,14 +3636,20 @@ function snapTargets(ex = null) {
   }
   return ex ? { pts, segs } : (snapCache = { pts, segs });
 }
-function snapAt(m, e, ex = null) {
+/* a round step for the grid at the current zoom: about 8 px or more on screen */
+function gridStep() { const k = pxSize() * 8; return [1, 2, 5, 10, 20, 25, 50, 100, 200, 250, 500, 1000, 2000, 5000].find(v => v >= k) || 10000; }
+/* opts: grid = round to the grid where nothing else is near; noEdges = corners and bars only; skip = [x, y] of the point being dragged */
+function snapAt(m, e, ex = null, opts = {}) {
   if (state.snap === false || e.altKey) return { x: m[0], y: m[1], kind: null };
   const r = 12 * pxSize(), T = snapTargets(ex);
   let best = null, bd = r;
-  for (const p of T.pts) { const d = Math.hypot(p.x - m[0], p.y - m[1]); if (d < bd) { bd = d; best = p; } }
+  for (const p of T.pts) {
+    if (opts.skip && Math.hypot(p.x - opts.skip[0], p.y - opts.skip[1]) < 1e-6) continue;
+    const d = Math.hypot(p.x - m[0], p.y - m[1]); if (d < bd) { bd = d; best = p; }
+  }
   if (best) return best;
   bd = r;
-  for (const sg of T.segs) {
+  if (!opts.noEdges) for (const sg of T.segs) {
     const [ax, ay] = sg.a, [bx, by] = sg.b, vx = bx - ax, vy = by - ay, L2 = vx * vx + vy * vy;
     const t = L2 ? Math.max(0, Math.min(1, ((m[0] - ax) * vx + (m[1] - ay) * vy) / L2)) : 0;
     let qx = ax + vx * t, qy = ay + vy * t, d = Math.hypot(m[0] - qx, m[1] - qy);
@@ -3543,6 +3659,7 @@ function snapAt(m, e, ex = null) {
     }
     if (d < bd) { bd = d; best = { x: qx, y: qy, kind: sg.kind }; }
   }
+  if (!best && opts.grid) { const g = gridStep(); return { x: Math.round(m[0] / g) * g, y: Math.round(m[1] / g) * g, kind: "grid", step: g }; }
   return best || { x: m[0], y: m[1], kind: null };
 }
 
@@ -3595,7 +3712,13 @@ function drawOverlay() {
     o += `<text x="${cursor.x + 10 * k}" y="${-cursor.y - 10 * k}" font-size="${11 * k}" fill="${acc}" stroke="#fff" stroke-width="${3 * k}" paint-order="stroke">${cursor.kind}</text>`;
   }
   o += rebarOverlay(k);
+  o = viewOverlay(k) + o + shapeOverlay(k) + pickOverlay(k);
+  if ((pickReq || sdrag) && cursor && cursor.kind) {
+    o += marker(cursor.x, cursor.y, cursor.kind === "grid" ? "grid" : cursor.kind, k);
+    o += `<text x="${cursor.x + 10 * k}" y="${-cursor.y - 10 * k}" font-size="${11 * k}" fill="${acc}" stroke="#fff" stroke-width="${3 * k}" paint-order="stroke">${escXml(kindText(cursor))}</text>`;
+  }
   ovl.innerHTML = o;
+  drawRulers();
   updateHint();
 }
 function marker(x, y, kind, k) {
@@ -3603,13 +3726,24 @@ function marker(x, y, kind, k) {
   if (kind === "start") return `<circle cx="${x}" cy="${Y}" r="${3 * k}" fill="${acc}"/>`;
   if (kind === "corner" || kind === "dimension end") return `<rect x="${x - r}" y="${Y - r}" width="${2 * r}" height="${2 * r}" fill="none" stroke="${acc}" stroke-width="${sw}"/>`;
   if (kind === "bar centre") return `<circle cx="${x}" cy="${Y}" r="${r}" fill="none" stroke="${acc}" stroke-width="${sw}"/><path d="M${x - r} ${Y}H${x + r}M${x} ${Y - r}V${Y + r}" stroke="${acc}" stroke-width="${sw}"/>`;
+  if (kind === "grid") return `<path d="M${x - r} ${Y}H${x + r}M${x} ${Y - r}V${Y + r}" stroke="${acc}" stroke-width="${sw}"/>`;
   if (kind === "edge") return `<path d="M${x - r} ${Y - r}L${x + r} ${Y + r}M${x - r} ${Y + r}L${x + r} ${Y - r}" stroke="${acc}" stroke-width="${sw}"/>`;
   return `<path d="M${x} ${Y - r}L${x + r} ${Y}L${x} ${Y + r}L${x - r} ${Y}Z" fill="none" stroke="${acc}" stroke-width="${sw}"/>`;
 }
 function updateHint() {
   const h = $("#hint");
   let msg = "";
-  if (tool === "measure") {
+  const sm = !pickReq && shapeMode();
+  if (pickReq) {
+    const R = pickReq, n = R.pts.length, len = n && cursor ? ` · <b>${fmtLen(dist(R.pts[n - 1], [cursor.x, cursor.y]))} mm</b>` : "";
+    msg = R.shape === "point" ? `Click the point for <b>${escXml(R.what)}</b>. It snaps to corners, bars and the grid; Alt places it freely. Esc cancels.`
+      : R.shape === "rect" ? (n ? `Click the opposite corner of the ${escXml(R.what)}. Esc cancels.` : `Click the first corner of the ${escXml(R.what)}.`)
+      : R.shape === "poly" ? (n < 3 ? `Click point ${n + 1} of the ${escXml(R.what)}${len}. Shift keeps lines straight; right-click takes a point back.` : `Click the next point${len}, or click the first point, double-click or press Enter to close it.`)
+      : (n < 2 ? `Click point ${n + 1} of the ${escXml(R.what)}${len}. Shift keeps lines straight.` : `Click the next point${len}; double-click or press Enter to finish.`);
+  } else if (sdrag) msg = "Shift keeps it straight, Alt turns snapping off. Esc puts it back.";
+  else if (sm === "geo") msg = hoverH && hoverH.type === "mid" ? "Drag the + to add a point here." : hoverH && hoverH.del ? "Drag to move it; right-click deletes it." : hoverH ? "Drag to move it." : "Drag the blue points to change the outline and openings; drag a + to add a point; right-click a point to delete it.";
+  else if (sm === "item") msg = shapeHandles().length ? (hoverH && hoverH.type === "mid" ? "Drag the + to add a point here." : hoverH && hoverH.del ? "Drag to move it; right-click deletes it." : `Drag the blue points to change item ${state.sel + 1}; the numbers in the panel follow.`) : "This item follows the section and its links. Change it in the panel.";
+  else if (tool === "measure") {
     if (!meas) msg = "Click the first point · it snaps to corners, edges and bars (hold Alt to place freely)";
     else if (!meas.p2) {
       if (cursor) {
@@ -3634,6 +3768,375 @@ function updateHint() {
     tag: `Click to place tag ${nextTag()}. Edit text changes its number or text.` }[state.draw.mode] || "";
   h.hidden = !msg || !!popState;
   h.innerHTML = msg;
+  h.classList.toggle("act", !!(pickReq || sm));
+}
+
+/* ------------------------------------------------------------------ coordinates: rulers, readout, origin, point numbers */
+const uiS = () => (state.ui = state.ui || {});
+const rulersOn = () => uiS().rulers !== false;
+var ptr = null;                          // the pointer in drawing coordinates
+function applyView() {
+  document.body.classList.toggle("rulers", rulersOn());
+  $("#zRulers").setAttribute("aria-pressed", String(rulersOn()));
+  $("#zNums").setAttribute("aria-pressed", String(!!uiS().nums));
+  if (!rulersOn()) $("#coords").hidden = true;
+}
+$("#zRulers").onclick = () => { uiS().rulers = !rulersOn(); persist(); applyView(); if (!userView) fitView(); drawOverlay(); };
+$("#zNums").onclick = () => { uiS().nums = !uiS().nums; persist(); applyView(); drawOverlay(); };
+const RSTEPS = [1, 2, 5, 10, 20, 25, 50, 100, 200, 250, 500, 1000, 2000, 2500, 5000, 10000, 20000, 25000, 50000, 100000];
+function drawRulers() {
+  if (!rulersOn() || !vb || !svg.clientWidth) return;
+  const k = pxSize(), W = svg.clientWidth, Hh = svg.clientHeight, RW = 24, RH = 18, rx = $("#rulerX"), ry = $("#rulerY");
+  const key = [vb.x, vb.y, vb.w, W, Hh].join();
+  if (key !== drawRulers.key) {          // the ticks change only with the view; the cursor marks below on every move
+    drawRulers.key = key;
+    const major = RSTEPS.find(v => v / k >= 70) || 200000, div = String(major).startsWith("2") && !String(major).startsWith("25") ? 4 : 5, minor = major / div;
+    let o = "";
+    for (let i = Math.ceil((vb.x + RW * k) / minor); i * minor <= vb.x + W * k; i++) {
+      const v = i * minor, px = (v - vb.x) / k - RW, maj = i % div === 0;
+      o += `<path d="M${px.toFixed(1)} 0v${maj ? 7 : 3.5}" stroke="#8a96a0"/>`;
+      if (maj) o += `<text x="${(px + 3).toFixed(1)}" y="15" font-size="10" fill="#5b6670">${fmtLen(v)}</text>`;
+    }
+    rx.innerHTML = o + `<path class="cur" stroke="#b3261e"/>`;
+    let q = "";
+    const yTop = -vb.y, yBot = -(vb.y + (Hh - RH) * k);
+    for (let i = Math.ceil(yBot / minor); i * minor <= yTop; i++) {
+      const v = i * minor, py = (-v - vb.y) / k, maj = i % div === 0;
+      q += `<path d="M${RW} ${py.toFixed(1)}h${maj ? -7 : -3.5}" stroke="#8a96a0"/>`;
+      if (maj) q += `<text font-size="10" fill="#5b6670" transform="translate(13 ${(py - 3).toFixed(1)}) rotate(-90)">${fmtLen(v)}</text>`;
+    }
+    ry.innerHTML = q + `<path class="cur" stroke="#b3261e"/>`;
+  }
+  rx.lastChild.setAttribute("d", ptr ? `M${((ptr[0] - vb.x) / k - RW).toFixed(1)} 0v${RH}` : "");
+  ry.lastChild.setAttribute("d", ptr ? `M0 ${((-ptr[1] - vb.y) / k).toFixed(1)}h${RW}` : "");
+}
+function kindText(sp) {
+  if (!sp || !sp.kind) return "";
+  if (sp.kind === "grid") return `grid ${sp.step} mm`;
+  if (sp.kind === "corner" && state.mode === "custom") {
+    const i = outlineVerts().findIndex(v => Math.abs(v.x - sp.x) < 1e-6 && Math.abs(v.y - sp.y) < 1e-6);
+    if (i >= 0) return `outline point ${i + 1}`;
+  }
+  return sp.kind;
+}
+function showCoords(e) {                 // x and y under the pointer (of the point it snaps to, when it does)
+  const box = $("#coords");
+  if (!rulersOn() || !current) { box.hidden = true; return; }
+  const m = modelAt(e);
+  ptr = m;
+  let live = (pickReq || sdrag || ["measure", "rebar", "cut"].includes(tool)) && cursor ? cursor : null;
+  if (!live) { live = snapAt(m, e, null, { noEdges: true }); if (!["corner", "bar centre"].includes(live.kind)) live = null; }   // nothing is placed: name corners and bars only
+  const P = live && live.kind ? live : { x: m[0], y: m[1], kind: null };
+  box.hidden = false;
+  box.innerHTML = `x ${fmtLen(P.x)} &nbsp; y ${fmtLen(P.y)} mm` + (P.kind ? `<span class="k">${escXml(kindText(P))}</span>` : "");
+  drawRulers();
+}
+/* the origin and, when asked for, the numbers of outline points, openings and links */
+function viewOverlay(k) {
+  let o = "";
+  if (rulersOn()) {
+    const L = 26 * k, a = 4 * k;
+    o += `<g stroke="#b3261e" stroke-width="${1.3 * k}" fill="none" opacity=".7"><path d="M0 0H${L}M${L - a} ${-a}L${L} 0L${L - a} ${a}"/><path d="M0 0V${-L}M${-a} ${-L + a}L0 ${-L}L${a} ${-L + a}"/></g>`
+      + `<text x="${4 * k}" y="${12 * k}" font-size="${9.5 * k}" fill="#b3261e" opacity=".8">0, 0</text>`;
+  }
+  if (uiS().nums && state.mode === "custom") {
+    const tag = (x, y, t, col) => {
+      const w = (6 + 6.2 * String(t).length) * k, h = 14 * k;
+      return `<rect x="${x - w / 2}" y="${-y - h / 2}" width="${w}" height="${h}" rx="${h / 2}" fill="#fff" stroke="${col}" stroke-width="${1.2 * k}"/>`
+        + `<text x="${x}" y="${-y + 3.6 * k}" font-size="${9.5 * k}" text-anchor="middle" fill="${col}" font-weight="600">${t}</text>`;
+    };
+    const vs = outlineVerts();
+    if (vs.length) {
+      const cx = vs.reduce((a, v) => a + v.x, 0) / vs.length, cy = vs.reduce((a, v) => a + v.y, 0) / vs.length;
+      vs.forEach((v, i) => { const d = Math.hypot(v.x - cx, v.y - cy) || 1, off = 13 * k; o += tag(v.x + (v.x - cx) / d * off, v.y + (v.y - cy) / d * off, i + 1, "#1b5fa8"); });
+    }
+    openingsList().forEach((op, j) => { const c = openingCentre(op); o += tag(c[0], c[1], `O${j + 1}`, "#2d6a3e"); });
+    let nl = 0;
+    state.custom.items.forEach((it, idx) => {
+      if (it.type !== "Link") return;
+      nl++;
+      const st = current.items.find(q => q.key === "i:" + idx && q.k === "steel" && q.closed);
+      if (!st) return;
+      const pts = expand(st.verts, true), tl = pts.reduce((a, q) => (q[1] - q[0] > a[1] - a[0] ? q : a));
+      o += tag(tl[0] - 10 * k, tl[1] + 10 * k, `L${nl}`, "#8a5300");
+    });
+  }
+  return o;
+}
+
+applyView();
+
+/* ------------------------------------------------------------------ the outline and openings as text, for editing on the drawing */
+const srcLines = t => String(t || "").split(/\r?\n/);
+function outlineVerts() {
+  if (state.mode !== "custom") return [];
+  const out = [];
+  srcLines(state.custom.outline).forEach((raw, li) => {
+    const [body, ...cm] = raw.split("#");
+    let ln = body.trim();
+    if (!ln) return;
+    const brk = /\b(brk|break)\b/i.test(ln);
+    ln = ln.replace(/\b(brk|break)\b/ig, "").replace(/^[\s,;]+|[\s,;]+$/g, "");
+    let nums; try { nums = splitNums(ln); } catch (e) { return; }
+    if (nums.length < 2) return;
+    out.push({ li, x: nums[0], y: nums[1], arc: nums.length > 2 ? nums[2] : 0, brk, comment: cm.length ? "#" + cm.join("#") : "" });
+  });
+  return out;
+}
+const vertLine = v => `${fmt(rd(v.x))}, ${fmt(rd(v.y))}` + (v.arc || v.brk ? `, ${fmt(v.arc)}` : "") + (v.brk ? ", brk" : "") + (v.comment ? "  " + v.comment : "");
+function setVert(i, x, y) { const L = srcLines(state.custom.outline), v = outlineVerts()[i]; if (!v) return; v.x = x; v.y = y; L[v.li] = vertLine(v); state.custom.outline = L.join("\n"); }
+function insertVert(i, x, y) { const L = srcLines(state.custom.outline), v = outlineVerts()[i]; L.splice(v.li + 1, 0, vertLine({ x, y, arc: 0, brk: false, comment: "" })); state.custom.outline = L.join("\n"); }
+function deleteVert(i) { const L = srcLines(state.custom.outline), v = outlineVerts()[i]; if (!v) return; L.splice(v.li, 1); state.custom.outline = L.join("\n"); }
+function openingsList() {
+  if (state.mode !== "custom") return [];
+  return srcLines(state.custom.openings).map((raw, li) => {
+    const [body, ...cm] = raw.split("#"), ln = body.trim();
+    if (!ln) return null;
+    const i = ln.search(/\s/), kw = (i < 0 ? ln : ln.slice(0, i)).toLowerCase();
+    let nums; try { nums = i < 0 ? [] : splitNums(ln.slice(i)); } catch (e) { return null; }
+    const kind = kw.startsWith("rect") ? "rect" : kw.startsWith("circ") ? "circle" : kw.startsWith("poly") ? "poly" : null;
+    if (!kind || nums.length < { rect: 4, circle: 3, poly: 6 }[kind]) return null;
+    return { li, kind, nums, comment: cm.length ? "#" + cm.join("#") : "" };
+  }).filter(Boolean);
+}
+function setOpening(j, nums) {
+  const L = srcLines(state.custom.openings), op = openingsList()[j];
+  if (!op) return;
+  L[op.li] = `${op.kind} ${nums.map(v => fmt(rd(v))).join(" ")}` + (op.comment ? "  " + op.comment : "");
+  state.custom.openings = L.join("\n");
+}
+function openingCentre(op) {
+  const n = op.nums;
+  if (op.kind === "rect") return [n[0] + n[2] / 2, n[1] + n[3] / 2];
+  if (op.kind === "circle") return [n[0], n[1]];
+  let x = 0, y = 0; const m = Math.floor(n.length / 2);
+  for (let i = 0; i < m; i++) { x += n[2 * i]; y += n[2 * i + 1]; }
+  return [x / m, y / m];
+}
+const ptsLine = pts => pts.map(q => `${fmt(rd(q[0]))}, ${fmt(rd(q[1]))}`).join("\n");
+function insideOutline(m) {
+  let P; try { P = expand(parseOutline(state.custom.outline)[0], true); } catch (e) { return false; }
+  let c = false;
+  for (let i = 0, j = P.length - 1; i < P.length; j = i++) {
+    const [xi, yi] = P[i], [xj, yj] = P[j];
+    if ((yi > m[1]) !== (yj > m[1]) && m[0] < (xj - xi) * (m[1] - yi) / (yj - yi) + xi) c = !c;
+  }
+  return c;
+}
+
+/* ------------------------------------------------------------------ picking points on the drawing for a form */
+var pickReq = null;                      // { what, n, shape: point | points | poly | rect, pts, done }
+function startPick(what, n, shape, done, btn = null) {
+  closeRebarPop(); closePop(true);
+  if (pickReq) endPick(false);
+  pickReq = { what, n, shape, pts: [], done, btn };
+  if (btn) btn.classList.add("on");
+  svg.classList.add("picking");
+  drawOverlay();
+}
+const pickMin = R => R.shape === "poly" ? 3 : R.shape === "points" ? 2 : R.n;
+function endPick(ok) {
+  const R = pickReq;
+  pickReq = null; svg.classList.remove("picking");
+  document.querySelectorAll(".pickbtn.on").forEach(b => b.classList.remove("on"));
+  if (ok && R && R.pts.length >= pickMin(R)) { histCommit(); R.done(R.pts.map(q => [rd(q[0]), rd(q[1])])); persist(); histCommit(); }
+  else if (ok && R && R.pts.length) toast(`Needs at least ${pickMin(R)} points.`);
+  drawOverlay();
+}
+function pickPoint(e) {
+  const m = modelAt(e), R = pickReq, prev = R.pts[R.pts.length - 1] || null;
+  const sp = snapAt(m, e, null, { grid: true }), q = ortho(prev, [sp.x, sp.y], e);
+  return { ...sp, x: rd(q[0]), y: rd(q[1]), raw: m };
+}
+function pickDown(e) {
+  const R = pickReq, c = pickPoint(e), P = [c.x, c.y];
+  const now = performance.now(), dbl = now - lastClick.t < 400 && Math.hypot(e.clientX - lastClick.x, e.clientY - lastClick.y) < 6;
+  lastClick = { t: now, x: e.clientX, y: e.clientY };
+  if (R.shape === "poly" && R.pts.length >= 3 && dist(P, R.pts[0]) < 10 * pxSize()) { endPick(true); return; }
+  if (R.n === Infinity && R.pts.length && (dbl || dist(P, R.pts[R.pts.length - 1]) < 2 * pxSize())) { endPick(true); return; }
+  R.pts.push(P);
+  if (R.pts.length >= R.n) endPick(true); else drawOverlay();
+}
+function pickOverlay(k) {
+  if (!pickReq) return "";
+  const R = pickReq, acc = "#1b5fa8", pts = cursor ? [...R.pts, [cursor.x, cursor.y]] : R.pts.slice();
+  let o = "";
+  if (R.shape === "rect" && pts.length === 2) {
+    const [a, b] = pts;
+    o += `<rect x="${Math.min(a[0], b[0])}" y="${-Math.max(a[1], b[1])}" width="${Math.abs(b[0] - a[0])}" height="${Math.abs(b[1] - a[1])}" fill="${acc}" fill-opacity=".08" stroke="${acc}" stroke-width="${1.5 * k}" stroke-dasharray="${6 * k} ${4 * k}"/>`;
+    o += `<text x="${(a[0] + b[0]) / 2}" y="${-Math.max(a[1], b[1]) - 6 * k}" font-size="${11 * k}" text-anchor="middle" fill="${acc}" stroke="#fff" stroke-width="${3 * k}" paint-order="stroke">${fmtLen(Math.abs(b[0] - a[0]))} × ${fmtLen(Math.abs(b[1] - a[1]))}</text>`;
+  } else if (pts.length > 1) {
+    o += `<path d="${pathD(pts, R.shape === "poly" && pts.length > 2)}" fill="${R.shape === "poly" ? acc : "none"}" fill-opacity=".06" stroke="${acc}" stroke-width="${1.5 * k}" stroke-dasharray="${6 * k} ${4 * k}"/>`;
+    const a = pts[pts.length - 2], b = pts[pts.length - 1];
+    o += `<text x="${(a[0] + b[0]) / 2 + 6 * k}" y="${-(a[1] + b[1]) / 2 - 6 * k}" font-size="${11 * k}" fill="${acc}" stroke="#fff" stroke-width="${3 * k}" paint-order="stroke">${fmtLen(dist(a, b))}</text>`;
+  }
+  R.pts.forEach((q, i) => { o += i === 0 && R.shape === "poly" && R.pts.length >= 3 ? `<circle cx="${q[0]}" cy="${-q[1]}" r="${7 * k}" fill="none" stroke="${acc}" stroke-width="${1.6 * k}"/>` : marker(q[0], q[1], "start", k); });
+  return o;
+}
+
+/* ------------------------------------------------------------------ dragging the outline, openings and items with the Edit tool */
+var sdrag = null, sraf = null, hoverH = null;
+function shapeMode() {
+  if (tool !== "edit" || state.mode !== "custom" || state.page === "anch" || rbEdit || pickReq) return null;
+  if (state.tab.custom === "geometry") return "geo";
+  if (state.tab.custom === "reinforcement" && state.sel !== null && state.custom.items[state.sel]) return "item";
+  return null;
+}
+function shapeHandles() { const m = shapeMode(); return m === "geo" ? geoHandles() : m === "item" ? itemHandles(state.sel) : []; }
+function shapeHandleAt(e) {
+  const m = modelAt(e), r = 8 * pxSize();
+  let best = null, bd = r;
+  for (const h of shapeHandles()) { const d = dist(h.p, m) - (h.type === "mid" ? 2 * pxSize() : 0); if (d <= bd) { bd = d; best = h; } }
+  return best;
+}
+function pointHandles(H, pts, setPts, key, closed, minN) {     // a list of points: drag them, add with +, right-click to delete
+  pts.forEach((q, i) => H.push({ p: q, type: "v", ex: key, anchor: pts[i - 1] || (closed ? pts[pts.length - 1] : null),
+    set: P => { const n = pts.map(r => r.slice()); n[i] = P; setPts(n); }, del: pts.length > minN ? () => setPts(pts.filter((_, j) => j !== i)) : null }));
+  for (let i = 0; i < pts.length - (closed ? 0 : 1); i++) {
+    const a = pts[i], b = pts[(i + 1) % pts.length];
+    H.push({ p: [(a[0] + b[0]) / 2, (a[1] + b[1]) / 2], type: "mid", ex: key, anchor: a,
+      insert: P => { const n = pts.map(r => r.slice()); n.splice(i + 1, 0, P); setPts(n); return i + 1; },
+      after: (ni, P) => { let cur = []; try { cur = parsePoints(state.custom.items[state.sel].points); } catch (e) { return; } cur[ni] = P; setPts(cur); } });
+  }
+  if (pts.length > 1) {
+    let c = [pts.reduce((s0, q) => s0 + q[0], 0) / pts.length, pts.reduce((s0, q) => s0 + q[1], 0) / pts.length];
+    if (!closed) {                       // on the bar, a quarter of the way along it
+      const L = pts.slice(1).reduce((a, q, i) => a + dist(pts[i], q), 0);
+      let t = L / 4;
+      for (let i = 1; i < pts.length; i++) {
+        const l = dist(pts[i - 1], pts[i]);
+        if (t <= l || i === pts.length - 1) { const f = l ? Math.min(1, t / l) : 0; c = [pts[i - 1][0] + f * (pts[i][0] - pts[i - 1][0]), pts[i - 1][1] + f * (pts[i][1] - pts[i - 1][1])]; break; }
+        t -= l;
+      }
+    }
+    H.push({ p: c, type: "move", ex: key, set: P => setPts(pts.map(q => [q[0] + P[0] - c[0], q[1] + P[1] - c[1]])) });
+  }
+}
+function geoHandles() {
+  const vs = outlineVerts(), H = [];
+  vs.forEach((v, i) => {
+    const prev = vs[(i - 1 + vs.length) % vs.length];
+    H.push({ p: [v.x, v.y], type: "v", anchor: [prev.x, prev.y], set: P => setVert(i, P[0], P[1]), del: vs.length > 3 ? () => deleteVert(i) : null });
+  });
+  vs.forEach((v, i) => {
+    const w = vs[(i + 1) % vs.length];
+    if (vs.length < 2 || Math.abs(v.arc) > 1e-9 || v.brk) return;
+    H.push({ p: [(v.x + w.x) / 2, (v.y + w.y) / 2], type: "mid", anchor: [v.x, v.y],
+      insert: P => { insertVert(i, P[0], P[1]); return i + 1; }, after: (ni, P) => setVert(ni, P[0], P[1]) });
+  });
+  openingsList().forEach((op, j) => {
+    const n = op.nums, upd = nums => setOpening(j, nums);
+    if (op.kind === "rect") {
+      const [x, y, w, h] = n, C = [[x, y], [x + w, y], [x + w, y + h], [x, y + h]];
+      C.forEach((c, ci) => { const opp = C[(ci + 2) % 4]; H.push({ p: c, type: "v", set: P => upd([Math.min(P[0], opp[0]), Math.min(P[1], opp[1]), Math.abs(P[0] - opp[0]), Math.abs(P[1] - opp[1])]) }); });
+      H.push({ p: [x + w / 2, y + h / 2], type: "move", set: P => upd([P[0] - w / 2, P[1] - h / 2, w, h]) });
+    } else if (op.kind === "circle") {
+      const [cx, cy, D] = n;
+      H.push({ p: [cx, cy], type: "move", set: P => upd([P[0], P[1], D]) });
+      H.push({ p: [cx + D / 2, cy], type: "r", anchor: [cx, cy], set: P => upd([cx, cy, 2 * dist(P, [cx, cy])]) });
+    } else {
+      const pts = []; for (let i = 0; i + 1 < n.length; i += 2) pts.push([n[i], n[i + 1]]);
+      pts.forEach((q, i) => H.push({ p: q, type: "v", anchor: pts[(i - 1 + pts.length) % pts.length],
+        set: P => { const m2 = pts.map(r => r.slice()); m2[i] = P; upd(m2.flat()); }, del: pts.length > 3 ? () => upd(pts.filter((_, k2) => k2 !== i).flat()) : null }));
+      const c = openingCentre(op);
+      H.push({ p: c, type: "move", set: P => upd(pts.map(q => [q[0] + P[0] - c[0], q[1] + P[1] - c[1]]).flat()) });
+    }
+  });
+  return H;
+}
+function itemHandles(idx) {
+  const it = state.custom.items[idx], H = [], key = "i:" + idx, N = v => numOr(v);
+  if (!it) return H;
+  const setF = patch => { for (const [k2, v] of Object.entries(patch)) it[k2] = fmt(Math.round(v * 10) / 10); };
+  const setPts = pts => { it.points = ptsLine(pts); };
+  const corners = (x0, y0, x1, y1, keys) => {
+    const C = [[x0, y0], [x1, y0], [x1, y1], [x0, y1]];
+    C.forEach((c, ci) => { const opp = C[(ci + 2) % 4]; H.push({ p: c, type: "v", ex: key, set: P => setF({ [keys[0]]: Math.min(P[0], opp[0]), [keys[1]]: Math.min(P[1], opp[1]), [keys[2]]: Math.max(P[0], opp[0]), [keys[3]]: Math.max(P[1], opp[1]) }) }); });
+    const c = [(x0 + x1) / 2, (y0 + y1) / 2];
+    H.push({ p: c, type: "move", ex: key, set: P => setF({ [keys[0]]: x0 + P[0] - c[0], [keys[1]]: y0 + P[1] - c[1], [keys[2]]: x1 + P[0] - c[0], [keys[3]]: y1 + P[1] - c[1] }) });
+  };
+  if (it.type === "Row") {
+    const a = [N(it.x1), N(it.y1)], b = [N(it.x2), N(it.y2)], c = [(a[0] + b[0]) / 2, (a[1] + b[1]) / 2];
+    H.push({ p: a, type: "v", ex: key, anchor: b, set: P => setF({ x1: P[0], y1: P[1] }) }, { p: b, type: "v", ex: key, anchor: a, set: P => setF({ x2: P[0], y2: P[1] }) },
+      { p: c, type: "move", ex: key, set: P => setF({ x1: a[0] + P[0] - c[0], y1: a[1] + P[1] - c[1], x2: b[0] + P[0] - c[0], y2: b[1] + P[1] - c[1] }) });
+  } else if (it.type === "Single bar" || it.type === "Text") {
+    H.push({ p: [N(it.x), N(it.y)], type: "move", ex: key, set: P => setF({ x: P[0], y: P[1] }) });
+  } else if (it.type === "Line bar" || (it.type === "Link" && it.region === "polygon")) {
+    let pts = []; try { pts = parsePoints(it.points); } catch (e) { pts = []; }
+    pointHandles(H, pts, setPts, key, truthy(it.closed) || it.type === "Link", truthy(it.closed) || it.type === "Link" ? 3 : 2);
+  } else if (it.type === "Link" && it.region === "rectangle") {
+    corners(Math.min(N(it.x0), N(it.x1)), Math.min(N(it.y0), N(it.y1)), Math.max(N(it.x0), N(it.x1)), Math.max(N(it.y0), N(it.y1)), ["x0", "y0", "x1", "y1"]);
+  } else if (it.type === "Circle pattern") {
+    const c = [N(it.cx), N(it.cy)], r = N(it.r), a0 = N(it.start) * Math.PI / 180;
+    H.push({ p: c, type: "move", ex: key, set: P => setF({ cx: P[0], cy: P[1] }) });
+    H.push({ p: [c[0] + r * Math.cos(a0), c[1] + r * Math.sin(a0)], type: "r", ex: key, anchor: c,
+      set: P => setF({ r: dist(P, c), start: Math.atan2(P[1] - c[1], P[0] - c[0]) * 180 / Math.PI }) });
+  } else if (it.type === "Dimension") {
+    const a = [N(it.x1), N(it.y1)], b = [N(it.x2), N(it.y2)], pos = N(it.pos), hz = (it.orient || "h") === "h";
+    H.push({ p: a, type: "v", ex: key, set: P => setF({ x1: P[0], y1: P[1] }) }, { p: b, type: "v", ex: key, set: P => setF({ x2: P[0], y2: P[1] }) },
+      { p: hz ? [(a[0] + b[0]) / 2, pos] : [pos, (a[1] + b[1]) / 2], type: "move", axis: hz ? [0, 1] : [1, 0], set: P => setF({ pos: hz ? P[1] : P[0] }) });
+  } else if (it.type === "Layer" && current) {
+    const els = current.items.filter(q => q.key === key && (q.k === "bar" || q.k === "steel"));
+    let shell = []; try { shell = expand(parseOutline(state.custom.outline)[0], true); } catch (e) { shell = []; }
+    if (els.length && shell.length) {
+      const face = it.face || "bottom", horiz = face === "bottom" || face === "top";
+      const xs = shell.map(q => q[0]), ys = shell.map(q => q[1]), mnx = Math.min(...xs), mxx = Math.max(...xs), mny = Math.min(...ys), mxy = Math.max(...ys);
+      let p0;
+      if (els[0].k === "steel") { const v = els[0].verts; p0 = [(v[0][0] + v[v.length - 1][0]) / 2, (v[0][1] + v[v.length - 1][1]) / 2]; }
+      else { const bs = els.slice().sort((p1, p2) => horiz ? p1.x - p2.x : p1.y - p2.y), b = bs[Math.floor(bs.length / 2)]; p0 = [b.x, b.y]; }
+      H.push({ p: p0, type: "move", ex: key, axis: horiz ? [0, 1] : [1, 0],
+        set: P => setF({ offset: { bottom: P[1] - mny, top: mxy - P[1], left: P[0] - mnx, right: mxx - P[0] }[face] }) });
+    }
+  }
+  return H;
+}
+function startShapeDrag(e, h) {
+  histCommit();
+  let set = h.set;
+  if (h.insert) { const ni = h.insert(h.p); set = P => h.after(ni, P); }
+  sdrag = { set, anchor: h.anchor || null, skip: h.p, axis: h.axis || null, origin: h.p, ex: h.ex || null, moved: false, pending: null };
+  svg.setPointerCapture(e.pointerId); svg.classList.add("moving");
+  e.preventDefault();
+  if (h.insert) { userView = true; redraw(); }
+}
+function moveShapeDrag(e) {
+  const m = modelAt(e), sp = snapAt(m, e, sdrag.ex, { grid: true, noEdges: true, skip: sdrag.skip });
+  let P = ortho(sdrag.anchor, [sp.x, sp.y], e);
+  if (sdrag.axis) { const a = sdrag.axis, o = sdrag.origin, t = (P[0] - o[0]) * a[0] + (P[1] - o[1]) * a[1]; P = [o[0] + a[0] * t, o[1] + a[1] * t]; }
+  P = [rd(P[0]), rd(P[1])];
+  cursor = { ...sp, x: P[0], y: P[1], raw: m };
+  sdrag.pending = P; sdrag.moved = true;
+  if (!sraf) sraf = requestAnimationFrame(() => {
+    sraf = null;
+    if (!sdrag || !sdrag.pending) return;
+    sdrag.set(sdrag.pending); sdrag.skip = sdrag.pending; sdrag.pending = null;
+    userView = true; redraw(); syncForms();
+  });
+}
+function endShapeDrag(commit) {
+  const d = sdrag;
+  sdrag = null; svg.classList.remove("moving");
+  if (sraf) { cancelAnimationFrame(sraf); sraf = null; }
+  if (!d) return;
+  if (!commit) { applyDoc(hist.cur); return; }
+  if (d.pending) d.set(d.pending);
+  persist(); histCommit(); userView = true;
+  renderAll();
+}
+function deleteHandle(h) { histCommit(); h.del(); persist(); histCommit(); userView = true; renderAll(); }
+function shapeOverlay(k) {
+  const H = shapeHandles();
+  if (!H.length) return "";
+  const acc = "#1b5fa8", r = 5 * k, sw = 1.6 * k;
+  let o = "";
+  for (const h of H) {
+    const [x, y] = h.p, Y = -y, hot = hoverH && hoverH.p === h.p && hoverH.type === h.type;
+    if (h.type === "v") o += `<rect x="${x - r}" y="${Y - r}" width="${2 * r}" height="${2 * r}" fill="${hot ? acc : "#fff"}" stroke="${acc}" stroke-width="${sw}"/>`;
+    else if (h.type === "mid") o += `<circle cx="${x}" cy="${Y}" r="${r * .9}" fill="${hot ? acc : "#fff"}" stroke="${acc}" stroke-width="${sw * .8}" opacity=".85"/><path d="M${x - r * .5} ${Y}H${x + r * .5}M${x} ${Y - r * .5}V${Y + r * .5}" stroke="${hot ? "#fff" : acc}" stroke-width="${sw * .8}"/>`;
+    else if (h.type === "r") o += `<path d="M${x} ${Y - r * 1.2}L${x + r * 1.2} ${Y}L${x} ${Y + r * 1.2}L${x - r * 1.2} ${Y}Z" fill="${hot ? acc : "#fff"}" stroke="${acc}" stroke-width="${sw}"/>`;
+    else o += `<circle cx="${x}" cy="${Y}" r="${r * 1.2}" fill="${hot ? acc : "#fff"}" stroke="${acc}" stroke-width="${sw}"/><path d="M${x - r * 2} ${Y}H${x - r * 1.2}M${x + r * 1.2} ${Y}H${x + r * 2}M${x} ${Y - r * 2}V${Y - r * 1.2}M${x} ${Y + r * 1.2}V${Y + r * 2}" stroke="${acc}" stroke-width="${sw}"/>`;
+  }
+  return o;
 }
 
 /* picking predefined and added texts */
@@ -4084,6 +4587,14 @@ function finishInk() {
   if (a) { a.id = newId(); editAnnot(x => x.items.push(a)); } else drawOverlay();
 }
 function toolMove(e) {
+  if (pickReq) { cursor = pickPoint(e); drawOverlay(); return; }
+  const sm = shapeMode();
+  if (sm) {
+    const h = shapeHandleAt(e), was = hoverH;
+    hoverH = h;
+    svg.classList.toggle("onhandle", !!h);
+    if (h || was) { setHot(null); drawOverlay(); if (h) return; }
+  } else if (hoverH) { hoverH = null; svg.classList.remove("onhandle"); }
   if (tool === "draw" && ink) {
     const m = modelAt(e);
     if (ink.mode === "pencil" || ink.mode === "marker") {
@@ -4159,6 +4670,10 @@ function toolDown(e) {
     if (ref) { openRebarPop(e, ref); return; }
     closeRebarPop();
     if (key && key.startsWith("i:")) { selectItem(+key.slice(2)); return; }
+    if (!key && state.mode === "custom" && insideOutline(modelAt(e))) {
+      if (state.tab.custom !== "geometry") { state.tab.custom = "geometry"; uiS().panelHidden = false; applyPanel(); persist(); renderAll(); toast("Geometry: drag the blue points to change the outline."); }
+      return;
+    }
     if (!key) return;
     const it = itemOfKey(key), isDim = it && it.k === "dim";
     if (!it) return;
@@ -4247,6 +4762,8 @@ const typing = e => /^(INPUT|TEXTAREA|SELECT)$/.test(e.target.tagName) || e.targ
 document.addEventListener("keydown", e => {
   if (e.key === "Escape") {
     if (popState) { closePop(); return; }
+    if (sdrag) { endShapeDrag(false); return; }
+    if (pickReq) { endPick(false); return; }
     if (hdrag) { endHandle(false); return; }
     if (rbEdit) { closeRebarPop(); return; }
     if (meas) { cancelMeasure(); return; }
@@ -4255,6 +4772,10 @@ document.addEventListener("keydown", e => {
     if (cutp) { cutp = null; drawOverlay(); return; }
   }
   if (e.key === "Enter" && rb && !typing(e)) { e.preventDefault(); commitRebar(); return; }
+  if (pickReq && !typing(e)) {
+    if (e.key === "Enter") { e.preventDefault(); endPick(true); return; }
+    if (e.key === "Backspace" || e.key === "Delete") { e.preventDefault(); pickReq.pts.pop(); drawOverlay(); return; }
+  }
   if (typing(e) || document.querySelector("dialog[open]")) return;
   const k = e.key.toLowerCase();
   if ((e.ctrlKey || e.metaKey) && ((k === "z" && e.shiftKey) || k === "y")) { e.preventDefault(); redo(); return; }
