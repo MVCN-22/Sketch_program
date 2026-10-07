@@ -255,6 +255,9 @@ body.rulers .hintpill { bottom: 30px; }
 .pickbtn svg { width: 12px; height: 12px; vertical-align: -2px; }
 .geobar .pickbtn { padding: 3px 9px; font-size: 12.5px; line-height: 18px; }
 .geobar { display: flex; flex-wrap: wrap; gap: 6px; margin: 0 0 10px; }
+.barpanel { border: 1px solid #b9d1ec; background: #f3f8fd; border-radius: 8px; padding: 8px 12px; margin: 0 0 10px; }
+.barpanel .bph { display: flex; justify-content: space-between; margin-bottom: 6px; }
+.barpanel .toolbar { margin: 8px 0 0; }
 .fsec.qr { border: 1px solid #b9d1ec; background: #f3f8fd; border-radius: 8px; padding: 0 12px; margin: 0 0 12px; }
 .fsec.qr > summary { color: var(--accent); }
 .zoom button:hover { border-color: var(--accent); color: var(--accent); }
@@ -568,6 +571,7 @@ dialog code { background: var(--panel-2); padding: 1px 4px; border-radius: 3px; 
       <div class="segs" role="group" aria-label="What to draw">
         <button type="button" data-rb="row" title="Bars cut by the section, spread along a line you draw">Row of bars</button>
         <button type="button" data-rb="line" title="A bar lying in the section plane, following the points you click">Bar along a line</button>
+        <button type="button" data-rb="around" title="Bars around the outline or an opening, at cover: click inside it (custom sections)">Bars around</button>
       </div>
       <label>Ø <select id="rbD" aria-label="Bar diameter"></select></label>
       <span id="rbRowOpts"><select id="rbDist" aria-label="Spread by"><option value="spacing">spacing</option><option value="count">number</option></select>
@@ -711,7 +715,8 @@ dialog code { background: var(--panel-2); padding: 1px 4px; border-radius: 3px; 
     <li><b>Quick reinforcement</b> (top of the Reinforcement tab) fills the list for the outline in one go, at the cover and with the minimum spacing between layers: <em>beam or column</em> (link, bottom, top and side bars), <em>walls, slabs and frames</em> (transverse and longitudinal bars on every straight face, for any shape such as U-frames, box girders or stairs; short end faces can be left out), <em>bars around the outline</em> (columns, piles, round sections) or <em>hollow or box section</em> (links and bars on the outer faces and around the openings). The items it makes are ordinary items you can change, and Undo takes them back.</li>
     <li><b>Face layer</b>: bars along chosen faces in any direction, at cover or inside a link: the inner face of a wall, an inclined slab, a web. Give the faces by the number of their first point (# on the drawing shows them; 2-4 for several, all for every straight face, O1 for the faces of an opening), or use <em>Pick a face</em> and <em>Add a face</em> on the drawing. Layers on the same face stack inwards at the minimum spacing, and the ends stop at the cover of the next face, so corners meet cleanly.</li>
     <li><b>Layer</b>: bars parallel to a face. Bottom and top give horizontal layers, left and right vertical ones. With a blank offset, layers from the same face stack inwards at the minimum spacing.</li>
-    <li><b>Perimeter</b>: bars around the outline or the openings, with a bar in every corner.</li>
+    <li><b>Perimeter</b>: bars around the outline or the openings, with a bar in every corner and the bars between spread evenly face by face. Under <em>More control</em>: only around one opening, a different Ø for the corner bars, 2 or 3 rings inwards at the minimum spacing (or a gap you give), an extra distance inwards, and faces whose bars are left out (by the numbers # shows). The quickest way to add one is the Rebar tool's <em>Bars around</em>: click inside the section, or inside an opening; it goes inside the link around it if there is one.</li>
+    <li><b>Bar set</b>: bars one by one, each line <code>x, y</code> with an optional own Ø. With Edit, drag a bar, right-click one to delete it, drag a + to add one between two bars, or click a bar to change its position or Ø in the panel (Previous and Next step through them). <em>Add bars on the drawing</em> adds bars where you click. <em>Make each bar editable</em> on a perimeter, layer, face layer, row or circle pattern turns its bars into a bar set, keeping its label; the bars then no longer follow changes to the outline.</li>
     <li><b>Link</b>: follows the outline, the part inside a rectangle or polygon, or runs around an opening. Links are numbered in list order; bars with <em>Inside link no.</em> stay inside that link.</li>
     <li><b>List and drawing</b>: the item selected in the list is shown in blue on the drawing, and hovering an item lights up its bars. With <em>Edit</em>, clicking a bar on the drawing opens its item; with <em>Remove</em>, it deletes the item.</li>
     <li><b>Row, circle pattern, single bar, line bar, dimension, text</b>: free placement.</li>
@@ -2150,33 +2155,70 @@ function faceItem(dr, it, idx, P, links, cover, dg, stacks, geo) {
     itemLabel(dr, it, placed, (it.dist || "count").startsWith("spacing") ? `Ø${fmt(dr.nom(d))}/${fmt(fnum(it.s))}` : `${placed.length}Ø${fmt(dr.nom(d))}`, zone);
   }
 }
-function perimeterItem(dr, it, idx, P, links, cover) {
-  const d = dr.G(fnum(it.d, "Ø")), k = inum(it.link, "link");
-  const R = buf(baseRegion(dr, links, k, P, cover, idx), -d / 2), which = it.ring || "outer", cand = [];
-  for (const g of polysOf(R)) {
-    if (which !== "openings") cand.push([g.getExteriorRing(), "outer"]);
-    if (which !== "outer") for (let i = 0; i < g.getNumInteriorRing(); i++) cand.push([g.getInteriorRingN(i), "hole"]);
-  }
-  if (!cand.length) throw new UserError("nothing to place along" + (which === "openings" ? " (no opening inside this region)" : ""));
+function perimeterItem(dr, it, idx, P, links, cover, dg = 16, geo = null) {
+  const d = dr.G(fnum(it.d, "Ø")), k = inum(it.link, "link"), which = it.ring || "outer";
+  const dcRaw = onum(it.dc, "corner Ø"), dc = dcRaw ? dr.G(dcRaw) : d, extra = onum(it.offset, "offset") || 0;
+  const nl = Math.max(1, Math.min(4, Math.round(onum(it.layers, "rings") || 1))), ug = onum(it.gap, "gap");
+  const R1 = buf(baseRegion(dr, links, k, P, cover, idx), -Math.max(d, dc) / 2 - extra);
+  const opNo = onum(it.opening, "opening");
+  const holeOf = ring => {                                          // which opening of the section a ring runs around
+    let best = -1, bd = Infinity;
+    for (let i = 0; i < P.getNumInteriorRing(); i++) { const dd = P.getInteriorRingN(i).distance(ring); if (dd < bd) { bd = dd; best = i; } }
+    return best + 1;
+  };
   const src = { outer: ringCorners(ringPts(P.getExteriorRing())), hole: [] };
   for (let i = 0; i < P.getNumInteriorRing(); i++) src.hole.push(...ringCorners(ringPts(P.getInteriorRingN(i))));
-  const placed = [];
-  for (const [ring, typ] of cand) {
-    const Lr = ring.getLength(), lil = new jsts.linearref.LengthIndexedLine(ring);
-    let ts = [];
-    if (it.corners === undefined || truthy(it.corners)) {
-      const same = cand.filter(c => c[1] === typ).map(c => c[0]);
-      for (const V of src[typ]) {
-        const pv = gf().createPoint(C(V[0], V[1])), dv = ring.distance(pv);
-        if (same.every(r => dv <= r.distance(pv) + 1e-6)) ts.push(lil.project(C(V[0], V[1])));
-      }
-      ts = dedupeCyclic(ts.sort((a, b) => a - b), Lr, 1.5 * d);
+  /* faces left out: bars whose nearest faces are all in the list */
+  let edges = [], skipKeys = new Set();
+  if (geo && String(it.skip_faces || "").trim()) { edges = faceEdges(geo, "*").filter(e => e.straight); skipKeys = new Set(faceEdges(geo, it.skip_faces).map(e => e.key)); }
+  const skipped = q => {
+    if (!skipKeys.size) return false;
+    const ds = edges.map(e => segDist(q, e.A, e.B)), m = Math.min(...ds);
+    return edges.every((e, i) => ds[i] > m + 1 || skipKeys.has(e.key));
+  };
+  const placed = [], gap = ug !== null ? ug : minClear(dr.nom(d), dg);
+  for (let L = 0; L < nl; L++) {
+    const R = L ? buf(R1, -L * (d + gap)) : R1, cand = [];
+    for (const g of polysOf(R)) {
+      if (which !== "openings") cand.push([g.getExteriorRing(), "outer"]);
+      if (which !== "outer") for (let i = 0; i < g.getNumInteriorRing(); i++) { const r = g.getInteriorRingN(i); if (!opNo || holeOf(r) === opNo) cand.push([r, "hole"]); }
     }
-    for (const t of ringPositions(ts, Lr, it, dr, idx)) { const q = lil.extractPoint(t); placed.push([q.x, q.y]); }
+    if (!cand.length) { if (!L) throw new UserError("nothing to place along" + (which === "openings" ? " (no opening inside this region)" : "")); break; }
+    for (const [ring, typ] of cand) {
+      const Lr = ring.getLength(), lil = new jsts.linearref.LengthIndexedLine(ring);
+      let ts = [];
+      if (it.corners === undefined || truthy(it.corners)) {
+        const same = cand.filter(c => c[1] === typ).map(c => c[0]);
+        for (const V of src[typ]) {
+          const pv = gf().createPoint(C(V[0], V[1])), dv = ring.distance(pv);
+          if (same.every(r => dv <= r.distance(pv) + 1e-6)) ts.push(lil.project(C(V[0], V[1])));
+        }
+        ts = dedupeCyclic(ts.sort((a, b) => a - b), Lr, 1.5 * d);
+      }
+      const cornerT = new Set(ts.map(t => Math.round(t * 1000)));
+      for (const t of ringPositions(ts, Lr, it, dr, idx)) {
+        const q = lil.extractPoint(t), pt = [q.x, q.y];
+        if (skipped(pt)) continue;
+        placed.push({ p: pt, d: cornerT.has(Math.round((t % Lr) * 1000)) || cornerT.has(Math.round(t * 1000)) ? dc : d });
+      }
+    }
   }
+  if (!placed.length) throw new UserError("every bar is on a face that is left out");
   const set = it.zone && it.zone !== "auto" ? it.zone : null;
-  placed.forEach(([x, y]) => dr.bar(x, y, d, set));
-  itemLabel(dr, it, placed, `${placed.length}Ø${fmt(dr.nom(d))}`, set);
+  placed.forEach(b => dr.bar(b.p[0], b.p[1], b.d, set));
+  const nc = placed.filter(b => b.d !== d).length, nd = placed.length - nc;
+  itemLabel(dr, it, placed.map(b => b.p), nc ? `${nc}Ø${fmt(dr.nom(dc))} + ${nd}Ø${fmt(dr.nom(d))}` : `${placed.length}Ø${fmt(dr.nom(d))}`, set);
+}
+/* bars one by one: each line x, y and its own Ø if given */
+function parseBarSet(text, d0) {
+  const out = [];
+  for (const raw of String(text || "").split(/\r?\n/)) {
+    const ln = raw.split("#")[0].trim(); if (!ln) continue;
+    const n = splitNums(ln);
+    if (n.length < 2) throw new UserError(`bar '${raw.trim()}': need x, y`);
+    out.push([n[0], n[1], n.length > 2 && n[2] > 0 ? n[2] : d0]);
+  }
+  return out;
 }
 function clashCheck(dr, dg) {
   const bars = dr.items.filter(i => i.k === "bar");
@@ -2230,7 +2272,15 @@ function buildCustom(cs, st, pickable = true) {
     try {
       if (t === "Layer") layerItem(dr, it, idx, P, links, cover, dg, stacks);
       else if (t === "Face layer") faceItem(dr, it, idx, P, links, cover, dg, stacks, { verts, brk, holes });
-      else if (t === "Perimeter") perimeterItem(dr, it, idx, P, links, cover);
+      else if (t === "Perimeter") perimeterItem(dr, it, idx, P, links, cover, dg, { verts, brk, holes });
+      else if (t === "Bar set") {
+        const d0 = fnum(it.d, "Ø"), bs = parseBarSet(it.points, d0);
+        if (!bs.length) throw new UserError("no bars yet");
+        const zone = itemZone(dr, it, bs.map(b => b[1]));
+        bs.forEach(([x, y, dd]) => dr.bar(x, y, dr.G(dd), it.zone && it.zone !== "auto" ? it.zone : dr.zoneAt(y)));
+        const byD = new Map(); bs.forEach(b => byD.set(b[2], (byD.get(b[2]) || 0) + 1));
+        itemLabel(dr, it, bs.map(b => [b[0], b[1]]), [...byD].map(([dd, n]) => `${n}Ø${fmt(dd)}`).join(" + "), zone);
+      }
       else if (t === "Circle pattern") {
         const cx = fnum(it.cx, "cx"), cy = fnum(it.cy, "cy"), r = fnum(it.r, "radius"), d = dr.G(fnum(it.d, "Ø")), n = inum(it.n, "n");
         const a0 = fnum(it.start ?? 0, "start"), sw = fnum(it.sweep ?? 360, "sweep");
@@ -2598,7 +2648,15 @@ const ITEM_SPECS = {
     ["ranges", "Only within ranges along the face", "str", "", { ph: "e.g. 0:450; 750:1200", help: "Measured from the first point of the face" }], ...LABEL_F, ZONE_F],
   "Perimeter": [["ring", "Along", "choice", "outer", ["outer", "openings", "all"]], ["d", "Bar Ø", "float", "16"],
     ["dist", "Distribution", "choice", "max spacing", DIST_CHOICES], ["n", "Number of bars n", "int", "8", { help: "Per ring" }], ["s", "Spacing s", "float", "150"],
-    ["link", "Inside link no.", "int", "1", { help: "0 = not inside a link" }], ["corners", "Bar in every corner", "bool", true], ...LABEL_F, ZONE_F],
+    ["link", "Inside link no.", "int", "1", { help: "0 = not inside a link" }], ["corners", "Bar in every corner", "bool", true],
+    H("More control", false), ["opening", "Only around opening no.", "optfloat", "", { ph: "all", help: "With Along openings or all: the opening to go around (O1, O2 … on the drawing)" }],
+    ["dc", "Corner bar Ø", "optfloat", "", { ph: "same Ø" }],
+    ["layers", "Rings", "optfloat", "", { ph: "1", help: "2 or 3 for more rings inwards, at the minimum spacing (or the gap below)" }],
+    ["gap", "Clear gap between rings", "optfloat", "", { ph: "minimum" }],
+    ["offset", "Extra distance inwards", "optfloat", "", { ph: "0", help: "Beyond the cover or link" }],
+    ["skip_faces", "Leave out the bars along faces", "str", "", { ph: "e.g. 3 or 2-4 or O1:1", help: "Faces by the number of their first point, as for a face layer (# on the drawing shows them)" }],
+    ...LABEL_F, ZONE_F],
+  "Bar set": [["points", "Bars: x, y [, Ø] (one per line)", "text", "", 8, { help: "Give a Ø after a bar to change only that bar" }], ["d", "Bar Ø (where a line gives none)", "float", "16"], ...LABEL_F, ZONE_F],
   "Circle pattern": [["cx", "Centre x", "float", "300"], ["cy", "Centre y", "float", "300"], ["r", "Radius to bar centres", "float", "200"],
     ["n", "Number of bars", "int", "8"], ["start", "Start angle [°]", "float", "0"], ["sweep", "Sweep [°]", "float", "360", { help: "360 = full circle" }],
     ["d", "Bar Ø", "float", "20"], ...LABEL_F, ZONE_F],
@@ -2626,7 +2684,7 @@ const SP = ["spacing (exact)", "max spacing"];
 const DIST_SHOW = { n: ["dist", ["count"]], s: ["dist", SP] };
 const REG = ["outline", "rectangle", "polygon"];
 const SHOW_IF = {
-  "Layer": DIST_SHOW, "Perimeter": DIST_SHOW, "Row": DIST_SHOW, "Face layer": DIST_SHOW,
+  "Layer": DIST_SHOW, "Perimeter": { ...DIST_SHOW, opening: ["ring", ["openings", "all"]] }, "Row": DIST_SHOW, "Face layer": DIST_SHOW,
   "Link": { x0: ["region", ["rectangle"]], y0: ["region", ["rectangle"]], x1: ["region", ["rectangle"]], y1: ["region", ["rectangle"]],
     points: ["region", ["polygon"]], opening: ["region", ["around opening"]], hooks: ["region", REG], hook_len: ["region", REG], clip: ["region", ["rectangle", "polygon"]] },
 };
@@ -2636,6 +2694,7 @@ const ITEM_HELP = {
   "Circle pattern": "Bars on a circle or an arc.",
   "Row": "Bars on a straight line between two points.",
   "Single bar": "One bar at a point.",
+  "Bar set": "Bars one by one: drag each bar with Edit, right-click one to delete it, drag a + to add one between two bars, or click a bar to change its Ø. Make each bar editable on a perimeter, layer or row turns its bars into a bar set.",
   "Face layer": "Bars along one or more faces of the outline or of an opening, in any direction (walls, inclined slabs, frames, webs), at cover or inside a link. Pick the face on the drawing or give its number (# on the drawing shows the points). Layers on the same face stack inwards at the minimum spacing, and the ends stop at the cover of the neighbouring faces.",
   "Line bar": "A bar lying in the section plane: a U-bar, a cross-tie, a bent-up bar, or a link of your own shape (tick Closed).",
   "Link": "A closed link at cover. It follows the outline, the part of the section inside a rectangle or polygon, or runs around an opening. Links are numbered 1, 2, … in list order.",
@@ -2816,6 +2875,7 @@ function itemSummary(it, linkNo) {
     case "Layer": return `${g("face")}, ${g("kind")} Ø${g("d")}, ${amount}${lk}`;
     case "Perimeter": return `${g("ring")}, Ø${g("d")}, ${amount}${lk}`;
     case "Face layer": return `face ${g("edges")}, ${g("kind")} Ø${g("d")}, ${amount}${lk}`;
+    case "Bar set": { const n = String(g("points")).split(/\r?\n/).filter(l => l.split("#")[0].trim()).length; return `${n} bar${n === 1 ? "" : "s"}, Ø${g("d")}`; }
     case "Circle pattern": return `${g("n")}Ø${g("d")}, r = ${g("r")}`;
     case "Row": return `Ø${g("d")} from (${g("x1")}, ${g("y1")}) to (${g("x2")}, ${g("y2")})`;
     case "Single bar": return `Ø${g("d")} at (${g("x")}, ${g("y")})`;
@@ -4141,6 +4201,24 @@ function renderReinf(body) {
     const it = items[state.sel];
     body.append(el("div", { class: "itemhead" }, `Item ${state.sel + 1}: ${it.type}`), el("p", { class: "hint" }, ITEM_HELP[it.type] || ""));
     if (itemHandles(state.sel).length) body.append(el("p", { class: "hint", id: "itemEditHint" }, tool === "edit" ? "Drag the blue points on the drawing to change it, or pick a point with the target button." : "Choose Edit (E) to drag its points on the drawing, or pick a point with the target button."));
+    if (it.type === "Bar set") {
+      const bs = barSetList(it), bi = barSel && barSel.item === state.sel ? barSel.i : null, b = bi !== null ? bs[bi] : null;
+      if (b) {
+        const fx = (label, val, on) => { const inp = el("input", { type: "text", value: val, inputmode: "decimal", autocomplete: "off" }); inp.addEventListener("change", () => { const v = numOf(inp.value); if (v === null) return; histCommit(); on(v); persist(); histCommit(); renderAll(); }); return el("div", { class: "fcell" }, el("label", {}, label), inp); };
+        body.append(el("div", { class: "barpanel" }, el("div", { class: "bph" }, el("b", {}, `Bar ${bi + 1} of ${bs.length}`),
+            el("button", { type: "button", class: "linkbtn", onclick: () => { barSel = null; renderAll(); } }, "close")),
+          el("div", { class: "fgrid" }, fx("x", fmt(rd(b.x)), v => barSetEdit(it, bi, [v, b.y])), fx("y", fmt(rd(b.y)), v => barSetEdit(it, bi, [b.x, v])),
+            fx("Ø (blank: the item's)", b.d ? fmt(b.d) : "", v => barSetEdit(it, bi, undefined, null, v > 0 ? v : null))),
+          el("div", { class: "toolbar" }, el("button", { type: "button", class: "btn", onclick: () => { histCommit(); barSetEdit(it, bi, null); barSel = null; persist(); histCommit(); renderAll(); } }, "Delete this bar"),
+            el("button", { type: "button", class: "btn", disabled: bi === 0, onclick: () => { barSel = { item: state.sel, i: bi - 1 }; renderAll(); } }, "‹ Previous"),
+            el("button", { type: "button", class: "btn", disabled: bi >= bs.length - 1, onclick: () => { barSel = { item: state.sel, i: bi + 1 }; renderAll(); } }, "Next ›"))));
+      } else body.append(el("p", { class: "hint" }, tool === "edit" ? "Click a bar on the drawing to change its position or Ø." : "Choose Edit (E) and click a bar on the drawing to change it."));
+      const add = el("button", { type: "button", class: "pickbtn", title: "Click where the new bars go; Enter or a double-click finishes" }, "Add bars on the drawing");
+      add.addEventListener("click", () => startPick("bars", Infinity, "points1", pts => { pts.forEach(q => barSetAdd(it, barSetList(it).length, q)); renderAll(); }, add));
+      body.append(el("div", { class: "geobar" }, add));
+    }
+    if (["Perimeter", "Layer", "Face layer", "Row", "Circle pattern"].includes(it.type) && (it.kind || "dots") === "dots")
+      body.append(el("div", { class: "geobar" }, el("button", { type: "button", class: "pickbtn", title: "Turns the bars this item places into a bar set, so each bar can be moved, deleted or given its own Ø. The bars no longer follow changes to the outline or the settings.", onclick: () => itemToBarSet(state.sel) }, "Make each bar editable")));
     if (it.type === "Face layer") {
       const pickFace = add => b => startPick("face", 1, "point", pts => {
         const k = nearestFace(pts[0]); if (!k) { toast("No straight face there."); return; }
@@ -4985,7 +5063,7 @@ function renderRebarOpts() {
   if (!sel.options.length) BAR_DS.forEach(d => sel.append(el("option", { value: d }, d)));
   sel.value = BAR_DS.includes(String(o.d)) ? String(o.d) : "16";
   $("#rbDist").value = o.dist; $("#rbVal").value = o.val; $("#rbLs").value = o.ls;
-  $("#rbRowOpts").hidden = o.mode !== "row"; $("#rbLineOpts").hidden = o.mode !== "line";
+  $("#rbRowOpts").hidden = o.mode === "line"; $("#rbLineOpts").hidden = o.mode !== "line";
   updateHint();
 }
 document.querySelectorAll("[data-rb]").forEach(b => b.addEventListener("click", () => { state.rebar.mode = b.dataset.rb; rb = null; persist(); renderRebarOpts(); drawOverlay(); }));
@@ -5204,7 +5282,7 @@ function updateHint() {
   else if (tool === "pan") msg = hotKey ? "Drag to move it." : "";
   else if (tool === "rebar") {
     const len = rb && cursor ? ` · <b>${fmtLen(dist(rb.pts[rb.pts.length - 1], [cursor.x, cursor.y]))} mm</b>` : "";
-    msg = state.rebar.mode === "row"
+    msg = state.rebar.mode === "around" ? "Click inside the section for bars around the outline, or inside an opening for bars around it. They go at cover, or inside the link around it." : state.rebar.mode === "row"
       ? (rb ? `Click where the row ends${len}. Shift keeps it straight.` : "Click where the row of bars starts. It snaps to corners, edges, bars and the line at cover for this Ø.")
       : (rb ? `Click the next point${len}; double-click or press Enter to finish.` : "Click the first point of the bar. It snaps to the line at cover for this Ø, corners and bars.");
     if (state.mode === "custom") msg += " The bars go into the reinforcement list.";
@@ -5389,7 +5467,7 @@ function startPick(what, n, shape, done, btn = null) {
   svg.classList.add("picking");
   drawOverlay();
 }
-const pickMin = R => R.shape === "poly" ? 3 : R.shape === "points" ? 2 : R.n;
+const pickMin = R => R.shape === "poly" ? 3 : R.shape === "points" ? 2 : R.shape === "points1" ? 1 : R.n;
 function endPick(ok) {
   const R = pickReq;
   pickReq = null; svg.classList.remove("picking");
@@ -5420,7 +5498,7 @@ function pickOverlay(k) {
     const [a, b] = pts;
     o += `<rect x="${Math.min(a[0], b[0])}" y="${-Math.max(a[1], b[1])}" width="${Math.abs(b[0] - a[0])}" height="${Math.abs(b[1] - a[1])}" fill="${acc}" fill-opacity=".08" stroke="${acc}" stroke-width="${1.5 * k}" stroke-dasharray="${6 * k} ${4 * k}"/>`;
     o += `<text x="${(a[0] + b[0]) / 2}" y="${-Math.max(a[1], b[1]) - 6 * k}" font-size="${11 * k}" text-anchor="middle" fill="${acc}" stroke="#fff" stroke-width="${3 * k}" paint-order="stroke">${fmtLen(Math.abs(b[0] - a[0]))} × ${fmtLen(Math.abs(b[1] - a[1]))}</text>`;
-  } else if (pts.length > 1) {
+  } else if (pts.length > 1 && R.shape !== "points1") {
     o += `<path d="${pathD(pts, R.shape === "poly" && pts.length > 2)}" fill="${R.shape === "poly" ? acc : "none"}" fill-opacity=".06" stroke="${acc}" stroke-width="${1.5 * k}" stroke-dasharray="${6 * k} ${4 * k}"/>`;
     const a = pts[pts.length - 2], b = pts[pts.length - 1];
     o += `<text x="${(a[0] + b[0]) / 2 + 6 * k}" y="${-(a[1] + b[1]) / 2 - 6 * k}" font-size="${11 * k}" fill="${acc}" stroke="#fff" stroke-width="${3 * k}" paint-order="stroke">${fmtLen(dist(a, b))}</text>`;
@@ -5510,7 +5588,18 @@ function itemHandles(idx) {
     const c = [(x0 + x1) / 2, (y0 + y1) / 2];
     H.push({ p: c, type: "move", ex: key, set: P => setF({ [keys[0]]: x0 + P[0] - c[0], [keys[1]]: y0 + P[1] - c[1], [keys[2]]: x1 + P[0] - c[0], [keys[3]]: y1 + P[1] - c[1] }) });
   };
-  if (it.type === "Row") {
+  if (it.type === "Bar set") {
+    const bs = barSetList(it);
+    bs.forEach((b, i) => H.push({ p: [b.x, b.y], type: "v", ex: key, pick: i, set: P => barSetEdit(it, i, P), del: () => barSetEdit(it, i, null) }));
+    for (let i = 0; i + 1 < bs.length; i++) {
+      const a = bs[i], b = bs[i + 1];
+      H.push({ p: [(a.x + b.x) / 2, (a.y + b.y) / 2], type: "mid", ex: key, insert: P => { barSetAdd(it, i + 1, P); return i + 1; }, after: (ni, P) => barSetEdit(it, ni, P) });
+    }
+    if (bs.length > 1) {
+      const c = [bs.reduce((s0, b) => s0 + b.x, 0) / bs.length, bs.reduce((s0, b) => s0 + b.y, 0) / bs.length];
+      H.push({ p: c, type: "move", ex: key, set: P => { bs.forEach((b, i) => barSetEdit(it, i, [b.x + P[0] - c[0], b.y + P[1] - c[1]], b)); } });
+    }
+  } else if (it.type === "Row") {
     const a = [N(it.x1), N(it.y1)], b = [N(it.x2), N(it.y2)], c = [(a[0] + b[0]) / 2, (a[1] + b[1]) / 2];
     H.push({ p: a, type: "v", ex: key, anchor: b, set: P => setF({ x1: P[0], y1: P[1] }) }, { p: b, type: "v", ex: key, anchor: a, set: P => setF({ x2: P[0], y2: P[1] }) },
       { p: c, type: "move", ex: key, set: P => setF({ x1: a[0] + P[0] - c[0], y1: a[1] + P[1] - c[1], x2: b[0] + P[0] - c[0], y2: b[1] + P[1] - c[1] }) });
@@ -5545,11 +5634,46 @@ function itemHandles(idx) {
   }
   return H;
 }
+/* a bar set as text lines: each bar keeps its own Ø and any comment when moved */
+var barSel = null;                                                 // { item, i }: the bar picked on the drawing
+function barSetList(it) {
+  const out = [];
+  String(it.points || "").split(/\r?\n/).forEach((raw, li) => {
+    const [body, ...cm] = raw.split("#"); if (!body.trim()) return;
+    let n; try { n = splitNums(body); } catch (e) { return; }
+    if (n.length >= 2) out.push({ li, x: n[0], y: n[1], d: n.length > 2 ? n[2] : null, cm: cm.length ? "  #" + cm.join("#") : "" });
+  });
+  return out;
+}
+const barLine = b => `${fmt(rd(b.x))}, ${fmt(rd(b.y))}` + (b.d ? `, ${fmt(b.d)}` : "") + (b.cm || "");
+function barSetEdit(it, i, P, orig = null, d = undefined) {     // move (P), delete (P = null) or change the Ø (d) of bar i
+  const L = String(it.points || "").split(/\r?\n/), bs = barSetList(it), b = bs[i];
+  if (!b) return;
+  if (P === null) L.splice(b.li, 1);
+  else { const nb = { ...b, x: P ? P[0] : b.x, y: P ? P[1] : b.y }; if (d !== undefined) nb.d = d; L[b.li] = barLine(nb); }
+  it.points = L.join("\n");
+}
+function barSetAdd(it, i, P) {
+  const L = String(it.points || "").split(/\r?\n/), bs = barSetList(it), ref = bs[i] ? bs[i].li : L.length;
+  L.splice(ref, 0, barLine({ x: P[0], y: P[1], d: null, cm: "" }));
+  it.points = L.join("\n");
+}
+/* the bars an item placed, as a bar set you can edit one by one */
+function itemToBarSet(idx) {
+  const it = state.custom.items[idx], bars = current ? current.items.filter(q => q.k === "bar" && q.key === "i:" + idx) : [];
+  if (!it || !bars.length) { toast("This item has no bars to take over."); return; }
+  const d0 = numOr(it.d, 16), lines = bars.map(b => { const dd = Math.round(current.nom(b.d) * 10) / 10; return `${fmt(rd(b.x))}, ${fmt(rd(b.y))}` + (Math.abs(dd - d0) > 0.05 ? `, ${fmt(dd)}` : ""); });
+  histCommit();
+  const keep = {}; for (const k of ["note", "ltext", "label", "zone", "lx", "ly"]) if (it[k] !== undefined) keep[k] = it[k];
+  state.custom.items[idx] = { ...newItem("Bar set", { d: d0 }), ...keep, points: lines.join("\n") };
+  barSel = null; persist(); histCommit(); renderAll();
+  toast(`Item ${idx + 1} is now a bar set of ${bars.length} bars. Drag them one by one with Edit; undo turns it back.`);
+}
 function startShapeDrag(e, h) {
   histCommit();
   let set = h.set;
   if (h.insert) { const ni = h.insert(h.p); set = P => h.after(ni, P); }
-  sdrag = { set, anchor: h.anchor || null, skip: h.p, axis: h.axis || null, origin: h.p, ex: h.ex || null, moved: false, pending: null };
+  sdrag = { set, anchor: h.anchor || null, skip: h.p, axis: h.axis || null, origin: h.p, ex: h.ex || null, moved: false, pending: null, h };
   svg.setPointerCapture(e.pointerId); svg.classList.add("moving");
   e.preventDefault();
   if (h.insert) { userView = true; redraw(); }
@@ -5575,6 +5699,7 @@ function endShapeDrag(commit) {
   if (!d) return;
   if (!commit) { applyDoc(hist.cur); return; }
   if (d.pending) d.set(d.pending);
+  if (d.h && d.h.pick !== undefined) barSel = { item: state.sel, i: d.h.pick };   // a click (or drag) on a bar picks it for the panel
   persist(); histCommit(); userView = true;
   renderAll();
 }
@@ -5585,8 +5710,9 @@ function shapeOverlay(k) {
   const acc = "#1b5fa8", r = 5 * k, sw = 1.6 * k;
   let o = "";
   for (const h of H) {
-    const [x, y] = h.p, Y = -y, hot = hoverH && hoverH.p === h.p && hoverH.type === h.type;
-    if (h.type === "v") o += `<rect x="${x - r}" y="${Y - r}" width="${2 * r}" height="${2 * r}" fill="${hot ? acc : "#fff"}" stroke="${acc}" stroke-width="${sw}"/>`;
+    const [x, y] = h.p, Y = -y, hot = (hoverH && hoverH.p === h.p && hoverH.type === h.type) || (h.pick !== undefined && barSel && barSel.item === state.sel && barSel.i === h.pick);
+    if (h.type === "v" && h.pick !== undefined) o += `<circle cx="${x}" cy="${Y}" r="${r * 1.35}" fill="${hot ? acc : "none"}" fill-opacity=".3" stroke="${acc}" stroke-width="${sw * (hot ? 1.6 : 1.1)}"/>`;
+    else if (h.type === "v") o += `<rect x="${x - r}" y="${Y - r}" width="${2 * r}" height="${2 * r}" fill="${hot ? acc : "#fff"}" stroke="${acc}" stroke-width="${sw}"/>`;
     else if (h.type === "mid") o += `<circle cx="${x}" cy="${Y}" r="${r * .9}" fill="${hot ? acc : "#fff"}" stroke="${acc}" stroke-width="${sw * .8}" opacity=".85"/><path d="M${x - r * .5} ${Y}H${x + r * .5}M${x} ${Y - r * .5}V${Y + r * .5}" stroke="${hot ? "#fff" : acc}" stroke-width="${sw * .8}"/>`;
     else if (h.type === "r") o += `<path d="M${x} ${Y - r * 1.2}L${x + r * 1.2} ${Y}L${x} ${Y + r * 1.2}L${x - r * 1.2} ${Y}Z" fill="${hot ? acc : "#fff"}" stroke="${acc}" stroke-width="${sw}"/>`;
     else o += `<circle cx="${x}" cy="${Y}" r="${r * 1.2}" fill="${hot ? acc : "#fff"}" stroke="${acc}" stroke-width="${sw}"/><path d="M${x - r * 2} ${Y}H${x - r * 1.2}M${x + r * 1.2} ${Y}H${x + r * 2}M${x} ${Y - r * 2}V${Y - r * 1.2}M${x} ${Y + r * 1.2}V${Y + r * 2}" stroke="${acc}" stroke-width="${sw}"/>`;
@@ -6070,6 +6196,23 @@ function toolMove(e) {
 }
 function toolDown(e) {
   if (!current) return;
+  if (tool === "rebar" && state.rebar.mode === "around") {        // a perimeter item around the ring clicked in
+    if (state.mode !== "custom") { toast("Bars around works on custom sections; use Edit as custom first."); return; }
+    const m = modelAt(e), inside = (pts, q) => { let c = false; for (let i = 0, j = pts.length - 1; i < pts.length; j = i++) { const [xi, yi] = pts[i], [xj, yj] = pts[j]; if ((yi > q[1]) !== (yj > q[1]) && q[0] < (xj - xi) * (q[1] - yi) / (yj - yi) + xi) c = !c; } return c; };
+    let holes = []; try { holes = parseOpenings(state.custom.openings).map(h => expand(h, true)); } catch (err) { holes = []; }
+    const j = holes.findIndex(h => inside(h, m));
+    if (j < 0 && !insideOutline(m)) { toast("Click inside the section, or inside an opening."); return; }
+    const o = state.rebar, cnt = o.dist === "count", v = String(o.val).replace(",", ".");
+    const hasLink = state.custom.items.some(q => q.type === "Link" && (j < 0 ? (q.region || "outline") === "outline" : q.region === "around opening" && +q.opening === j + 1));
+    let linkNo = 0;
+    if (hasLink) { let n = 0; state.custom.items.forEach(q => { if (q.type !== "Link") return; n++; if (!linkNo && (j < 0 ? (q.region || "outline") === "outline" : q.region === "around opening" && +q.opening === j + 1)) linkNo = n; }); }
+    pushItemsUndo();
+    state.custom.items.push(newItem("Perimeter", { ring: j < 0 ? "outer" : "openings", opening: j < 0 ? "" : j + 1, d: o.d, dist: cnt ? "count" : "max spacing", n: cnt ? v : 8, s: cnt ? 150 : v, link: linkNo }));
+    persist(); userView = true; redraw();
+    if (state.tab.custom === "reinforcement") { state.sel = state.custom.items.length - 1; renderAll(); }
+    toast(`Bars around ${j < 0 ? "the outline" : "opening " + (j + 1)} added as item ${state.custom.items.length}${linkNo ? `, inside link ${linkNo}` : ", at cover"}.`);
+    return;
+  }
   if (tool === "rebar" || tool === "cut") {
     const m = modelAt(e), sp = snapAt(m, e);
     const prev = tool === "rebar" ? (rb ? rb.pts[rb.pts.length - 1] : null) : cutp;
