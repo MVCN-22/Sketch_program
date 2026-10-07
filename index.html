@@ -255,6 +255,8 @@ body.rulers .hintpill { bottom: 30px; }
 .pickbtn svg { width: 12px; height: 12px; vertical-align: -2px; }
 .geobar .pickbtn { padding: 3px 9px; font-size: 12.5px; line-height: 18px; }
 .geobar { display: flex; flex-wrap: wrap; gap: 6px; margin: 0 0 10px; }
+.fsec.qr { border: 1px solid #b9d1ec; background: #f3f8fd; border-radius: 8px; padding: 0 12px; margin: 0 0 12px; }
+.fsec.qr > summary { color: var(--accent); }
 .zoom button:hover { border-color: var(--accent); color: var(--accent); }
 .status { border-top: 1px solid var(--rule); background: #fbfcfc; padding: 8px 14px; font-size: 13px; min-height: 38px; max-height: 30vh; overflow: auto; }
 .status .ok { color: var(--ok); }
@@ -298,6 +300,42 @@ table.anch td.ovr { color: var(--accent); font-weight: 600; }
 .ap-result > div { background: var(--panel); border: 1px solid var(--rule); border-radius: 6px; padding: 6px 10px; }
 .ap-result .rl { display: block; font-size: 11.5px; color: var(--muted); }
 .ap-result b { font-size: 15px; font-variant-numeric: tabular-nums; }
+.ap-mini { display: inline-block; width: 110px; height: 12px; vertical-align: middle; }
+.ap-mini svg { width: 100%; height: 100%; display: block; }
+.bond { display: inline-block; padding: 0 6px; border-radius: 9px; font-size: 12px; line-height: 17px; }
+.bond.good { background: #e3f1e6; color: #2d6a3e; }
+.bond.poor { background: #fbeee0; color: #8a5300; }
+.ap-sum { margin: 6px 0 14px; }
+.ap-pic { background: #fff; border: 1px solid var(--rule); border-radius: 8px; padding: 6px; margin: 4px 0 12px; }
+.ap-pic svg { display: block; width: 100%; height: auto; }
+.ap-quick { display: flex; flex-direction: column; gap: 6px; margin: 0 0 14px; }
+.ap-chips { display: flex; flex-wrap: wrap; align-items: center; gap: 4px; font-size: 13px; }
+.ap-chips .cl { width: 150px; color: var(--muted); font-size: 12.5px; }
+.ap-chips button { border: 1px solid var(--rule); background: #fff; border-radius: 14px; padding: 3px 11px; cursor: pointer; font-size: 12.5px; }
+.ap-chips button:hover { border-color: var(--accent); color: var(--accent); }
+.ap-chips button[aria-pressed="true"] { background: var(--accent); border-color: var(--accent); color: #fff; }
+.ap-two { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 14px; }
+.ap-card { border: 1px solid var(--rule); border-radius: 8px; padding: 10px 14px 12px; background: #fff; min-width: 0; }
+.ap-card h3, .ap-h3 { font-size: 14px; margin: 0 0 8px; }
+.ap-h3 { margin-top: 18px; }
+.ap-chart { display: flex; flex-direction: column; gap: 5px; }
+.ap-crow { display: grid; grid-template-columns: 92px minmax(60px, 1fr) 44px; grid-template-areas: "l b v" ". t t"; gap: 0 8px; align-items: center; font-size: 12.5px; }
+.ap-crow .cl { grid-area: l; font-weight: 600; white-space: nowrap; }
+.ap-crow .cl small { font-weight: 400; color: var(--muted); }
+.ap-crow .cb { grid-area: b; height: 10px; background: #f0f2f4; border-radius: 3px; overflow: hidden; }
+.ap-crow .cb i { display: block; height: 100%; background: #9fbde0; }
+.ap-crow.fin .cb i { background: var(--err); }
+.ap-crow .cv { grid-area: v; text-align: right; font-variant-numeric: tabular-nums; }
+.ap-crow .ct { grid-area: t; color: var(--muted); font-size: 11.5px; }
+.ap-rules { margin: 0; padding-left: 18px; font-size: 13px; line-height: 1.45; }
+.ap-rules li { margin: 0 0 6px; }
+.ap-rules li.bad { color: var(--err); }
+.ap-pair { max-width: 300px; margin: 0 auto 6px; }
+.ap-card .ap-pic { border: 0; padding: 0; margin: 0 0 6px; }
+.ap-memform { max-width: 720px; grid-template-columns: repeat(3, minmax(0, 1fr)); margin: 4px 0 12px; }
+table.anch.ap-all td small, table.anch td small { color: var(--muted); }
+table.anch tfoot td { font-weight: 600; border-top: 1px solid var(--rule); }
+@media (max-width: 1100px) { .ap-two { grid-template-columns: 1fr; } }
 .ap-ctrl legend .lval { font-weight: 400; color: var(--accent); margin-left: 6px; font-size: 12px; }
 table.anch.pick { margin-bottom: 0; }
 .ap-detail h3 { margin: 0 0 8px; font-size: 14.5px; }
@@ -319,6 +357,8 @@ table.anch.pick { margin-bottom: 0; }
 .wk.res .wl, .wk.res .wr { color: var(--ok); }
 .wk.note .wr { color: var(--muted); }
 .ap-print { display: none; }
+.ap-printlap { grid-column: 1 / -1; }
+.ap-printlap svg { width: 100%; height: auto; }
 .linkbtn { background: none; border: 0; padding: 0 0 0 6px; color: var(--accent); cursor: pointer; font: inherit; text-decoration: underline; }
 /* SOFiSTiK page */
 body.page-sofi main > aside, body.page-sofi main > .stage, body.page-sofi #expGrp { display: none; }
@@ -668,6 +708,8 @@ dialog code { background: var(--panel-2); padding: 1px 4px; border-radius: 3px; 
     <li><b>One custom section</b> is kept while you work on standard sections. Coming back from a different standard section, a note offers to keep it, start blank or copy that standard section instead. <em>New section or shape…</em> on the Geometry tab starts a new section from a template, copies any standard section, or changes only the shape and keeps the bars. Undo brings the previous section back.</li>
     <li><b>Outline</b>: one vertex per line, <code>x, y</code>. Add an angle for an arc to the next vertex (<code>0, 300, 180</code> is a half circle), and <code>brk</code> to draw the next edge as a break line. Pasting from Excel works.</li>
     <li><b>Openings</b>: <code>rect x y w h</code>, <code>circle cx cy D</code> or <code>poly x1 y1 x2 y2 …</code>.</li>
+    <li><b>Quick reinforcement</b> (top of the Reinforcement tab) fills the list for the outline in one go, at the cover and with the minimum spacing between layers: <em>beam or column</em> (link, bottom, top and side bars), <em>walls, slabs and frames</em> (transverse and longitudinal bars on every straight face, for any shape such as U-frames, box girders or stairs; short end faces can be left out), <em>bars around the outline</em> (columns, piles, round sections) or <em>hollow or box section</em> (links and bars on the outer faces and around the openings). The items it makes are ordinary items you can change, and Undo takes them back.</li>
+    <li><b>Face layer</b>: bars along chosen faces in any direction, at cover or inside a link: the inner face of a wall, an inclined slab, a web. Give the faces by the number of their first point (# on the drawing shows them; 2-4 for several, all for every straight face, O1 for the faces of an opening), or use <em>Pick a face</em> and <em>Add a face</em> on the drawing. Layers on the same face stack inwards at the minimum spacing, and the ends stop at the cover of the next face, so corners meet cleanly.</li>
     <li><b>Layer</b>: bars parallel to a face. Bottom and top give horizontal layers, left and right vertical ones. With a blank offset, layers from the same face stack inwards at the minimum spacing.</li>
     <li><b>Perimeter</b>: bars around the outline or the openings, with a bar in every corner.</li>
     <li><b>Link</b>: follows the outline, the part inside a rectangle or polygon, or runs around an opening. Links are numbered in list order; bars with <em>Inside link no.</em> stay inside that link.</li>
@@ -682,7 +724,7 @@ dialog code { background: var(--panel-2); padding: 1px 4px; border-radius: 3px; 
     <li><b>Draw</b>: <em>Pencil</em> draws thin freehand lines, <em>Marker</em> colours areas with a broad see-through stroke, <em>Arrow</em> and <em>Circle</em> are dragged out, and <em>Tag</em> places numbered markers (1, 2, 3 …) you can refer to in the text. Pick a colour and a width in the bar under the tools.</li>
     <li><b>Move</b>: drag any label, title, text, dimension, drawing or section view to a new place. Dimensions move sideways only, so they keep measuring the same points. Dragging the background pans.</li>
     <li><b>Edit</b>: besides the words, the formatting bar sets font, size, bold, italic, underline and colour, as in a word processor. <em>Font</em> on the Drawing tab changes the default for all text.</li>
-    <li><b>Rebar</b>: <em>Row of bars</em> places bars (cut by the section) along a line you click from start to end, by spacing or number. <em>Bar along a line</em> draws a bar lying in the section plane; click its points and double-click or press Enter to finish. Shift keeps a segment horizontal or vertical. On a custom section the bars go into the reinforcement list, where you can fine-tune them.</li>
+    <li><b>Rebar</b>: <em>Row of bars</em> places bars (cut by the section) along a line you click from start to end, by spacing or number. <em>Bar along a line</em> draws a bar lying in the section plane; click its points and double-click or press Enter to finish. Points also snap to the line where a bar of the chosen Ø sits at cover (inside the links), and to its corners, so drawn bars keep the cover. Shift keeps a segment horizontal or vertical. On a custom section the bars go into the reinforcement list, where you can fine-tune them.</li>
     <li><b>Changing a bar you drew</b>: with <em>Edit</em>, click the bar. A box opens with its Ø, spacing or number and its coordinates; drag the blue points on the drawing to move the ends or corners, or drag the bar itself to move all of it, and the coordinates follow (in the reinforcement list as well). <em>Remove</em> deletes it. <em>Move</em> never picks up bars, so dragging a label or text next to a bar cannot shift the bar. This works for rows, single bars and line bars from the reinforcement list too.</li>
     <li><b>Cut</b>: click two points across the section. A section along the member (A–A, B–B …) appears beside the drawing, showing the concrete with break lines, longitudinal bars as lines, links at their spacing and in-plane bars as dots. Drag the cut line to move the cut, or drag the view to place it.</li>
     <li><b>Remove</b>: click a label, title, dimension or drawing to take it off the drawing. <em>Restore</em> brings back the predefined ones; <em>Undo</em> reverses the last change.</li>
@@ -709,9 +751,13 @@ dialog code { background: var(--panel-2); padding: 1px 4px; border-radius: 3px; 
   <h4>Anchorage and lap lengths</h4>
   <p><em>Anchorage and laps</em> in the header opens a page of its own for the section you are drawing. Each group of bars (same position, Ø and bond condition) gets l<sub>bd</sub> and l<sub>0</sub> to EN 1992-1-1, 8.4 and 8.7. Set the concrete class, f<sub>yk</sub>, the steel stress, the share of bars lapped in one section and the partial factors on the left (the defaults are the recommended values; use your National Annex).</p>
   <ul>
-    <li>Click a row to see the calculation written out with the numbers put in, and the section with that group's bars highlighted.</li>
+    <li><b>The table</b> shows every bar group with l<sub>bd</sub> and l<sub>0</sub>, its bond as a coloured tag, and both lengths as bars to the same scale (light: anchorage, red: lap), so the long ones stand out. <em>Show the factors</em> adds c<sub>d</sub> and the products of the α factors. Click a row to work on that group.</li>
+    <li><b>Lap</b>: the lap seen from the side, to scale along the bars: l<sub>0</sub> in mm and in Ø, the bar ends (straight, bent or looped), and, where 8.7.4.1 asks for them (Ø ≥ 20 mm), the outer thirds where the transverse bars go, checked against the section's links. With less than 100 % lapped in one section the next set of bars is drawn with its lap staggered by 1.3 l<sub>0</sub>, the 0.3 l<sub>0</sub> gap and the 0.65 l<sub>0</sub> zone. In compression the bars within 4Ø outside the lap ends are marked. The buttons under the picture change the share lapped, the bond, tension or compression and the bar end in one click. <em>How l0 is made</em> shows each step from l<sub>b,rqd</sub> to l<sub>0</sub> as a bar, so you see which factor matters; <em>Rules for this lap</em> lists the spacing, staggering and transverse-bar rules with this group's numbers.</li>
+    <li><b>Anchorage</b>: the bar anchored past the point where it must carry its full force, with l<sub>bd</sub>, l<sub>b,rqd</sub> and l<sub>b,min</sub> on a ruler, how l<sub>bd</sub> is made, and the mandrel diameter for bends.</li>
+    <li><b>Calculation</b>: every factor written out with the numbers put in, the section with the group's bars highlighted, and all the inputs for one group.</li>
+    <li><b>All diameters</b>: l<sub>bd</sub> and l<sub>0</sub> for Ø6 to Ø40 in good and poor bond with the page settings, ready to copy into a drawing note.</li>
     <li>For one group you can set every parameter of Table 8.2: the bond condition, tension or compression, the steel stress; α₁ and α₂ from the bar end (straight, bent or hooked, looped) and your own a, c₁ and c (Fig. 8.3; blank uses what the drawing measures); α₃ from K (Fig. 8.4), the transverse bars (Ø, spacing, legs, or a link of the section with one click) and beam or slab; α₄ for a welded transverse bar; α₅ from the transverse pressure p; and α₆ from ρ₁. α₂·α₃·α₅ is kept at 0.7 or more, and α₃ for laps uses ΣA<sub>st,min</sub> = A<sub>s</sub>·σ<sub>sd</sub>/f<sub>yd</sub>. Changed rows are marked ✎; <em>Use the page values for this group</em> undoes it.</li>
-    <li><b>Lap layout</b>: the member seen from the side, one lane per group of bars cut by the section. Bars of the stock length are laid from the left end and lapped by l₀; with ρ₁ below 100 % they are split into sets with laps staggered by 1.3·l₀ (0.3·l₀ clear, Fig. 8.7). The member length, bar length and ends are set on the left, the bar length also per group. Bars lying in the section plane get a lap position along the bar, and the lap is drawn on the group's section picture.</li>
+    <li><b>Along the member</b>: the member seen from the side, one lane per group of bars cut by the section (hover a bar or a lap to see where it runs). The member length, bar length and ends can be changed right there, and a bar schedule lists the cut lengths, numbers and weights. Bars of the stock length are laid from the left end and lapped by l₀; with ρ₁ below 100 % they are split into sets with laps staggered by 1.3·l₀ (0.3·l₀ clear, Fig. 8.7). The member length, bar length and ends are set on the left, the bar length also per group. Bars lying in the section plane get a lap position along the bar, and the lap is drawn on the group's section picture.</li>
     <li><b>Bond condition</b> comes from where each bar sits, as the section is drawn (cast from the top): good for h ≤ 250 mm, within 250 mm of the bottom, or more than 300 mm below the top when h > 600 mm; poor otherwise. Bars running vertically (columns, piles, plan sections of walls) and in-plane bars at 45° or more are good. Edges drawn as break lines count as continuing concrete.</li>
     <li><b>α₂</b> uses c<sub>d</sub> = min(a/2, c) measured on the drawing (clear distance to the nearest bar, cover to the nearest real face); the smallest c<sub>d</sub> of a group governs. α₃, α₄ and α₅ are 1, which is on the safe side.</li>
     <li><em>Print / PDF</em> prints every group with its workings; <em>Copy table</em> copies the table for Excel. A summary table can also go on the section drawing (ticked on the page).</li>
@@ -2011,6 +2057,99 @@ function layerItem(dr, it, idx, P, links, cover, dg, stacks) {
     itemLabel(dr, it, us.map(P2), dm.startsWith("spacing") ? `Ø${fmt(dr.nom(d))}/${fmt(fnum(it.s))}` : `${us.length}Ø${fmt(dr.nom(d))}`, zone);
   }
 }
+/* bars along faces of any direction: an edge of the outline or of an opening, at cover (or inside a link),
+   stacking inwards like layers; the ends meet the cover lines of the neighbouring faces */
+function faceEdges(geo, spec, minlen = 0) {
+  const rings = [{ verts: geo.verts, brk: geo.brk, hole: false, tag: "" }, ...geo.holes.map((h, j) => ({ verts: h, brk: [], hole: true, tag: "O" + (j + 1) + ":" }))];
+  const all = [];
+  rings.forEach((r, ri) => {
+    const pts = r.verts, m = pts.length, sa = signedArea(expand(pts, true));
+    pts.forEach((p, i) => {
+      const q = pts[(i + 1) % m], L = Math.hypot(q[0] - p[0], q[1] - p[1]);
+      if (L < 1e-6) return;
+      const u = [(q[0] - p[0]) / L, (q[1] - p[1]) / L], left = [-u[1], u[0]], inw = (sa > 0) !== r.hole ? left : [-left[0], -left[1]];
+      all.push({ key: r.tag + (i + 1), ring: ri, i, A: [p[0], p[1]], B: [q[0], q[1]], u, n: inw, L, straight: Math.abs(p[2] || 0) < 1e-9, brk: !!r.brk[i], prev: null, next: null });
+    });
+  });
+  for (const e of all) {                                            // neighbours on the same ring
+    const same = all.filter(f => f.ring === e.ring), m = same.length, k = same.indexOf(e);
+    e.prev = same[(k - 1 + m) % m]; e.next = same[(k + 1) % m];
+  }
+  const t = String(spec || "").trim().toLowerCase(), out = [], bad = [];
+  if (t === "*") return all;
+  if (t === "all" || t === "") return all.filter(e => !e.ring && e.straight && !e.brk && e.L >= minlen);
+  for (const tok of t.split(/[,;\s]+/).filter(Boolean)) {
+    const mo = /^o(\d+)(?::(\d+))?$/.exec(tok), mr = /^(\d+)-(\d+)$/.exec(tok);
+    let hit = [];
+    if (mo) hit = all.filter(e => e.ring === +mo[1] && (!mo[2] || e.i + 1 === +mo[2]));
+    else if (mr) hit = all.filter(e => !e.ring && e.i + 1 >= +mr[1] && e.i + 1 <= +mr[2]);
+    else if (/^\d+$/.test(tok)) hit = all.filter(e => !e.ring && e.i + 1 === +tok);
+    if (!hit.length) bad.push(tok);
+    out.push(...hit.filter(e => e.straight));
+  }
+  if (bad.length) throw new UserError(`no face ${bad.join(", ")} (outline edges are numbered by their first point, 1 to ${all.filter(e => !e.ring).length})`);
+  return out;
+}
+function faceItem(dr, it, idx, P, links, cover, dg, stacks, geo) {
+  const kind = it.kind || "dots", d = dr.G(fnum(it.d, "Ø")), k = inum(it.link ?? 0, "link");
+  const R0 = baseRegion(dr, links, k, P, cover, idx), R = buf(R0, -d / 2 + 1e-3, "mitre");
+  if (R.isEmpty()) throw new UserError("no room for bars of this diameter");
+  const edges = faceEdges(geo, it.edges, onum(it.minlen, "shortest face") || 0);
+  if (!edges.length) throw new UserError("no straight face to place along");
+  const userOff = onum(it.offset, "offset"), ug = onum(it.gap, "gap"), placed = [], lines = [], exact = (it.dist || "count") === "spacing (exact)" ? fnum(it.s) : null;
+  const base = e => {                                                // face to the inside of the cover or link, along the normal at the middle
+    const M = [(e.A[0] + e.B[0]) / 2, (e.A[1] + e.B[1]) / 2], far = Math.max(e.L, 1e5);
+    const g = R0.intersection(lineOf([M, [M[0] + e.n[0] * far, M[1] + e.n[1] * far]]));
+    let best = Infinity;
+    for (const c of g.getCoordinates()) best = Math.min(best, (c.x - M[0]) * e.n[0] + (c.y - M[1]) * e.n[1]);
+    return isFinite(best) ? best : cover;
+  };
+  for (const e of edges) {
+    const key = "face:" + e.key + "|" + k;
+    let off;
+    if (userOff !== null) off = userOff;
+    else if (stacks.has(key)) {
+      const [po, pd, pk] = stacks.get(key);
+      const gap = ug !== null ? ug : (kind === "dots" && pk === "dots") ? minClear(dr.nom(Math.max(d, pd)), dg) : 0;
+      off = po + pd / 2 + gap + d / 2;
+    } else off = base(e) + d / 2;
+    stacks.set(key, [off, d, kind]);
+    const O = [e.A[0] + e.n[0] * off, e.A[1] + e.n[1] * off];
+    const lim = f => {                                               // where the line meets the neighbour's line at the same depth
+      const den = e.u[0] * f.n[0] + e.u[1] * f.n[1];
+      if (Math.abs(den) < 1e-6 || !f.straight) return null;
+      return (off - ((O[0] - f.A[0]) * f.n[0] + (O[1] - f.A[1]) * f.n[1])) / den;
+    };
+    let t0 = lim(e.prev), t1 = lim(e.next);
+    if (t0 === null || t0 > e.L / 2) t0 = 0;
+    if (t1 === null || t1 < e.L / 2) t1 = e.L;
+    if (t1 - t0 < 1e-6) continue;
+    const P2 = t => [O[0] + e.u[0] * t, O[1] + e.u[1] * t];
+    let segs = [];
+    const g = R.intersection(lineOf([P2(t0 - 1), P2(t1 + 1)]));
+    const walk = gg => { if (!gg || gg.isEmpty()) return; const ty = gg.getGeometryType();
+      if (ty === "LineString") { const ts = gg.getCoordinates().map(c => (c.x - O[0]) * e.u[0] + (c.y - O[1]) * e.u[1]); const lo = Math.max(t0, Math.min(...ts)), hi = Math.min(t1, Math.max(...ts)); if (hi - lo > 1e-6) segs.push([lo, hi]); }
+      else for (let i = 0; i < gg.getNumGeometries(); i++) walk(gg.getGeometryN(i)); };
+    walk(g);
+    segs = applyRanges(segs.sort((a, b) => a[0] - b[0]), parseRanges(it.ranges));
+    for (const [a, b] of segs) {
+      if (kind === "line") { lines.push([P2(a), P2(b)]); continue; }
+      for (const t of distribute(a, b, it)) { const q = P2(t); if (!placed.some(p => Math.hypot(p[0] - q[0], p[1] - q[1]) < 2 * d)) placed.push(q); }   // corners: one bar where faces meet
+    }
+  }
+  const cats = new Set(edges.map(e => e.n[1] < -0.7 ? "top" : e.n[1] > 0.7 ? "bottom" : "side"));   // by the way the face looks
+  const zone = it.zone && it.zone !== "auto" ? it.zone : cats.size === 1 ? [...cats][0] : itemZone(dr, it, (kind === "line" ? lines.flat() : placed).map(q => q[1]));
+  const s0 = (it.dist || "count") !== "count" ? onum(it.s, "spacing") : null;
+  if (kind === "line") {
+    if (!lines.length) throw new UserError("the face lies outside the available area");
+    lines.forEach(l => { dr.steel(l, d, false, "BARS", s0, zone); dr.items[dr.items.length - 1].dir = noteDir(it); });
+    itemLabel(dr, it, lines.flat(), `Ø${fmt(dr.nom(d))}` + (s0 ? `/${fmt(s0)}` : ""), zone);
+  } else {
+    if (!placed.length) throw new UserError("the face lies outside the available area");
+    placed.forEach(([x, y]) => dr.bar(x, y, d, zone || dr.zoneAt(y), exact));
+    itemLabel(dr, it, placed, (it.dist || "count").startsWith("spacing") ? `Ø${fmt(dr.nom(d))}/${fmt(fnum(it.s))}` : `${placed.length}Ø${fmt(dr.nom(d))}`, zone);
+  }
+}
 function perimeterItem(dr, it, idx, P, links, cover) {
   const d = dr.G(fnum(it.d, "Ø")), k = inum(it.link, "link");
   const R = buf(baseRegion(dr, links, k, P, cover, idx), -d / 2), which = it.ring || "outer", cand = [];
@@ -2073,7 +2212,7 @@ function buildCustom(cs, st, pickable = true) {
   dr.outline([ext, ...holes]);
   for (const r of parseOpenings(cs.extras || "")) dr.items.push({ k: "extra", ring: v3(r) });
   const items = cs.items || [], maxr = new Map();
-  for (const it of items) if ((it.type === "Layer" || it.type === "Perimeter") && (it.kind || "dots") === "dots") {
+  for (const it of items) if ((it.type === "Layer" || it.type === "Perimeter" || it.type === "Face layer") && (it.kind || "dots") === "dots") {
     try { const kk = inum(it.link); maxr.set(kk, Math.max(maxr.get(kk) || 0, dr.G(fnum(it.d)) / 2)); } catch (e) { /* reported later */ }
   }
   const links = new Map(); let nlink = 0;
@@ -2090,6 +2229,7 @@ function buildCustom(cs, st, pickable = true) {
     const idx = i + 1, t = it.type, n0 = dr.items.length;
     try {
       if (t === "Layer") layerItem(dr, it, idx, P, links, cover, dg, stacks);
+      else if (t === "Face layer") faceItem(dr, it, idx, P, links, cover, dg, stacks, { verts, brk, holes });
       else if (t === "Perimeter") perimeterItem(dr, it, idx, P, links, cover);
       else if (t === "Circle pattern") {
         const cx = fnum(it.cx, "cx"), cy = fnum(it.cy, "cy"), r = fnum(it.r, "radius"), d = dr.G(fnum(it.d, "Ø")), n = inum(it.n, "n");
@@ -2447,6 +2587,15 @@ const ITEM_SPECS = {
     H("Placement", false), ["offset", "Offset face → bar centre", "optfloat", "", { ph: "auto", help: "Leave blank to stack the layers automatically" }],
     ["gap", "Clear gap to previous layer", "optfloat", "", { ph: "minimum", help: "On the same face; leave blank for the minimum spacing" }],
     ["ranges", "Only within ranges along the layer", "str", "", { ph: "e.g. 0:450; 750:1200" }], ...LABEL_F, ZONE_F],
+  "Face layer": [["edges", "Along faces", "str", "1", { ph: "e.g. 2, or 2 5, or 2-4, or all", help: "Outline edges by the number of their first point (# on the drawing shows the numbers): 2 is the face from point 2 to point 3. 2-4 = faces 2, 3 and 4; all = every straight face; O1 = the faces of opening 1, O1:2 its second face" }],
+    ["kind", "Bars", "choice", "dots", ["dots", "line"], { help: "dots = cut by the section, line = lying in the section plane" }], ["d", "Bar Ø", "float", "16"],
+    ["dist", "Distribution", "choice", "spacing (exact)", DIST_CHOICES], ["n", "Number of bars n", "int", "4", { help: "Per face" }], ["s", "Spacing s", "float", "150"],
+    ["link", "Inside link no.", "int", "0", { help: "0 = at cover, not inside a link" }],
+    ["skip_ends", "Skip the end bars (intermediate bars only)", "bool", false],
+    H("Placement", false), ["offset", "Offset face → bar centre", "optfloat", "", { ph: "auto", help: "Leave blank to place at cover and stack the layers of a face automatically" }],
+    ["gap", "Clear gap to previous layer", "optfloat", "", { ph: "minimum", help: "On the same face; leave blank for the minimum spacing" }],
+    ["minlen", "With all: leave out faces shorter than", "optfloat", "", { ph: "0" }],
+    ["ranges", "Only within ranges along the face", "str", "", { ph: "e.g. 0:450; 750:1200", help: "Measured from the first point of the face" }], ...LABEL_F, ZONE_F],
   "Perimeter": [["ring", "Along", "choice", "outer", ["outer", "openings", "all"]], ["d", "Bar Ø", "float", "16"],
     ["dist", "Distribution", "choice", "max spacing", DIST_CHOICES], ["n", "Number of bars n", "int", "8", { help: "Per ring" }], ["s", "Spacing s", "float", "150"],
     ["link", "Inside link no.", "int", "1", { help: "0 = not inside a link" }], ["corners", "Bar in every corner", "bool", true], ...LABEL_F, ZONE_F],
@@ -2477,7 +2626,7 @@ const SP = ["spacing (exact)", "max spacing"];
 const DIST_SHOW = { n: ["dist", ["count"]], s: ["dist", SP] };
 const REG = ["outline", "rectangle", "polygon"];
 const SHOW_IF = {
-  "Layer": DIST_SHOW, "Perimeter": DIST_SHOW, "Row": DIST_SHOW,
+  "Layer": DIST_SHOW, "Perimeter": DIST_SHOW, "Row": DIST_SHOW, "Face layer": DIST_SHOW,
   "Link": { x0: ["region", ["rectangle"]], y0: ["region", ["rectangle"]], x1: ["region", ["rectangle"]], y1: ["region", ["rectangle"]],
     points: ["region", ["polygon"]], opening: ["region", ["around opening"]], hooks: ["region", REG], hook_len: ["region", REG], clip: ["region", ["rectangle", "polygon"]] },
 };
@@ -2487,6 +2636,7 @@ const ITEM_HELP = {
   "Circle pattern": "Bars on a circle or an arc.",
   "Row": "Bars on a straight line between two points.",
   "Single bar": "One bar at a point.",
+  "Face layer": "Bars along one or more faces of the outline or of an opening, in any direction (walls, inclined slabs, frames, webs), at cover or inside a link. Pick the face on the drawing or give its number (# on the drawing shows the points). Layers on the same face stack inwards at the minimum spacing, and the ends stop at the cover of the neighbouring faces.",
   "Line bar": "A bar lying in the section plane: a U-bar, a cross-tie, a bent-up bar, or a link of your own shape (tick Closed).",
   "Link": "A closed link at cover. It follows the outline, the part of the section inside a rectangle or polygon, or runs around an opening. Links are numbered 1, 2, … in list order.",
   "Dimension": "A dimension line between two points.",
@@ -2665,6 +2815,7 @@ function itemSummary(it, linkNo) {
   switch (it.type) {
     case "Layer": return `${g("face")}, ${g("kind")} Ø${g("d")}, ${amount}${lk}`;
     case "Perimeter": return `${g("ring")}, Ø${g("d")}, ${amount}${lk}`;
+    case "Face layer": return `face ${g("edges")}, ${g("kind")} Ø${g("d")}, ${amount}${lk}`;
     case "Circle pattern": return `${g("n")}Ø${g("d")}, r = ${g("r")}`;
     case "Row": return `Ø${g("d")} from (${g("x1")}, ${g("y1")}) to (${g("x2")}, ${g("y2")})`;
     case "Single bar": return `Ø${g("d")} at (${g("x")}, ${g("y")})`;
@@ -3889,8 +4040,77 @@ function renderGeo(body) {
   buildForm(body, CUSTOM_GEO_SPEC, state.custom, changed);
   body.append(el("p", { class: "hint" }, OUTLINE_HELP));
 }
+/* ready-made reinforcement for the outline: links, layers and face bars at cover, with the minimum spacing between layers */
+const QR_DEF = { kind: "beam", link_d: "10", link_s: "200", bot_n: "4", bot_d: "20", top_n: "3", top_d: "16", side_d: "12", side_s: "200",
+  line_d: "12", line_s: "150", dot_d: "16", dot_s: "200", outside: "transverse", minlen: "500", ring_d: "16", ring_s: "150" };
+function quickItems(q, cs) {
+  const L = [], link = num => { if (+q.link_d > 0) L.push(newItem("Link", { region: "outline", d: q.link_d, s: q.link_s })); return +q.link_d > 0 ? 1 : 0; };
+  let nOpen = 0; try { nOpen = parseOpenings(cs.openings).length; } catch (e) { nOpen = 0; }
+  if (q.kind === "beam") {
+    const k = link();
+    if (+q.bot_n > 0) L.push(newItem("Layer", { face: "bottom", kind: "dots", d: q.bot_d, dist: "count", n: q.bot_n, link: k }));
+    if (+q.top_n > 0) L.push(newItem("Layer", { face: "top", kind: "dots", d: q.top_d, dist: "count", n: q.top_n, link: k }));
+    if (+q.side_d > 0) for (const f of ["left", "right"]) L.push(newItem("Layer", { face: f, kind: "dots", d: q.side_d, dist: "max spacing", s: q.side_s, skip_ends: true, link: k, label: f === "left" ? "none" : "right" }));
+  } else if (q.kind === "faces") {
+    const tr = newItem("Face layer", { edges: "all", kind: "line", d: q.line_d, dist: "spacing (exact)", s: q.line_s, minlen: q.minlen, note: "(transv.)" });
+    const lo = newItem("Face layer", { edges: "all", kind: "dots", d: q.dot_d, dist: "spacing (exact)", s: q.dot_s, minlen: q.minlen, note: "(long.)" });
+    L.push(...(q.outside === "transverse" ? [tr, lo] : [lo, tr]));
+  } else if (q.kind === "around") {
+    const k = link();
+    L.push(newItem("Perimeter", { ring: "outer", d: q.ring_d, dist: "max spacing", s: q.ring_s, link: k }));
+  } else if (q.kind === "box") {
+    const k = link();
+    for (let j = 1; j <= nOpen; j++) if (+q.link_d > 0) L.push(newItem("Link", { region: "around opening", opening: j, d: q.link_d, s: q.link_s, hooks: false }));
+    L.push(newItem("Perimeter", { ring: "outer", d: q.ring_d, dist: "max spacing", s: q.ring_s, link: k }));
+    if (nOpen) L.push(newItem("Perimeter", { ring: "openings", d: q.ring_d, dist: "max spacing", s: q.ring_s, link: nOpen === 1 && k ? 2 : 0 }));
+  }
+  return L;
+}
+function quickPanel(body) {
+  const ui = state.ui = state.ui || {}, q = ui.qr = { ...QR_DEF, ...(ui.qr || {}) }, cs = state.custom;
+  const KINDS = [["beam", "Beam or column: links, bottom, top and side bars"], ["faces", "Walls, slabs and frames: both directions on every face"], ["around", "Bars around the outline: columns, piles, round sections"], ["box", "Hollow or box section: outer and inner faces"]];
+  const det = el("details", { class: "fsec qr" }, el("summary", {}, "Quick reinforcement"));
+  det.open = uiOpen("Quick reinforcement", !cs.items.length);
+  det.addEventListener("toggle", () => setUiOpen("Quick reinforcement", det.open));
+  const box = el("div", { class: "fsec-body" });
+  det.append(box);
+  const draw = () => {
+    box.replaceChildren();
+    const sel = el("select", {}, KINDS.map(([v, t]) => el("option", { value: v, selected: q.kind === v }, t)));
+    sel.addEventListener("change", () => { q.kind = sel.value; persist(); draw(); });
+    const f = (label, key, help) => { const inp = el("input", { type: "text", value: q[key] ?? "", inputmode: "decimal", autocomplete: "off", title: help || null }); inp.addEventListener("input", () => { q[key] = inp.value.trim(); persist(); }); return el("div", { class: "fcell" }, el("label", { title: help || null }, label), inp); };
+    const cov = el("input", { type: "text", value: cs.cover, inputmode: "decimal" });
+    cov.addEventListener("change", () => { if (posNum(cov.value)) { cs.cover = cov.value.trim(); changed(); } });
+    const grid = el("div", { class: "fgrid" }, el("div", { class: "fcell" }, el("label", { title: "The section's c_nom, used by every item at cover" }, "Cover c_nom [mm]"), cov));
+    if (q.kind !== "faces") grid.append(f("Link Ø (blank: none)", "link_d"), f("Link spacing", "link_s"));
+    if (q.kind === "beam") grid.append(f("Bottom bars: number", "bot_n"), f("Bottom Ø", "bot_d"), f("Top bars: number", "top_n"), f("Top Ø", "top_d"), f("Side bars Ø (blank: none)", "side_d"), f("Side bars max spacing", "side_s"));
+    if (q.kind === "faces") {
+      const o = el("select", {}, [["transverse", "transverse bars outside"], ["longitudinal", "longitudinal bars outside"]].map(([v, t]) => el("option", { value: v, selected: q.outside === v }, t)));
+      o.addEventListener("change", () => { q.outside = o.value; persist(); });
+      grid.append(f("Transverse Ø (in the section)", "line_d"), f("Transverse spacing", "line_s"), f("Longitudinal Ø (cut)", "dot_d"), f("Longitudinal spacing", "dot_s"),
+        el("div", { class: "fcell" }, el("label", {}, "Order from the face"), o), f("Leave out faces shorter than [mm]", "minlen", "End faces of walls and slabs are usually left out"));
+    }
+    if (q.kind === "around" || q.kind === "box") grid.append(f("Bar Ø", "ring_d"), f("Max spacing", "ring_s"));
+    const go = replace => {
+      const add = quickItems(q, cs);
+      if (!add.length) { toast("Nothing to add with these values."); return; }
+      histCommit();
+      if (replace) cs.items = add; else cs.items.push(...add);
+      state.sel = null; persist(); histCommit(); renderAll();
+      toast(`${add.length} item${add.length === 1 ? "" : "s"} ${replace ? "now make up the list" : "added"}. Each can be changed in the list; undo takes them back.`);
+    };
+    box.append(el("div", { class: "fcell wide" }, sel), grid,
+      el("p", { class: "hint" }, { beam: "Bars inside the link, at the minimum clear spacing between layers; side bars skip the corners.", faces: "For any outline: every straight face gets transverse bars lying in the section and longitudinal bars cut by it, at cover, stacked at the minimum spacing; the bars stop at the cover of the next face.",
+        around: "Bars around the outline inside the link, with a bar in every corner.", box: "Links around the outline and each opening, and bars along the outer faces and the openings." }[q.kind]),
+      el("div", { class: "toolbar" }, el("button", { type: "button", class: "btn primary", onclick: () => go(false) }, "Add to the list"),
+        cs.items.length ? el("button", { type: "button", class: "btn", onclick: () => go(true) }, "Replace the list") : null));
+  };
+  draw();
+  body.append(det);
+}
 function renderReinf(body) {
   const items = state.custom.items;
+  quickPanel(body);
   const addSel = el("select", { "aria-label": "Add an item" }, el("option", { value: "" }, "Add item…"), Object.keys(ITEM_SPECS).map(t => el("option", { value: t }, t)));
   addSel.addEventListener("change", () => {
     const t = addSel.value; if (!t) return;
@@ -3921,6 +4141,17 @@ function renderReinf(body) {
     const it = items[state.sel];
     body.append(el("div", { class: "itemhead" }, `Item ${state.sel + 1}: ${it.type}`), el("p", { class: "hint" }, ITEM_HELP[it.type] || ""));
     if (itemHandles(state.sel).length) body.append(el("p", { class: "hint", id: "itemEditHint" }, tool === "edit" ? "Drag the blue points on the drawing to change it, or pick a point with the target button." : "Choose Edit (E) to drag its points on the drawing, or pick a point with the target button."));
+    if (it.type === "Face layer") {
+      const pickFace = add => b => startPick("face", 1, "point", pts => {
+        const k = nearestFace(pts[0]); if (!k) { toast("No straight face there."); return; }
+        const cur = String(it.edges || "").trim(), list = cur && cur !== "all" ? cur.split(/[,;\s]+/) : [];
+        it.edges = add ? [...new Set([...list, k])].join(" ") : k;
+        renderAll();
+      }, b);
+      const b1 = el("button", { type: "button", class: "pickbtn", title: "Click a face of the outline or of an opening" }, "Pick a face"), b2 = el("button", { type: "button", class: "pickbtn", title: "Add another face to this layer" }, "Add a face");
+      b1.addEventListener("click", () => pickFace(false)(b1)); b2.addEventListener("click", () => pickFace(true)(b2));
+      body.append(el("div", { class: "geobar" }, b1, b2, el("button", { type: "button", class: "pickbtn", onclick: () => { uiS().nums = true; applyView(); drawOverlay(); } }, "Show the point numbers")));
+    }
     const closedPts = it.type === "Link" || truthy(it.closed);
     const ta = { points: { label: "Draw on the drawing", title: "Click the points on the drawing; they replace the list", what: it.type === "Link" ? "link polygon" : "bar", shape: closedPts ? "poly" : "points", done: pts => { it.points = ptsLine(pts); } } };
     buildForm(body, ITEM_SPECS[it.type], it, () => { const [sp, ln] = sums[state.sel]; sp.textContent = itemSummary(it, ln); changed(); }, SHOW_IF[it.type] || {}, { picks: true, ta });
@@ -4150,18 +4381,23 @@ const zoneTxt = z => z === "none" ? "–" : zoneName(z).toLowerCase();
 const lenTxt = (l, dn) => `${ceil10(l)} (${Math.ceil(ceil10(l) / dn)}Ø)`;
 const qtyTxt = g => g.kind === "plane" ? (g.sp.length ? "c/c " + g.sp.map(fmt).join(", ") : "–") : String(g.n);
 const SHAPE_TXT = { straight: "straight", bent: "bent or hooked", looped: "looped" };
-function anchTableEl(groups, pick) {
-  const cols = ["Bars", "Position", "n or c/c", "Bond", "c_d", "Πα (l_bd)", "Πα (l_0)", "l_bd [mm]", "l_0 [mm]", ""];
-  const num = j => j >= 4 && j <= 8;
+function anchTableEl(groups, pick, factors = !pick || !!(state.ui || {}).apFactors) {
+  const cols = ["Bars", "Position", "n or c/c", "Bond", ...(factors ? ["c_d", "Πα (l_bd)", "Πα (l_0)"] : []), "l_bd [mm]", "l_0 [mm]", ...(pick ? ["to scale"] : []), ""];
+  const num = j => j >= 4 && j < cols.length - (pick ? 2 : 1);
+  const M = Math.max(...groups.map(g => ceil10(g.l0)), ...groups.map(g => ceil10(g.lbd)));
+  const scale = g => { const a = ceil10(g.lbd) / M * 100, b = ceil10(g.l0) / M * 100;
+    const sv = el("span", { class: "ap-mini", title: `l_bd ${ceil10(g.lbd)} mm (light), l0 ${ceil10(g.l0)} mm (dark), to the same scale` });
+    sv.innerHTML = `<svg viewBox="0 0 100 12" preserveAspectRatio="none"><rect x="0" y="1" width="${a.toFixed(1)}" height="4" fill="#9fbde0"/><rect x="0" y="7" width="${b.toFixed(1)}" height="4" fill="${AP_RED}"/></svg>`; return sv; };
   return el("table", { class: "anch" + (pick ? " pick" : "") },
     el("thead", {}, el("tr", {}, cols.map((c, j) => el("th", { class: num(j) ? "num" : null }, c)))),
     el("tbody", {}, groups.map(g => {
       const tr = el("tr", pick ? { tabindex: "0", "aria-selected": String(g.key === apSel) } : {},
         el("td", {}, anchName(g)), el("td", {}, zoneTxt(g.zone)), el("td", {}, qtyTxt(g)),
-        el("td", {}, (g.good ? "good" : "poor") + (g.opt.comp ? ", compr." : "")),
-        el("td", { class: "num" }, isFinite(g.cd) ? String(Math.round(g.cd)) : "–"),
-        el("td", { class: "num" }, (g.lbdCalc / g.lbrqd).toFixed(2)), el("td", { class: "num" }, (g.l0Calc / g.lbrqd).toFixed(2)),
-        el("td", { class: "num" }, lenTxt(g.lbd, g.dn)), el("td", { class: "num" }, lenTxt(g.l0, g.dn)),
+        el("td", {}, el("span", { class: "bond " + (g.good ? "good" : "poor") }, g.good ? "good" : "poor"), g.opt.comp ? ", compr." : ""),
+        ...(factors ? [el("td", { class: "num" }, isFinite(g.cd) ? String(Math.round(g.cd)) : "–"),
+          el("td", { class: "num" }, (g.lbdCalc / g.lbrqd).toFixed(2)), el("td", { class: "num" }, (g.l0Calc / g.lbrqd).toFixed(2))] : []),
+        el("td", { class: "num" }, lenTxt(g.lbd, g.dn)), el("td", { class: "num" }, el("b", {}, lenTxt(g.l0, g.dn))),
+        ...(pick ? [el("td", {}, scale(g))] : []),
         el("td", { class: "ovr", title: Object.keys(g.ov).length ? "Changed on this page" : null }, Object.keys(g.ov).length ? "✎" : ""));
       if (pick) {
         const go = () => { apSel = g.key; renderAnchPage(); };
@@ -4233,31 +4469,31 @@ function anchElevation(dr, groups, selKey) {
   const W = 1000, X0 = 150, X1 = W - 16, L = A.memLen, k = (X1 - X0) / L, X = x => X0 + x * k, acc = "#1b5fa8", red = "#b3261e";
   let y = 30, body = "", dims = "";
   for (const { g, lay } of lanes) {
-    const sel = g.key === selKey, col = sel ? acc : "#1c2126", laneH = 10 + lay.m * 9 + (lay.warn.length ? 12 : 0);
+    const sel = g.key === selKey, col = sel ? acc : "#1c2126", laneH = 14 + lay.m * 15 + (lay.warn.length ? 14 : 0);
     if (sel) body += `<rect x="2" y="${y - 6}" width="${W - 4}" height="${laneH + 16}" fill="#e3edf8" rx="4"/>`;
     body += `<g class="lane" data-key="${escXml(g.key)}" style="cursor:pointer">`;
     body += `<rect x="0" y="${y - 6}" width="${W}" height="${laneH + 16}" fill="transparent"/>`;
-    body += `<text x="8" y="${y + 6}" font-size="11" font-weight="600" fill="${col}">${escXml(anchName(g))} ${escXml(zoneTxt(g.zone))}</text>`;
-    body += `<text x="8" y="${y + 19}" font-size="10" fill="#5b6670">${lay.m > 1 ? lay.sets.map(s0 => s0.n).join(" + ") + " bars, staggered" : g.n + " bar" + (g.n === 1 ? "" : "s") + ", lapped together"}</text>`;
+    body += `<text x="8" y="${y + 8}" font-size="13" font-weight="600" fill="${col}">${escXml(anchName(g))} ${escXml(zoneTxt(g.zone))}</text>`;
+    body += `<text x="8" y="${y + 23}" font-size="11" fill="#5b6670">${lay.m > 1 ? lay.sets.map(s0 => s0.n).join(" + ") + " bars, staggered" : g.n + " bar" + (g.n === 1 ? "" : "s") + ", lapped together"}</text>`;
     lay.sets.forEach((st0, j) => {
-      const yy = y + 6 + j * 9;
-      for (const [a, b] of st0.laps) body += `<rect x="${N2(X(a))}" y="${yy - 4}" width="${N2((b - a) * k)}" height="8" fill="${red}" opacity=".16"/>`;
-      st0.bars.forEach(([a, b], i) => { const dy = i % 2 ? 1.8 : -1.8; body += `<path d="M${N2(X(a))} ${yy + dy}H${N2(X(b))}" stroke="${col}" stroke-width="1.8"/>`; });
-      for (const [a, b] of st0.laps) body += `<path d="M${N2(X(a))} ${yy - 4.5}v9M${N2(X(b))} ${yy - 4.5}v9" stroke="${red}" stroke-width=".8"/>`;
+      const yy = y + 8 + j * 15;
+      for (const [a, b] of st0.laps) body += `<rect x="${N2(X(a))}" y="${yy - 6}" width="${N2((b - a) * k)}" height="12" fill="${red}" opacity=".2"><title>lap ${fmt(Math.round(a))}–${fmt(Math.round(b))} mm (l0 = ${lay.l0})</title></rect>`;
+      st0.bars.forEach(([a, b], i) => { const dy = i % 2 ? 2.6 : -2.6; body += `<path d="M${N2(X(a))} ${yy + dy}H${N2(X(b))}" stroke="${col}" stroke-width="2.6"><title>bar ${fmt(Math.round(b - a))} mm, from ${fmt(Math.round(a))} to ${fmt(Math.round(b))}</title></path>`; });
+      for (const [a, b] of st0.laps) body += `<path d="M${N2(X(a))} ${yy - 7}v14M${N2(X(b))} ${yy - 7}v14" stroke="${red}" stroke-width="1"/>`;
     });
     // l0 on the first lap, the stagger between the first two sets, l_bd at the ends
     const s0 = lay.sets[0], s1 = lay.sets[1];
-    if (s0 && s0.laps.length) { const [a, b] = s0.laps[0]; body += `<text x="${N2((X(a) + X(b)) / 2)}" y="${y - 1}" font-size="9.5" text-anchor="middle" fill="${red}">l0 = ${lay.l0}</text>`; }
+    if (s0 && s0.laps.length) { const [a, b] = s0.laps[0]; body += `<text x="${N2((X(a) + X(b)) / 2)}" y="${y - 1}" font-size="11" text-anchor="middle" fill="${red}">l0 = ${lay.l0}</text>`; }
     if (s0 && s1 && s0.laps.length && s1.laps.length) {
-      const a = (s0.laps[0][0] + s0.laps[0][1]) / 2, b = (s1.laps[0][0] + s1.laps[0][1]) / 2, yy = y + 6 + lay.m * 9;
+      const a = (s0.laps[0][0] + s0.laps[0][1]) / 2, b = (s1.laps[0][0] + s1.laps[0][1]) / 2, yy = y + 4 + lay.m * 15;
       if (Math.abs(b - a) > 1) body += `<path d="M${N2(X(a))} ${yy}H${N2(X(b))}M${N2(X(a))} ${yy - 3}v6M${N2(X(b))} ${yy - 3}v6" stroke="#5b6670" stroke-width=".7"/><text x="${N2((X(a) + X(b)) / 2)}" y="${yy + 9}" font-size="9" text-anchor="middle" fill="#5b6670">${fmt(Math.round(Math.abs(b - a)))} (≥ 1.3 l0 = ${lay.st})</text>`;
     }
     if (A.anchoredEnds) {
-      const yy = y + 2 + lay.m * 9;
+      const yy = y + lay.m * 15;
       for (const [a, b, anchor] of [[0, lay.lbd, "start"], [L - lay.lbd, L, "end"]])
-        body += `<path d="M${N2(X(a))} ${yy}H${N2(X(b))}" stroke="${acc}" stroke-width="3" opacity=".45"/>` + (anchor === "start" ? `<text x="${N2(X(b) + 4)}" y="${yy + 3}" font-size="9" fill="${acc}">l_bd = ${lay.lbd}</text>` : "");
+        body += `<path d="M${N2(X(a))} ${yy}H${N2(X(b))}" stroke="${acc}" stroke-width="4" opacity=".5"><title>anchorage l_bd = ${lay.lbd} mm</title></path>` + (anchor === "start" ? `<text x="${N2(X(b) + 4)}" y="${yy + 4}" font-size="10.5" fill="${acc}">l_bd = ${lay.lbd}</text>` : "");
     }
-    if (lay.warn.length) body += `<text x="${X0}" y="${y + laneH + 4}" font-size="9.5" fill="${red}">⚠ ${escXml(lay.warn.join("; "))}</text>`;
+    if (lay.warn.length) body += `<text x="${X0}" y="${y + laneH + 4}" font-size="11" fill="${red}">⚠ ${escXml(lay.warn.join("; "))}</text>`;
     body += `</g>`;
     y += laneH + 22;
   }
@@ -4269,6 +4505,156 @@ function anchElevation(dr, groups, selKey) {
   for (let x = step; x < L - 1e-6; x += step) dims += `<path d="M${N2(X(x))} ${yBot}v4" stroke="#888" stroke-width=".7"/><text x="${N2(X(x))}" y="${yBot + 13}" font-size="8.5" text-anchor="middle" fill="#5b6670">${fmt(x / 1000)} m</text>`;
   dims += `<path d="M${X0} ${yBot + 22}H${X1}M${X0} ${yBot + 18}v8M${X1} ${yBot + 18}v8" stroke="#444" stroke-width=".8"/><text x="${(X0 + X1) / 2}" y="${yBot + 34}" font-size="10" text-anchor="middle" fill="#1c2126">L = ${fmt(L)} mm, bars of ${fmt(A.stock)} mm${A.anchoredEnds ? ", anchored at both ends" : ", member continues at both ends"}</text>`;
   return `<svg class="ap-elev" viewBox="0 0 ${W} ${yBot + 42}" role="img" aria-label="Lap layout along the member" font-family="Helvetica, Arial, sans-serif">${frame}${body}${dims}</svg>`;
+}
+/* ------------------------------------------------------------------ anchorage page: pictures */
+const AP_RED = "#b3261e", AP_ACC = "#1b5fa8", AP_INK = "#1c2126", AP_MUT = "#5b6670";
+const svgDim = (x0, x1, y, txt, col = AP_INK, fs = 12) => `<g stroke="${col}" stroke-width="1" fill="none"><path d="M${x0} ${y}H${x1}M${x0} ${y - 5}v10M${x1} ${y - 5}v10"/><path d="M${x0 + 7} ${y - 3}L${x0} ${y}L${x0 + 7} ${y + 3}M${x1 - 7} ${y - 3}L${x1} ${y}L${x1 - 7} ${y + 3}"/></g>`
+  + `<text x="${(x0 + x1) / 2}" y="${y - 6}" font-size="${fs}" text-anchor="middle" fill="${col}" stroke="#fff" stroke-width="3" paint-order="stroke">${txt}</text>`;
+const brkV = (x, y0, y1) => { const m = (y0 + y1) / 2; return `<path d="M${x} ${y0}V${m - 8}L${x - 6} ${m - 3}L${x + 6} ${m + 3}L${x} ${m + 8}V${y1}" fill="none" stroke="#fff" stroke-width="5"/><path d="M${x} ${y0}V${m - 8}L${x - 6} ${m - 3}L${x + 6} ${m + 3}L${x} ${m + 8}V${y1}" fill="none" stroke="#999" stroke-width="1"/>`; };
+/* the bar end drawn at x (pointing in direction dir = ±1): straight, a 90° bend or a loop */
+function barEnd(x, y, dir, shape, w, col, down = 1) {
+  if (shape === "bent") { const r = 9; return `<path d="M${x} ${y}q${dir * r} 0 ${dir * r} ${down * r}v${down * 22}" fill="none" stroke="${col}" stroke-width="${w}" stroke-linecap="round"/>`; }
+  if (shape === "looped") { const r = 12; return `<path d="M${x} ${y}a${r} ${r} 0 1 ${dir * down > 0 ? 1 : 0} 0 ${down * 2 * r}h${-dir * 26}" fill="none" stroke="${col}" stroke-width="${w}" stroke-linecap="round"/>`; }
+  return "";
+}
+/* need for transverse reinforcement at a lap, 8.7.4.1 */
+function lapTransverse(g, links) {
+  const dn = g.dn, As = Math.PI * dn * dn / 4, l0 = ceil10(g.l0);
+  if (g.opt.comp && dn < 20) return { need: false, text: "Ø below 20 mm: the transverse bars needed for other reasons are enough (8.7.4.1(2)). In compression, add one bar within 4Ø outside each end of the lap (8.7.4.2)." };
+  if (dn < 20 || g.opt.rho1 < 25) return { need: false, text: `${dn < 20 ? "Ø below 20 mm" : "under 25 % of the bars lapped in one section"}: the transverse bars needed for other reasons are enough (8.7.4.1(2)).` };
+  const third = l0 / 3, out = { need: true, As, half: As / 2, third, sMax: 150 };
+  out.text = `Ø ≥ 20 mm: transverse bars of ΣA_st ≥ A_s = ${Math.round(As)} mm² across the lap, half of it (${Math.round(As / 2)} mm²) in each outer third of ${Math.round(third)} mm, at most 150 mm apart (8.7.4.1(3)-(4), Fig. 8.9).`
+    + (g.opt.rho1 > 50 ? " With more than 50 % lapped at one point and laps closer than 10Ø, use links or U-bars anchored into the section." : "")
+    + (g.opt.comp ? " In compression, also one bar within 4Ø outside each end (8.7.4.2)." : "");
+  const L = links && links[0];
+  if (L) {
+    const [d, sp] = L, Aleg = Math.PI * d * d / 4, n = Math.floor(third / Math.min(sp, 150) + 1e-9) + 1, A = n * Aleg;
+    out.link = { d, sp, n, A, ok: A >= As / 2 - 1e-6 && sp <= 150 };
+    out.text += ` The section's links Ø${fmt(d)}/${fmt(sp)} give ${n} leg${n === 1 ? "" : "s"} per bar in a third = ${Math.round(A)} mm²${out.link.ok ? " ✓" : sp > 150 ? " – spacing over 150 mm ✗" : " – not enough ✗"}.`;
+  }
+  return out;
+}
+/* the lap seen from the side, to scale along the bars */
+function lapSvg(g, A, links) {
+  const W = 1000, l0 = ceil10(g.l0), dn = g.dn, sh = g.opt.shape, k = 520 / l0, X0 = 240, X1 = X0 + l0 * k, XL = 20, XR = W - 20;
+  const bw = Math.max(5, Math.min(14, dn * 0.35)), gap = bw + 4, red = AP_RED, ink = AP_INK, acc = AP_ACC;
+  const T = lapTransverse(g, links), rho = g.opt.rho1, stag = rho < 100;
+  let o = "", y = 92;
+  // concrete
+  const cy0 = 52, cy1 = stag ? 250 : 178;
+  o += `<rect x="${XL}" y="${cy0}" width="${XR - XL}" height="${cy1 - cy0}" fill="#eeeeee" stroke="#999" stroke-width="1"/>` + brkV(XL, cy0, cy1) + brkV(XR, cy0, cy1);
+  // transverse thirds
+  const th = l0 / 3 * k;
+  if (T.need) for (const [a, b] of [[X0, X0 + th], [X1 - th, X1]]) {
+    o += `<rect x="${a}" y="${cy0}" width="${b - a}" height="${cy1 - cy0}" fill="${acc}" opacity=".09"/>`;
+    const sp = Math.min(150, T.link ? T.link.sp : 150) * k, n = Math.max(2, Math.floor((b - a) / sp + 1e-9) + 1);
+    for (let i = 0; i < n; i++) { const x = a + (b - a) * (n === 1 ? 0.5 : i / (n - 1)); o += `<path d="M${x} ${cy0 + 6}V${cy1 - 6}" stroke="${acc}" stroke-width="1.6" opacity=".75"/>`; }
+    o += `<text x="${(a + b) / 2}" y="${cy1 + 15}" font-size="11" text-anchor="middle" fill="${acc}">l0/3 = ${Math.round(l0 / 3)}</text>`;
+  } else if (links && links[0]) {
+    const sp = links[0][1] * k;
+    for (let x = XL + 12; x < XR - 8; x += sp) o += `<path d="M${x} ${cy0 + 6}V${cy1 - 6}" stroke="#9aa6b0" stroke-width="1" opacity=".6"/>`;
+  }
+  // compression: a bar outside each end within 4Ø
+  if (g.opt.comp) for (const x of [X0 - 4 * dn * k, X1 + 4 * dn * k]) o += `<path d="M${x} ${cy0 + 6}V${cy1 - 6}" stroke="${red}" stroke-width="2.2"/><text x="${x}" y="${cy0 - 4}" font-size="10" text-anchor="middle" fill="${red}">≤ 4Ø</text>`;
+  // the lapped pair
+  const pair = (yy, xa, xb, colA, colB, label) => {
+    let s = `<path d="M${XL} ${yy}H${xb}" stroke="${colA}" stroke-width="${bw}"/>` + barEnd(xb, yy, 1, sh, bw * 0.8, colA, 1)
+      + `<path d="M${xa} ${yy + gap}H${XR}" stroke="${colB}" stroke-width="${bw}"/>` + barEnd(xa, yy + gap, -1, sh, bw * 0.8, colB, 1);
+    if (!sh || sh === "straight") s += `<path d="M${xb} ${yy - bw / 2}v${bw}M${xa} ${yy + gap - bw / 2}v${bw}" stroke="#fff" stroke-width="1.2"/>`;
+    if (label) s += `<text x="${XL + 10}" y="${yy - bw / 2 - 5}" font-size="11" fill="${colA}">${label}</text>`;
+    return s;
+  };
+  o += pair(y, X0, X1, ink, acc, `Ø${fmt(dn)}`);
+  o += svgDim(X0, X1, 34, `lap l0 = ${l0} mm = ${Math.ceil(l0 / dn)}Ø`, red, 13);
+  o += `<path d="M${X0} 39V${y + gap + bw}M${X1} 39V${y + gap + bw}" stroke="${red}" stroke-width=".8" stroke-dasharray="3 3"/>`;
+  // neighbouring lap: same section, or staggered with 0.3·l0 clear (Fig. 8.7 and 8.8)
+  const y2 = y + 70;
+  if (stag) {
+    const off = ceil10(1.3 * l0) * k, xa2 = X0 + off, xb2 = X1 + off, zone = 0.65 * l0 * k, cx = (X0 + X1) / 2;
+    o += `<rect x="${cx - zone}" y="${y2 + gap + bw + 12}" width="${2 * zone}" height="8" fill="${red}" opacity=".18"/>`
+      + `<text x="${cx}" y="${y2 + gap + bw + 34}" font-size="10.5" text-anchor="middle" fill="${red}">laps with centres within 0.65 l0 count as one section</text>`;
+    o += `<g clip-path="url(#lapclip)">${pair(y2, xa2, xb2, "#6b7680", "#7f9bc0", "")}</g>`;
+    o += svgDim(X1, Math.min(xa2, XR - 2), y2 - 16, `≥ 0.3 l0 = ${ceil10(0.3 * l0)}`, AP_MUT, 11);
+    o += `<text x="${XL + 10}" y="${y2 - bw / 2 - 5}" font-size="11" fill="#6b7680">next set of bars, lap staggered by 1.3 l0</text>`;
+  }
+  // a ruler in Ø below
+  const ry = cy1 + 34, step = [5, 10, 20, 25, 50].find(s0 => l0 / dn / s0 <= 8) || 100;
+  o += `<path d="M${X0} ${ry}H${X1}" stroke="${AP_MUT}" stroke-width="1"/>`;
+  for (let i = 0; i * step * dn <= l0 + 1e-6; i++) { const x = X0 + i * step * dn * k; o += `<path d="M${x} ${ry - 4}v8" stroke="${AP_MUT}"/><text x="${x}" y="${ry + 16}" font-size="10" text-anchor="middle" fill="${AP_MUT}">${i * step}Ø</text>`; }
+  const H = ry + 26;
+  return `<svg class="ap-lapsvg" viewBox="0 0 ${W} ${H}" role="img" aria-label="Lap of Ø${fmt(dn)} bars, ${l0} mm" font-family="Helvetica, Arial, sans-serif"><defs><clipPath id="lapclip"><rect x="${XL}" y="0" width="${XR - XL}" height="${H}"/></clipPath></defs>${o}</svg>`;
+}
+/* the bar anchored beyond a face, to scale, with l_bd, l_b,rqd and l_b,min marked */
+function anchSvg(g) {
+  const W = 1000, dn = g.dn, sh = g.opt.shape, lbd = ceil10(g.lbd), rqd = Math.round(g.lbrqd), lmin = ceil10(g.lbmin), Lmax = Math.max(lbd, rqd);
+  const k = 600 / Lmax, XF = 760, XE = XF - lbd * k, bw = Math.max(5, Math.min(14, dn * 0.35)), y = 110, acc = AP_ACC, red = AP_RED;
+  let o = "";
+  o += `<rect x="40" y="40" width="${XF - 40}" height="150" fill="#eeeeee" stroke="#999"/>` + brkV(40, 40, 190);
+  o += `<rect x="${XF}" y="80" width="${W - 30 - XF}" height="70" fill="#f6f6f6" stroke="#bbb" stroke-dasharray="4 3"/>`;
+  o += `<text x="56" y="180" font-size="11" fill="${AP_MUT}">anchorage zone (support, column, or beyond the shifted moment line)</text><text x="${XF + 10}" y="142" font-size="11" fill="${AP_MUT}">span</text>`;
+  o += `<path d="M${XF} 30V200" stroke="${red}" stroke-width="1.6" stroke-dasharray="7 4"/><text x="${XF + 6}" y="32" font-size="11" fill="${red}">where the bar must carry its full force</text>`;
+  o += `<path d="M${XE} ${y}H${W - 40}" stroke="${AP_INK}" stroke-width="${bw}"/>` + barEnd(XE, y, -1, sh, bw * 0.8, AP_INK, 1);
+  o += svgDim(XE, XF, 64, `l_bd = ${lbd} mm = ${Math.ceil(lbd / dn)}Ø`, red, 13);
+  // the ruler: l_b,rqd, l_b,min
+  const ry = 232, X = l => XF - l * k;
+  o += `<path d="M${X(Lmax)} ${ry}H${XF}" stroke="${AP_MUT}"/>`;
+  for (const [l, t, col] of [[rqd, `l_b,rqd = ${rqd}`, AP_MUT], [lbd, `l_bd = ${lbd}`, red], [lmin, `l_b,min = ${lmin}`, acc]]) o += `<path d="M${X(l)} ${ry - 6}v12" stroke="${col}" stroke-width="2"/><text x="${X(l)}" y="${ry + (t.startsWith("l_bd") ? -10 : 20)}" font-size="11" text-anchor="middle" fill="${col}">${t}</text>`;
+  if (sh !== "straight") o += `<text x="${XE}" y="${y + 60}" font-size="11" text-anchor="middle" fill="${AP_MUT}">${sh === "bent" ? "bend or hook" : "loop"}; l_bd is measured along the bar</text>`;
+  return `<svg class="ap-anchsvg" viewBox="0 0 ${W} 262" role="img" aria-label="Anchorage length ${lbd} mm" font-family="Helvetica, Arial, sans-serif">${o}</svg>`;
+}
+/* how a length is made: l_b,rqd times the factors, then the minimum, then rounding */
+function lenChart(g, lap) {
+  const rows = [], rqd = g.lbrqd;
+  rows.push(["l_b,rqd", "basic length, (8.3)", rqd]);
+  let v = rqd;
+  const f = (lbl, txt, a) => { if (Math.abs(a - 1) > 1e-9) { v *= a; rows.push([lbl, txt, v, a]); } };
+  f("α1", g.opt.shape === "straight" ? "bar end" : `bar end (${SHAPE_TXT[g.opt.shape]})`, g.a1);
+  const p = lap ? g.pL : g.pA, raw = g.a2 * (lap ? g.a3L.a3 : g.a3.a3) * g.a5;
+  f("α2·α3·α5", `cover ${g.a2.toFixed(2)} · transverse ${(lap ? g.a3L.a3 : g.a3.a3).toFixed(2)} · pressure ${g.a5.toFixed(2)}${p > raw + 1e-9 ? " → kept at 0.7" : ""}`, p);
+  if (!lap) f("α4", "welded transverse bar", g.a4);
+  if (lap) f("α6", `${fmt(g.opt.rho1)} % lapped in one section`, g.a6);
+  const min = lap ? g.l0min : g.lbmin, res = lap ? g.l0 : g.lbd;
+  if (min > v + 1e-6) rows.push([lap ? "l0,min" : "l_b,min", "the minimum governs", min]);
+  rows.push([lap ? "l0" : "l_bd", "rounded up to 10 mm", ceil10(res), null, true]);
+  const M = Math.max(...rows.map(r => r[2]));
+  return el("div", { class: "ap-chart" }, ...rows.map(([lbl, txt, val, a, fin]) => el("div", { class: "ap-crow" + (fin ? " fin" : "") },
+    el("span", { class: "cl" }, lbl, a !== undefined && a !== null ? el("small", {}, ` × ${a.toFixed(2)}`) : null),
+    el("span", { class: "cb" }, el("i", { style: `width:${(100 * val / M).toFixed(1)}%` })),
+    el("span", { class: "cv" }, `${Math.round(val)}`),
+    el("span", { class: "ct" }, txt))));
+}
+/* the cut lengths of the bars along the member, with weights */
+function barSchedule(groups, A) {
+  const rows = [];
+  for (const g of groups.filter(q => q.kind === "cut")) {
+    const lay = lapLayout(g, A), byLen = new Map();
+    for (const s0 of lay.sets) for (const [a, b] of s0.bars) { const L = ceil10(b - a); byLen.set(L, (byLen.get(L) || 0) + s0.n); }
+    const kgm = g.dn * g.dn / 162.2;
+    for (const [L, n] of [...byLen].sort((p, q) => q[0] - p[0])) rows.push([`${anchName(g)} ${zoneTxt(g.zone)}`, n, L, n * L / 1000, n * L / 1000 * kgm]);
+  }
+  if (!rows.length) return null;
+  const tot = rows.reduce((a, r) => a + r[4], 0);
+  return el("table", { class: "anch ap-sched" },
+    el("thead", {}, el("tr", {}, ["Bars", "Number", "Length [mm]", "Total [m]", "Weight [kg]"].map((c, j) => el("th", { class: j ? "num" : null }, c)))),
+    el("tbody", {}, rows.map(r => el("tr", {}, el("td", {}, r[0]), el("td", { class: "num" }, String(r[1])), el("td", { class: "num" }, String(r[2])), el("td", { class: "num" }, r[3].toFixed(1)), el("td", { class: "num" }, r[4].toFixed(0))))),
+    el("tfoot", {}, el("tr", {}, el("td", { colspan: 4 }, "Total along the member"), el("td", { class: "num" }, tot.toFixed(0)))));
+}
+/* l_bd and l0 for every common diameter with the page settings (straight bars, tension, α2 = α3 = α5 = 1) */
+const AP_DIAS = [6, 8, 10, 12, 14, 16, 20, 25, 28, 32, 40];
+function lapTableData(A) {
+  const opt = anchOpt(A, {});
+  return AP_DIAS.map(dn => {
+    const m = { a: 2 * dn, c: dn };
+    const G = anchCalc(A, dn, true, m, opt), P = anchCalc(A, dn, false, m, opt);
+    return [dn, ceil10(G.lbd), ceil10(G.l0), ceil10(P.lbd), ceil10(P.l0)];
+  });
+}
+function lapTableEl(A) {
+  const rows = lapTableData(A), cell = (l, dn) => el("td", { class: "num" }, `${l}`, el("small", {}, ` ${Math.ceil(l / dn)}Ø`));
+  return el("table", { class: "anch ap-all" },
+    el("thead", {}, el("tr", {}, el("th", { rowspan: 2 }, "Ø"), el("th", { colspan: 2, class: "num" }, "good bond"), el("th", { colspan: 2, class: "num" }, "poor bond")),
+      el("tr", {}, ["l_bd", "l0", "l_bd", "l0"].map(t => el("th", { class: "num" }, t + " [mm]")))),
+    el("tbody", {}, rows.map(([dn, a, b, c, d]) => el("tr", {}, el("td", {}, `Ø${dn}`), cell(a, dn), cell(b, dn), cell(c, dn), cell(d, dn)))));
 }
 /* the calculation written out, with the numbers put in */
 function anchWorkHTML(g, A) {
@@ -4386,7 +4772,8 @@ function renderAnchPage() {
   const elev = el("div", { class: "ap-elevbox" }); elev.innerHTML = anchElevation(current, groups, apSel);
   elev.querySelectorAll(".lane").forEach(n => n.addEventListener("click", () => { apSel = n.getAttribute("data-key"); renderAnchPage(); }));
   const planes = groups.filter(q => q.kind === "plane");
-  const apTab = (state.ui || {}).apTab === "layout" ? "layout" : "calc";
+  const TABS_AP = [["lap", "Lap"], ["anch", "Anchorage"], ["layout", "Along the member"], ["calc", "Calculation"], ["all", "All diameters"]];
+  const apTab = TABS_AP.some(t => t[0] === (state.ui || {}).apTab) ? state.ui.apTab : "lap";
   const tabBtn = (k, t) => el("button", { type: "button", role: "tab", "aria-selected": String(apTab === k), onclick: () => { state.ui = state.ui || {}; state.ui.apTab = k; persist(); renderAnchPage(); } }, t);
   const result = el("div", { class: "ap-result" },
     el("div", {}, el("span", { class: "rl" }, "Anchorage l_bd"), el("b", {}, `${lenTxt(g.lbd, g.dn)} mm`)),
@@ -4399,14 +4786,75 @@ function renderAnchPage() {
       ctrls, reset),
     el("div", {}, el("h3", {}, "Worked through (EN 1992-1-1)"), work,
       el("p", { class: "hint" }, "Indicative. The stress is the value given, not taken from an analysis. Bond conditions assume the section is cast as drawn.")));
+  /* quick choices: the same overrides as on the Calculation tab, one click each */
+  const chips = (label, key, opts) => el("div", { class: "ap-chips" }, el("span", { class: "cl" }, label),
+    ...opts.map(([v, t]) => el("button", { type: "button", "aria-pressed": String((g.ov[key] ?? "") === v), onclick: () => setAnchOv(g.key, { [key]: v }) }, t)));
+  const shareChips = () => chips("Lapped in one section", "share", [["", `page (${fmt(A.rho1)} %)`], ["25", "≤ 25 %"], ["33", "33 %"], ["50", "50 %"], ["100", "100 %"]]);
+  const bondChips = () => chips("Bond", "bond", [["", `from the drawing (${g.autoGood ? "good" : "poor"})`], ["good", "good"], ["poor", "poor"]]);
+  const loadChips = () => chips("Load", "load", [["", "tension"], ["compression", "compression"]]);
+  const endChips = () => chips("Bar end", "shape", [["", "straight"], ["bent", "bent / hook"], ["looped", "loop"]]);
+  const card = (title, ...kids) => el("div", { class: "ap-card" }, el("h3", {}, title), ...kids);
+  const pic = html => { const d = el("div", { class: "ap-pic" }); d.innerHTML = html; return d; };
+  const T = lapTransverse(g, links), dn = g.dn, l0 = ceil10(g.l0);
+  const pairPic = pic(`<svg viewBox="0 0 260 90" class="ap-pair" font-family="Helvetica, Arial, sans-serif"><rect x="0" y="10" width="260" height="70" fill="#eeeeee"/>`
+    + `<circle cx="40" cy="45" r="10" fill="${AP_INK}"/><circle cx="96" cy="45" r="10" fill="${AP_ACC}"/><circle cx="176" cy="45" r="10" fill="#6b7680"/><circle cx="232" cy="45" r="10" fill="#7f9bc0"/>`
+    + svgDim(50, 86, 74, "≤ 4Ø, 50", AP_RED, 10) + svgDim(106, 166, 74, "≥ 2Ø, 20", AP_MUT, 10)
+    + `<text x="68" y="24" font-size="10" text-anchor="middle" fill="${AP_INK}">lapped pair</text><text x="204" y="24" font-size="10" text-anchor="middle" fill="${AP_MUT}">next lap</text></svg>`);
+  const rules = el("ul", { class: "ap-rules" },
+    el("li", {}, el("b", {}, "Gap inside the lap: "), `at most 4Ø = ${4 * dn} mm or 50 mm; where the clear gap is larger, add the excess to l0 (8.7.2(3)).`),
+    el("li", {}, el("b", {}, "Between laps: "), `at least 2Ø = ${2 * dn} mm and 20 mm clear side by side; along the bars, at least 0.3 l0 = ${ceil10(0.3 * l0)} mm between the end of one lap and the start of the next (Fig. 8.7).`),
+    el("li", {}, el("b", {}, "Share lapped: "), `laps whose centres lie within 0.65 l0 = ${ceil10(0.65 * l0)} mm count as one section. ${fmt(g.opt.rho1)} % lapped gives α6 = ${g.a6.toFixed(2)}${g.a6 > 1 ? `; staggering to 25 % would shorten the lap to about ${ceil10(g.l0 / g.a6)} mm` : ""}.`),
+    el("li", { class: T.need ? (T.link && !T.link.ok ? "bad" : "") : "" }, el("b", {}, "Transverse bars: "), T.text),
+    el("li", {}, el("b", {}, "Where: "), "away from high moments where possible, and arranged symmetrically in the section (8.7.2(1))."));
+  const lapTab = el("div", { class: "ap-lap" },
+    pic(lapSvg(g, A, links)),
+    el("div", { class: "ap-quick" }, shareChips(), bondChips(), loadChips(), endChips()),
+    el("div", { class: "ap-two" },
+      card("How l0 is made", lenChart(g, true), el("p", { class: "hint" }, "Each bar is the length after that step, to the same scale.")),
+      card("Rules for this lap", pairPic, rules)));
+  const mandrel = dn <= 16 ? 4 * dn : 7 * dn;
+  const anchTab = el("div", { class: "ap-lap" },
+    pic(anchSvg(g)),
+    el("div", { class: "ap-quick" }, endChips(), bondChips(), loadChips()),
+    el("div", { class: "ap-two" },
+      card("How l_bd is made", lenChart(g, false), el("p", { class: "hint" }, "Each bar is the length after that step, to the same scale.")),
+      card("Good to know", el("ul", { class: "ap-rules" },
+        el("li", {}, el("b", {}, "From where: "), "l_bd is measured from the point where the bar has to carry its full design force: the face of the support, or for beams the end of the shifted moment line (a_l, 9.2.1.3)."),
+        el("li", {}, el("b", {}, "Never shorter than "), `l_b,min = ${ceil10(g.lbmin)} mm: ${g.opt.comp ? "max(0.6 l_b,rqd, 10Ø, 100 mm) in compression" : "max(0.3 l_b,rqd, 10Ø, 100 mm) in tension"} (8.6)–(8.7).`),
+        el("li", {}, el("b", {}, "Bends and hooks: "), `mandrel at least ${mandrel} mm (${dn <= 16 ? 4 : 7}Ø, Table 8.1N); they only shorten l_bd (α1 = 0.7) in tension with c_d > 3Ø${g.opt.shape !== "straight" ? ` – here c_d = ${isFinite(g.cd) ? Math.round(g.cd) : "–"} mm, so α1 = ${g.a1.toFixed(2)}` : ""}.`),
+        el("li", {}, el("b", {}, "Shorter with "), "more cover and spacing (α2), links around the bar (α3: use Calculation), a welded transverse bar (α4) or transverse pressure (α5).")))));
+  /* along the member: lengths you can change here, the layout, the bar schedule */
+  const memIn = (label, key, unit) => {
+    const id = "apm" + (++uid), inp = el("input", { type: "text", id, inputmode: "decimal", value: state.style[key], autocomplete: "off" });
+    inp.addEventListener("change", () => { const x = posNum(inp.value); if (!x) { toast(`${label}: not a length`); inp.value = state.style[key]; return; } state.style[key] = String(x); changed(); });
+    return el("div", { class: "fcell" }, el("label", { for: id }, `${label} [${unit}]`), inp);
+  };
+  const endsSel = el("select", {}, ["bars anchored at both ends", "member continues (break lines)"].map(t => el("option", { value: t, selected: state.style.ends === t }, t)));
+  endsSel.addEventListener("change", () => { state.style.ends = endsSel.value; changed(); });
+  const sched = barSchedule(groups, A);
   const layout = el("div", {},
+    el("div", { class: "fgrid ap-memform" }, memIn("Member length", "mem_len", "mm"), memIn("Bar (stock) length", "stock", "mm"), el("div", { class: "fcell" }, el("label", {}, "Member ends"), endsSel)),
     elev.innerHTML ? elev : el("p", { class: "hint" }, "No bars run along the member in this section."),
-    el("p", { class: "hint" }, `Bars of ${fmt(A.stock)} mm laid from the left end and lapped by l₀; with ρ₁ below 100 % they are split into sets whose laps are staggered by 1.3·l₀. The shaded lengths at the ends are l_bd. Click a lane to pick its group.`
-      + (planes.length ? ` Bars lying in the section plane (${planes.map(anchName).join(", ")}) lap across the member: set the lap position on the group's Calculation tab.` : "")));
+    el("p", { class: "hint" }, `Bars of ${fmt(A.stock)} mm laid from the left end and lapped by l₀ (red); with less than 100 % lapped in one section they are split into sets whose laps are staggered by 1.3·l₀. The blue lengths at the ends are l_bd. Click a lane to pick its group.`
+      + (planes.length ? ` Bars lying in the section plane (${planes.map(anchName).join(", ")}) lap across the member: set the lap position on the group's Calculation tab.` : "")),
+    sched ? el("h3", { class: "ap-h3" }, "Bar schedule along the member") : null, sched,
+    sched ? el("p", { class: "hint" }, "Cut lengths for one member, laps included, without bends or anchorages beyond the member ends; weight 0.00617·Ø² kg/m.") : null);
+  const allTab = el("div", {},
+    el("p", { class: "hint" }, `Anchorage and lap lengths for every common diameter with the page settings: ${A.cls}, f_yk = ${fmt(A.fyk)} MPa, σ_sd = ${fmt(A.util)} f_yd, ${fmt(A.rho1)} % lapped in one section (α6 = ${Math.min(1.5, Math.max(1, Math.sqrt(A.rho1 / 25))).toFixed(2)}). Straight bars in tension, with α2 = α3 = α5 = 1, which is on the safe side. Handy for the notes on a drawing.`),
+    lapTableEl(A),
+    el("div", { class: "toolbar" }, el("button", { type: "button", class: "btn", onclick: async () => {
+      const rows = lapTableData(A), tsv = [["Ø", "l_bd good [mm]", "l0 good [mm]", "l_bd poor [mm]", "l0 poor [mm]"], ...rows].map(r => r.join("\t")).join("\n");
+      try { await navigator.clipboard.writeText(tsv); toast("Table copied. Paste it into Excel or a drawing note."); } catch (e) { prompt("Copy:", tsv); }
+    } }, "Copy this table")));
+  const tabBody = { lap: lapTab, anch: anchTab, layout, calc: el("div", {}, result, calc), all: allTab }[apTab];
+  const longest = groups.reduce((a, q) => (ceil10(q.l0) > ceil10(a.l0) ? q : a));
+  const factorsOn = !!(state.ui || {}).apFactors;
   body.replaceChildren(
     anchTableEl(groups, true),
-    el("div", { class: "ap-tabs", role: "tablist" }, el("span", { class: "ap-sel" }, `${anchName(g)}, ${zoneTxt(g.zone)}`), tabBtn("calc", "Calculation"), tabBtn("layout", "Lap layout")),
-    apTab === "calc" ? el("div", {}, result, calc) : layout);
+    el("p", { class: "hint ap-sum" }, `Longest lap: ${anchName(longest)} ${zoneTxt(longest.zone)}, ${ceil10(longest.l0)} mm. Click a row to see its lap and anchorage. `,
+      el("button", { type: "button", class: "linkbtn", onclick: () => { state.ui = state.ui || {}; state.ui.apFactors = !factorsOn; persist(); renderAnchPage(); } }, factorsOn ? "Hide the factors" : "Show the factors")),
+    el("div", { class: "ap-tabs", role: "tablist" }, el("span", { class: "ap-sel" }, apTab === "all" ? "All diameters" : `${anchName(g)}, ${zoneTxt(g.zone)}`), ...TABS_AP.map(([k, t]) => tabBtn(k, t))),
+    tabBody);
   const tr = body.querySelector('tr[aria-selected="true"]');
   if (tr && document.activeElement && document.activeElement.closest && document.activeElement.closest("table.anch")) tr.focus();
 }
@@ -4424,13 +4872,16 @@ $("#apPrint").onclick = () => {
   const gs = (current && current.anch) || [], A = current && current.st.anch;
   if (!gs.length) return;
   const pr = $("#apReport");
-  const parts = gs.map(g => `<div class="grp"><h3>${escXml(anchName(g))}, ${escXml(zoneTxt(g.zone))} · ${g.good ? "good" : "poor"} bond${g.opt.comp ? ", compression" : ""}</h3><div>${anchWorkHTML(g, A)}</div><div>${anchPreview(current, g)}</div></div>`).join("");
+  const parts = gs.map(g => `<div class="grp"><h3>${escXml(anchName(g))}, ${escXml(zoneTxt(g.zone))} · ${g.good ? "good" : "poor"} bond${g.opt.comp ? ", compression" : ""}</h3><div class="ap-printlap">${lapSvg(g, A, sectionLinks(current))}</div><div>${anchWorkHTML(g, A)}</div><div>${anchPreview(current, g)}</div></div>`).join("");
   pr.innerHTML = `<h1>Anchorage and lap lengths: ${escXml(current.title)}</h1>
     <p>EN 1992-1-1, 8.4 and 8.7 · ${escXml(A.cls)}, f<sub>yk</sub> = ${fmt(A.fyk)} MPa, γ<sub>c</sub> = ${fmt(A.gc)}, γ<sub>s</sub> = ${fmt(A.gs)}, α<sub>ct</sub> = ${fmt(A.act)} · σ<sub>sd</sub> = ${fmt(A.util)} f<sub>yd</sub> · ρ<sub>1</sub> = ${fmt(A.rho1)} % · lengths in mm, rounded up to 10 mm. Indicative.</p>`;
   pr.append(anchTableEl(gs, false));
   const ev = anchElevation(current, gs, null);
   if (ev) pr.insertAdjacentHTML("beforeend", `<h2 class="ap-h3">Lap layout along the member</h2>${ev}`);
+  const sc = barSchedule(gs, A);
+  if (sc) { pr.insertAdjacentHTML("beforeend", `<h2 class="ap-h3">Bar schedule along the member</h2>`); pr.append(sc); }
   pr.insertAdjacentHTML("beforeend", parts);
+  pr.insertAdjacentHTML("beforeend", `<h2 class="ap-h3">All diameters (straight bars, tension, α2 = α3 = α5 = 1)</h2>`); pr.append(lapTableEl(A));
   document.body.classList.add("printing-anch");
   const done = () => { document.body.classList.remove("printing-anch"); removeEventListener("afterprint", done); };
   addEventListener("afterprint", done);
@@ -4582,7 +5033,12 @@ function cancelMeasure() { meas = null; drawOverlay(); }
 
 /* snapping */
 function snapTargets(ex = null) {
-  if (snapCache && !ex) return snapCache;
+  const base = snapCache && !ex ? snapCache : snapBase(ex);
+  if (typeof tool === "undefined" || tool !== "rebar") return base;
+  const C = coverTargets();
+  return { pts: [...base.pts, ...C.pts], segs: [...base.segs, ...C.segs] };
+}
+function snapBase(ex) {
   const pts = [], segs = [];
   if (current) for (const it of current.items) {
     if (ex && it.key === ex) continue;
@@ -4604,6 +5060,29 @@ function snapTargets(ex = null) {
     }
   }
   return ex ? { pts, segs } : (snapCache = { pts, segs });
+}
+/* drawing bars: the line where a bar of the tool's Ø sits at cover (inside the links), its corners and edges */
+let coverCache = null;
+function coverTargets() {
+  const d = posNum(state.rebar && state.rebar.d, 16), cov = state.mode === "custom" ? posNum(state.custom.cover, 35) : posNum((state.std[state.stdType] || {}).cover, 35);
+  const key = [current && current.items.length, d, cov, state.mode, state.stdType].join("|");
+  if (coverCache && coverCache.dr === current && coverCache.key === key) return coverCache;
+  const out = { pts: [], segs: [], dr: current, key };
+  coverCache = out;
+  if (!current || typeof jsts === "undefined") return out;
+  const ol = current.items.find(i => i.k === "outline");
+  if (!ol) return out;
+  let link = 0;
+  for (const it of current.items) if (it.k === "steel" && it.layer === "LINKS" && !it.view) link = Math.max(link, it.d);
+  try {
+    const rings = ol.rings.map(r => expand(r, true)), P = polyOf(rings[0], rings.slice(1)).buffer(0);
+    const R = buf(P, -(cov + link + d / 2), "mitre");
+    for (const g of polysOf(R)) for (const ring of [g.getExteriorRing(), ...Array.from({ length: g.getNumInteriorRing() }, (_, i) => g.getInteriorRingN(i))]) {
+      const q = ringPts(ring);
+      q.forEach((a, i) => { out.pts.push({ x: a[0], y: a[1], kind: "cover corner" }); out.segs.push({ a, b: q[(i + 1) % q.length], w: 0, kind: "cover line" }); });
+    }
+  } catch (e) { /* no cover line */ }
+  return out;
 }
 /* a round step for the grid at the current zoom: about 8 px or more on screen */
 function gridStep() { const k = pxSize() * 8; return [1, 2, 5, 10, 20, 25, 50, 100, 200, 250, 500, 1000, 2000, 5000].find(v => v >= k) || 10000; }
@@ -4726,8 +5205,8 @@ function updateHint() {
   else if (tool === "rebar") {
     const len = rb && cursor ? ` · <b>${fmtLen(dist(rb.pts[rb.pts.length - 1], [cursor.x, cursor.y]))} mm</b>` : "";
     msg = state.rebar.mode === "row"
-      ? (rb ? `Click where the row ends${len}. Shift keeps it straight.` : "Click where the row of bars starts. It snaps to corners, edges and bars.")
-      : (rb ? `Click the next point${len}; double-click or press Enter to finish.` : "Click the first point of the bar.");
+      ? (rb ? `Click where the row ends${len}. Shift keeps it straight.` : "Click where the row of bars starts. It snaps to corners, edges, bars and the line at cover for this Ø.")
+      : (rb ? `Click the next point${len}; double-click or press Enter to finish.` : "Click the first point of the bar. It snaps to the line at cover for this Ø, corners and bars.");
     if (state.mode === "custom") msg += " The bars go into the reinforcement list.";
   } else if (tool === "cut") msg = cutp ? "Click the second point of the cut line. Shift keeps it straight." : "Click the first point of the cut line across the section.";
   else if (tool === "erase") msg = "Click a label, dimension or drawing to remove it. Undo or Restore brings it back.";
@@ -4837,6 +5316,13 @@ applyView();
 
 /* ------------------------------------------------------------------ the outline and openings as text, for editing on the drawing */
 const srcLines = t => String(t || "").split(/\r?\n/);
+/* the face (outline or opening edge) nearest to a point, as written in a Face layer */
+function nearestFace(P) {
+  let es; try { const [verts, brk] = parseOutline(state.custom.outline); es = faceEdges({ verts, brk, holes: parseOpenings(state.custom.openings) }, "*"); } catch (e) { return null; }
+  let best = null, bd = Infinity;
+  for (const e of es) { if (!e.straight) continue; const d0 = segDist(P, e.A, e.B); if (d0 < bd) { bd = d0; best = e; } }
+  return best ? best.key.toUpperCase() : null;
+}
 function outlineVerts() {
   if (state.mode !== "custom") return [];
   const out = [];
