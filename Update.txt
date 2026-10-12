@@ -1,0 +1,19 @@
+What was updated:
+- Simple sketch: required reinforcement (A_s,req) in every section.
+  - Standard sections: each bar table has an A_s,req column. Rows given by a number of bars (beams, columns, piles) take cm²; rows given by a spacing (slabs, walls) take cm²/m.
+  - Leave a box blank and it is chosen to cover A_s,req with the least steel:
+    - spacing s given: the Ø (e.g. s = 150, A_s,req = 7 cm²/m gives Ø12/150 = 7.54 cm²/m);
+    - Ø given: the spacing, or the number of bars;
+    - n given: the Ø;
+    - both blank: both.
+  - The chosen value shows in blue italics in the blank box. The drawing, labels, anchorage page, 3D, schedule and "Edit as custom" all use it.
+  - With all boxes filled in, the row is checked, and the status bar also says which Ø the given spacing (or number of bars) needs, e.g. "at s = 150 it needs Ø16", or "(Ø10 would do)".
+  - The diameters and spacings to choose from are on the anchorage page under "Bars chosen from a required area".
+  - Limits:
+    - Slabs and walls keep within the largest spacing of EN 1992-1-1: 9.3.1.1(3) (3h ≤ 400 for the outer layer of a face, 3.5h ≤ 450 for the others) and 9.6 (3h ≤ 400). A typed spacing above it gets a warning.
+    - In beams the number of bars is kept to what fits in one row; when no Ø fits, a warning says to split the row.
+  - Custom sections: Layer and Face layer items have an A_s,req field (cm² with Distribution = count, cm²/m with a spacing); their Ø, n and s may now be left blank for it.
+  - The status bar lists every row with A_s,req: what was chosen or checked and the area it gives. Rows that are not covered are warnings.
+- The SOFiSTiK model program is unchanged apart from the version label.
+
+Functional? Yes (tested in headless Chrome: slab rows with Ø chosen for a given s, s and Ø both chosen, a row checked and its needed Ø named, a spacing above the limit; beam rows with Ø chosen for a given n, n for a given Ø, both chosen with the one-row fit; custom Layer items by spacing and by count; Edit as custom; all earlier tests of both programs pass)
