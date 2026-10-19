@@ -58,7 +58,7 @@ Status: the program has been tested on one real model (walls and slabs of a buil
   - beams and columns: minimum and maximum reinforcement, minimum links, link diameter and spacing;
   - bars outside the concrete, and covers that do not fit.
 - **Not checked:**
-  - clear spacing between bars in the model (only in single sections);
+  - clear spacing between bars across the whole 3D model: it is checked only in the sections drawn on step 5 (Details);
   - cover against exposure class and durability (the cover is taken as given);
   - fire, fatigue, accidental situations;
   - deflections;
@@ -89,13 +89,21 @@ Status: the program has been tested on one real model (walls and slabs of a buil
   - confinement;
   - seismic detailing.
 
-## 7. Drawings (Simple sketch, Rebar Drawing Studio)
+## 7. Drawings (step 5 Details in the SOFiSTiK model, and Simple sketch)
+
+- **Checks in the drawings:**
+  - cover per bar: each bar's surface against its own c_nom (from the model for imported bars, else the view's or the document's);
+  - clear spacing between cut bars: max(Ø, d_g + 5, 20) mm, EN 1992-1-1 8.2;
+  - bars on top of each other, and bars outside the concrete.
+
+  They see only what is drawn: bars running along a cut are one representative bar per layer, and dots against bar lines (a bar in a stirrup's bend) are not checked. Cover against the exposure class (c_min,dur), lap and anchorage spacing, and bundled bars are not checked.
+- **CAD editing:** Move, Copy, Rotate, Mirror, Scale, Trim, Extend, Offset, Fillet, Break, Join, Erase and Line work on lines, bars and outlines in model mm. Arcs are drawn as short straight pieces. There are no arrays, blocks or layers of your own.
 
 - **Manual drawing.** Drawings are made by hand, or started from sections imported from the model. An imported section shows:
   - the bars crossing the cut as dots;
   - one representative bar per layer for bars running along the cut, not every bar.
 - **No bar marks or schedule:** there are no bar marks, shape codes or bar schedule in the drawing program. Labels are generated from the bars, and their text can be overridden by hand.
-- **One-way link:** model → drawing. Changes in the drawing do not go back to the model.
+- **One-way link:** model → drawing. Changes in the drawing (moved or added bars) do not go back to the model, its 3D view, its schedule or the Tekla export.
 - **Re-import:** after the model changes, imported items the engineer did not touch are updated, and the engineer's edits are kept. Check the import report and the items marked "Changed by you; the model now has …".
 - **Export formats:** DXF is R12, without line weights, and its layers do not follow a company CAD standard.
 
@@ -105,7 +113,7 @@ Bars go to Tekla as polylines with a bending radius. They are not parametric reb
 
 ## 9. Software and quality assurance
 
-- **Tests:** the program has automated tests (about 740 checks in the model program, 784 in the drawing program). They prove that the program behaves as intended and gives the same numbers as before. They are **not an independent verification** of the engineering. There is no validation report against hand calculations for a range of structures.
+- **Tests:** the program has automated tests (about 800 checks in the model program, 1,150 in the drawing program). They prove that the program behaves as intended and gives the same numbers as before. They are **not an independent verification** of the engineering. There is no validation report against hand calculations for a range of structures.
 - **Browser and network:**
   - The program runs in the browser.
   - The 3D view and custom sections load two libraries (three.js, jsts) from the internet.

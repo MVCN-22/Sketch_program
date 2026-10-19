@@ -44,10 +44,12 @@ Either way, the programs run entirely in your browser. Your model, results and d
 5. **Step 4 (3D model and export):** check the bars and work through the check list. Then use:
    - "Export for drawing" (on step 1) for the drawing program;
    - the Tekla export, read by `tekla_rebars.py`.
-6. **Drawings:**
-   - Open `simple-sketch.html` → **Import from SOFiSTiK…** and pick the `.rsec.json` file.
-   - Detail the sections.
-   - Import again after the model changes: your changes are kept.
+6. **Step 5 (Details):**
+   - On step 1 click **Detail this section** on a cut, or on step 4 **Detail a section here** on an element. The section opens in the drawing program inside the model program, with its bars and labels.
+   - Detail it with the drawing tools and the AutoCAD-style commands: type `M`, `CO`, `TR`, `O`, `F` … and Enter; type points as `x,y`, `@dx,dy` or `@L<angle`. F3, F8 and F9 switch object snap, ortho and grid.
+   - **Check** lists cover per bar, clear spacing and bars outside the concrete. The items also appear in the model's check list.
+   - The drawings are saved with the project. When the model changes, step 5 updates what you did not touch and keeps your detailing.
+   - `simple-sketch.html` is the same drawing program on its own, for drawings without a model. It can still import a `.rsec.json` file exported on step 1.
 
 ## Files
 

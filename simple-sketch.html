@@ -35,11 +35,12 @@ html, body {
   display: grid;
   height: 100vh;
   grid-template-columns: 150px minmax(0, 1fr) 320px;
-  grid-template-rows: 38px 34px minmax(0, 1fr) 24px;
+  grid-template-rows: 38px 34px minmax(0, 1fr) 30px 24px;
   grid-template-areas:
     "top top top"
     "tools opt panel"
     "tools canvas panel"
+    "cmd cmd cmd"
     "status status status";
 }
 
@@ -112,6 +113,26 @@ kbd {
   color: #455060;
 }
 button.tool.on kbd { background: #fff; border-color: #9fc1e6; color: var(--accent); }
+
+.egroup { display: flex; flex-direction: column; gap: 2px; margin-top: 8px; padding-top: 6px; border-top: 1px solid var(--line); }
+.egroup-title { font-size: 11px; font-weight: 600; letter-spacing: 0.4px; text-transform: uppercase; color: var(--muted); padding: 0 6px 2px; }
+button.etool {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  align-items: center;
+  gap: 4px;
+  font: inherit;
+  text-align: left;
+  color: var(--text);
+  background: transparent;
+  border: 1px solid transparent;
+  border-radius: 4px;
+  padding: 3px 6px;
+  cursor: pointer;
+}
+button.etool:hover { background: #eef1f5; }
+button.etool.on { background: #fff3e0; border-color: #e65100; color: #bf360c; font-weight: 600; }
+button.etool .nm { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 
 /* ---------------------------------------------------------------- options bar */
 #optbar {
@@ -262,6 +283,47 @@ button.danger:hover:not(:disabled) { background: #fbeceb; }
 button.mini { padding: 0 6px; line-height: 20px; font-size: 12px; }
 button.mini.wide { margin-top: 4px; padding: 2px 10px; }
 
+/* ---------------------------------------------------------------- command line (AutoCAD style) */
+#cmdline {
+  grid-area: cmd;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 0 10px;
+  background: #1f2d3d;
+  color: #e6edf5;
+  border-top: 1px solid #0f1822;
+  min-width: 0;
+}
+#cmdprompt { flex: 0 1 auto; max-width: 48%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font: 12px/1 ui-monospace, Consolas, monospace; color: #9fc1e6; }
+#cmdprompt.busy { color: #ffd54f; }
+#cmdprompt.err { color: #ff8a80; }
+#cmdinput {
+  flex: 1 1 120px;
+  min-width: 80px;
+  height: 22px;
+  font: 13px ui-monospace, Consolas, monospace;
+  color: #fff;
+  background: #0f1822;
+  border: 1px solid #4a5a6c;
+  border-radius: 3px;
+  padding: 0 6px;
+}
+#cmdinput::placeholder { color: #6f7f90; }
+#cmdinput:focus { outline: none; border-color: #64b5f6; }
+#cmdaids { display: flex; gap: 3px; flex: 0 0 auto; }
+button.aid {
+  font: 600 11px/1 var(--font);
+  color: #9aa7b5;
+  background: transparent;
+  border: 1px solid #4a5a6c;
+  border-radius: 3px;
+  padding: 4px 7px;
+  cursor: pointer;
+}
+button.aid:hover { background: #33465b; }
+button.aid.on { color: #fff; background: #1565c0; border-color: #64b5f6; }
+
 /* ---------------------------------------------------------------- status bar */
 #status {
   grid-area: status;
@@ -353,6 +415,16 @@ ol li { margin: 4px 0; }
   <div id="optbar"></div>
   <main id="canvas"></main>
   <aside id="panel" aria-label="Properties"></aside>
+  <div id="cmdline" role="group" aria-label="Command line">
+    <label id="cmdprompt" for="cmdinput">Command:</label>
+    <input id="cmdinput" type="text" autocomplete="off" autocapitalize="off" spellcheck="false" aria-label="Command line"
+           placeholder="type a command (M, CO, RO, MI, SC, TR, EX, O, F, BR, J, E, L) or a tool code (R, B, S, D ...) and press Enter; points: 100,50  @20,0  @100&lt;90">
+    <span id="cmdaids">
+      <button type="button" class="aid" data-aid="ortho" title="Ortho (F8): horizontal / vertical from the last point">ORTHO</button>
+      <button type="button" class="aid" data-aid="osnap" title="Object snap (F3)">OSNAP</button>
+      <button type="button" class="aid" data-aid="grid" title="Grid snap (F9)">GRID</button>
+    </span>
+  </div>
   <footer id="status"></footer>
 </div>
 <div id="toast" role="status" aria-live="polite"></div>
@@ -484,9 +556,10 @@ ol li { margin: 4px 0; }
     //   prefix    = letter in front of the bar diameter: "Y" gives "Y16"
     //   cover     = concrete cover in mm
     //   kindStyle = "upper" gives BJL / U-BJL / L-BJL, "title" gives Bjl. / U-Bjl. / L-Bjl. (Danish only)
+    //   dg        = largest aggregate (stone) size in mm, used by the spacing check (default 16)
     //   paper     = paper size of a new sheet (must be a key of "papers" above)
     //   scale     = scale of a new view (the N of 1:N)
-    defaults: { lang: "da", prefix: "Y", cover: 35, kindStyle: "upper", paper: "A1", scale: 20 },
+    defaults: { lang: "da", prefix: "Y", cover: 35, dg: 16, kindStyle: "upper", paper: "A1", scale: 20 },
 
     // Words printed on the drawing, per language. Change the text between the quotes to taste.
     words: {
@@ -514,6 +587,15 @@ ol li { margin: 4px 0; }
 
     // Face codes that can be added to a bar label: none, over-, under-, inder-, yder-, bagside (Danish).
     faces: ["", "OS", "US", "IS", "YS", "BS"],
+
+    // The small engineering checks (Check button in the top bar). All lengths in mm.
+    //   k1       = clear distance between two bars must be at least k1 x the larger bar diameter (EN 1992-1-1, 8.2: 1.0)
+    //   k2       = ... and at least the aggregate size dg + k2 (EN 1992-1-1, 8.2: 5 mm)
+    //   minClear = ... and never less than this many mm (EN 1992-1-1, 8.2: 20 mm)
+    //   tol      = tolerance: differences smaller than this are not reported (drawing and rounding noise)
+    // The cover that a bar needs (c_nom) is not set here: it comes from the model for imported bars, otherwise from
+    // the view panel ("Cover c_nom for this view") or the document settings (Cover).
+    checks: { k1: 1, k2: 5, minClear: 20, tol: 1 },
 
     // Snapping: how close (in screen pixels) the cursor must be to a point or line to snap to it.
     snap: { px: 10 }
@@ -957,6 +1039,7 @@ ol li { margin: 4px 0; }
     if (sheetItem && SHEET_ITEM_TYPES.indexOf(e.type) < 0) { problems.push(w + ": sheet items can only be text or line"); }
     const def = DEFAULTS[e.type];
     Object.keys(def).forEach(function (k) { if (e[k] === undefined) { problems.push(w + ": missing field " + k); } });
+    if (e.cover !== undefined && !(isNum(e.cover) && e.cover >= 0)) { problems.push(w + ": cover must be a number of mm"); }
     if (e.src !== undefined && !srcOk(e.src)) { problems.push(w + ": src must be { key, hash, ... }"); }
     const c = cfg();
     function need(cond, msg) { if (!cond) { problems.push(w + ": " + msg); } }
@@ -1040,6 +1123,7 @@ ol li { margin: 4px 0; }
       if (typeof doc.settings.prefix !== "string") { problems.push("settings.prefix must be text"); }
       if (!isNum(doc.settings.cover)) { problems.push("settings.cover must be a number"); }
       if (["upper", "title"].indexOf(doc.settings.kindStyle) < 0) { problems.push("settings.kindStyle must be upper or title"); }
+      if (doc.settings.dg !== undefined && !(isNum(doc.settings.dg) && doc.settings.dg > 0)) { problems.push("settings.dg must be a positive number"); }
     }
     if (!Array.isArray(doc.sheets) || doc.sheets.length < 1) { problems.push("sheets must be a list with at least one sheet"); return problems; }
     if (!Number.isInteger(doc.active) || doc.active < 0 || doc.active >= doc.sheets.length) { problems.push("active is not a valid sheet index"); }
@@ -1076,6 +1160,7 @@ ol li { margin: 4px 0; }
           if (typeof v.title !== "string") { problems.push(vw + ": title must be text"); }
           if (!isNum(v.scale) || v.scale <= 0) { problems.push(vw + ": scale must be a positive number"); }
           if (!isNum(v.x) || !isNum(v.y)) { problems.push(vw + ": x and y must be numbers"); }
+          if (v.cover !== undefined && !(isNum(v.cover) && v.cover >= 0)) { problems.push(vw + ": cover must be a number of mm"); }
           if (v.link !== undefined && !linkOk(v.link)) { problems.push(vw + ": link must be { source, model, section, imported, keys, removed }"); }
           if (!Array.isArray(v.entities)) { problems.push(vw + ": entities must be a list"); }
           else { v.entities.forEach(function (e, ei) { validateEntity(e, vw + " entity " + (ei + 1), problems, seen, false); }); }
@@ -1124,6 +1209,7 @@ ol li { margin: 4px 0; }
   function migrateEntity(e, seen, sheetItem) {
     if (!isObj(e) || TYPES.indexOf(e.type) < 0) { return null; }
     migrateSrc(e);
+    if (e.cover !== undefined && !(isNum(e.cover) && e.cover >= 0)) { delete e.cover; }
     if (sheetItem && SHEET_ITEM_TYPES.indexOf(e.type) < 0) { return null; }
     const def = DEFAULTS[e.type];
     fillFrom(e, def);
@@ -1174,6 +1260,7 @@ ol li { margin: 4px 0; }
     fillFrom(doc.settings, base.settings);
     if (["da", "en"].indexOf(doc.settings.lang) < 0) { doc.settings.lang = base.settings.lang; }
     if (["upper", "title"].indexOf(doc.settings.kindStyle) < 0) { doc.settings.kindStyle = base.settings.kindStyle; }
+    if (doc.settings.dg !== undefined && !(isNum(doc.settings.dg) && doc.settings.dg > 0)) { delete doc.settings.dg; }
     if (!Array.isArray(doc.sheets)) { doc.sheets = []; }
     if (doc.sheets.length === 0) { doc.sheets.push(base.sheets[0]); }
     const seen = {};
@@ -1203,6 +1290,7 @@ ol li { margin: 4px 0; }
         fillFrom(v, { name: vref.name, kind: vref.kind, title: "", scale: vref.scale, x: vref.x, y: vref.y, entities: [] });
         if (VIEW_KINDS.indexOf(v.kind) < 0) { v.kind = "section"; }
         if (v.scale <= 0) { v.scale = vref.scale; }
+        if (v.cover !== undefined && !(isNum(v.cover) && v.cover >= 0)) { delete v.cover; }
         migrateLink(v);
         v.entities = v.entities.map(function (e) { return migrateEntity(e, seen, false); }).filter(Boolean);
       });
@@ -1261,9 +1349,13 @@ ol li { margin: 4px 0; }
     try { return window.localStorage || null; } catch (err) { return null; }
   }
 
+  // Inside the SOFiSTiK model program (window.RS_EMBED) the host keeps the document: never touch the autosave there,
+  // it belongs to the standalone program on the same site.
+  function embedded() { return !!window.RS_EMBED; }
+
   function writeAutosave() {
     saveTimer = null;
-    if (!docState) { return; }
+    if (!docState || embedded()) { return; }
     try {
       const ls = storage();
       if (ls) { ls.setItem(AUTOSAVE_KEY, JSON.stringify(docState)); }
@@ -1271,6 +1363,7 @@ ol li { margin: 4px 0; }
   }
 
   function scheduleAutosave() {
+    if (embedded()) { return; }
     if (saveTimer !== null) { clearTimeout(saveTimer); }
     saveTimer = setTimeout(writeAutosave, AUTOSAVE_DELAY);
   }
@@ -1283,6 +1376,7 @@ ol li { margin: 4px 0; }
 
   /** The autosaved document (migrated) or null when there is none or it cannot be read. */
   function loadAutosave() {
+    if (embedded()) { return null; }
     try {
       const ls = storage();
       if (!ls) { return null; }
@@ -1826,7 +1920,8 @@ ol li { margin: 4px 0; }
         const curHash = hashOf(cur);
         const src = cur.src;
         delete src.orphan;
-        if (item.meta !== undefined) { src.meta = U.clone(item.meta); }
+        // meta (cover, zone, ...) is the model's, not the engineer's data: refresh it for every linked entity
+        if (item.meta !== undefined) { src.meta = U.clone(item.meta); } else { delete src.meta; }
         if (curHash === src.hash) {                            // untouched: follow the model
           if (newHash === curHash) { rep.unchanged++; }
           else {
@@ -2253,6 +2348,1205 @@ ol li { margin: 4px 0; }
   }
 
   RS.labels = { text, textOf, parse };
+})(window.RS);
+</script>
+<script>
+/* --- src/check/checks.js --- */
+/* check/checks.js: small engineering checks per view: cover per bar, clear spacing, overlap, bars outside the concrete.
+   RS.checks.run(doc) -> items { id, sheet, view, ents, rule, text, at, need, have } (lengths in model mm). */
+(function (RS) {
+  "use strict";
+
+  const U = RS.util;
+  const CAP = 200;              // spacing + overlap items per view
+  const SAMPLE_MM = 10;         // spacing of the sample points along a bar path for the "outside" test
+  const RULES = ["cover", "outside", "spacing", "overlap"];
+
+  function cfg() {
+    const c = (RS.config && RS.config.checks) || {};
+    const n = function (v, d) { return typeof v === "number" && isFinite(v) ? v : d; };
+    return { k1: n(c.k1, 1), k2: n(c.k2, 5), minClear: n(c.minClear, 20), tol: n(c.tol, 1) };
+  }
+
+  function num(x) {
+    if (typeof x === "number") { return isFinite(x) ? x : null; }
+    if (typeof x === "string" && x.trim() !== "" && isFinite(Number(x))) { return Number(x); }
+    return null;
+  }
+  function num0(x, dflt) { const v = num(x); return v === null ? dflt : v; }
+
+  const fmt = function (x) { return U.fmt(U.round(x, 1)); };
+
+  // ---------------------------------------------------------------- the concrete: rings of all outlines
+  function concreteOf(view) {
+    const outers = [], holes = [], segs = [];
+    (view.entities || []).forEach(function (e) {
+      if (e.type !== "outline" || !Array.isArray(e.pts) || e.pts.length < 3) { return; }
+      outers.push(e.pts);
+      (e.holes || []).forEach(function (h) { if (Array.isArray(h) && h.length >= 3) { holes.push(h); } });
+    });
+    outers.concat(holes).forEach(function (ring) {
+      for (let i = 0; i < ring.length; i++) { segs.push([ring[i], ring[(i + 1) % ring.length]]); }
+    });
+    return { outers: outers, holes: holes, segs: segs };
+  }
+
+  function insideConcrete(c, p) {
+    let inOuter = false;
+    for (let i = 0; i < c.outers.length; i++) { if (RS.geom.pointInPoly(p, c.outers[i])) { inOuter = true; break; } }
+    if (!inOuter) { return false; }
+    for (let j = 0; j < c.holes.length; j++) { if (RS.geom.pointInPoly(p, c.holes[j])) { return false; } }
+    return true;
+  }
+
+  function distToFaces(c, p) {
+    let best = Infinity;
+    c.segs.forEach(function (s) { const r = RS.geom.closestOnSeg(p, s[0], s[1]); if (r.d < best) { best = r.d; } });
+    return best;
+  }
+
+  // a point is outside when it is not in the concrete and not (within 0.5 mm) on its face
+  function isOutside(c, p) { return !insideConcrete(c, p) && distToFaces(c, p) > 0.5; }
+
+  // distance between two segments (0 when they cross) and the point on the first one where it is smallest
+  function segDist(a, b, c, d) {
+    const g = RS.geom;
+    const x = g.segIntersect(a, b, c, d);
+    if (x) { return { d: 0, p: x.p }; }
+    let best = { d: Infinity, p: a };
+    [a, b].forEach(function (q) {
+      const r = g.closestOnSeg(q, c, d);
+      if (r.d < best.d) { best = { d: r.d, p: q }; }
+    });
+    [c, d].forEach(function (q) {
+      const r = g.closestOnSeg(q, a, b);
+      if (r.d < best.d) { best = { d: r.d, p: r.p }; }
+    });
+    return best;
+  }
+
+  // ---------------------------------------------------------------- bars
+  function pathOf(bar) {
+    try { return RS.geom.pathPoints(RS.bars.barPath(bar), 0.5); } catch (err) { return bar.pts || []; }
+  }
+
+  function samples(poly, step) {
+    const out = [];
+    for (let i = 0; i < poly.length; i++) {
+      out.push(poly[i]);
+      if (i + 1 < poly.length) {
+        const a = poly[i], b = poly[i + 1], n = Math.floor(RS.geom.dist(a, b) / step);
+        for (let k = 1; k <= n; k++) { out.push(RS.geom.lerp(a, b, k / (n + 1))); }
+      }
+    }
+    return out;
+  }
+
+  function coverNeed(doc, view, e) {
+    const cands = [e.src && e.src.meta && e.src.meta.cover, e.cover, view.cover, doc.settings && doc.settings.cover];
+    for (let i = 0; i < cands.length; i++) { const v = num(cands[i]); if (v !== null) { return v; } }
+    return 0;
+  }
+
+  function kindWord(e) {
+    if (e.type !== "bar") { return "bar"; }
+    const k = RS.bars.kindOf(e);
+    return k === "stirrup" ? "stirrup" : (k === "U" ? "U-bar" : (k === "L" ? "L-bar" : "bar"));
+  }
+
+  function dName(doc, d) { return ((doc.settings && doc.settings.prefix) || "Y") + fmt(d); }
+
+  // ---------------------------------------------------------------- the checks of one view
+  function checkView(doc, sheet, view, out) {
+    const t = cfg();
+    const con = concreteOf(view);
+    if (!con.outers.length) { return; }                         // no outline: nothing to check against
+    const dg = num0(doc.settings && doc.settings.dg, (RS.config.defaults && RS.config.defaults.dg) || 16);
+    const clouds = [];                                          // all dot points: { p, d, id }
+
+    function push(rule, ents, text, at, need, have, extra) {
+      out.push({
+        id: rule + "|" + view.id + "|" + ents.join(",") + (extra || ""), sheet: sheet.id, view: view.id,
+        ents: ents, rule: rule, text: text, at: [U.round(at[0], 1), U.round(at[1], 1)], need: U.round(need, 1), have: U.round(have, 1)
+      });
+    }
+
+    (view.entities || []).forEach(function (e) {
+      if (e.type !== "bar" && e.type !== "dots") { return; }
+      const d = num0(e.d, 16);
+      const need = coverNeed(doc, view, e);
+      const name = dName(doc, d) + " " + kindWord(e);
+      if (e.type === "dots") {
+        const pts = RS.bars.dotPositions(e);
+        let worst = null, outsideAt = null, nBad = 0;
+        pts.forEach(function (p) {
+          clouds.push({ p: p, d: d, id: e.id });
+          if (isOutside(con, p)) { if (!outsideAt) { outsideAt = p; } return; }
+          const have = distToFaces(con, p) - d / 2;
+          if (have < need - t.tol) { nBad++; }
+          if (!worst || have < worst.have) { worst = { have: have, p: p }; }
+        });
+        if (outsideAt) {
+          push("outside", [e.id], name + " lies outside the concrete", outsideAt, 0, 0);
+        } else if (worst && worst.have < need - t.tol) {
+          push("cover", [e.id], name + ": cover " + fmt(worst.have) + " mm, needs " + fmt(need) + " mm (c_nom)" + (nBad > 1 ? " (" + nBad + " bars)" : ""),
+            worst.p, need, worst.have);
+        }
+        return;
+      }
+      // a bar line (stirrups and bends included)
+      const poly = pathOf(e);
+      if (poly.length < 2) { return; }
+      let outAt = null;
+      samples(poly, SAMPLE_MM).forEach(function (p) { if (!outAt && isOutside(con, p)) { outAt = p; } });
+      if (outAt) { push("outside", [e.id], name + " lies outside the concrete", outAt, 0, 0); return; }
+      const closed = !!e.closed && poly.length > 2;
+      let best = { d: Infinity, p: poly[0] };
+      for (let i = 0; i < (closed ? poly.length : poly.length - 1); i++) {
+        const a = poly[i], b = poly[(i + 1) % poly.length];
+        if (a[0] === b[0] && a[1] === b[1]) { continue; }
+        for (let k = 0; k < con.segs.length; k++) {
+          const r = segDist(a, b, con.segs[k][0], con.segs[k][1]);
+          if (r.d < best.d) { best = r; }
+        }
+      }
+      const have = best.d - d / 2;
+      if (have < need - t.tol) {
+        push("cover", [e.id], name + ": cover " + fmt(have) + " mm, needs " + fmt(need) + " mm (c_nom)", best.p, need, have);
+      }
+    });
+
+    // clear spacing and overlap between all dots points of the view (sweep along x)
+    const order = clouds.slice().sort(function (a, b) { return a.p[0] - b.p[0]; });
+    let maxD = 0;
+    order.forEach(function (c) { if (c.d > maxD) { maxD = c.d; } });
+    const reach = Math.max(t.k1 * maxD, dg + t.k2, t.minClear) + maxD;     // beyond this centre distance no item is possible
+    let count = 0;
+    for (let i = 0; i < order.length && count < CAP; i++) {
+      for (let j = i + 1; j < order.length && count < CAP; j++) {
+        const A = order[i], B = order[j];
+        if (B.p[0] - A.p[0] > reach) { break; }
+        const clear = RS.geom.dist(A.p, B.p) - (A.d + B.d) / 2;
+        const ents = A.id === B.id ? [A.id] : [A.id, B.id];
+        const mid = [(A.p[0] + B.p[0]) / 2, (A.p[1] + B.p[1]) / 2];
+        const tag = "#" + U.round(A.p[0], 1) + "," + U.round(A.p[1], 1) + "-" + U.round(B.p[0], 1) + "," + U.round(B.p[1], 1);
+        const nm = dName(doc, A.d) + " and " + dName(doc, B.d);
+        if (clear < -t.tol) {
+          push("overlap", ents, nm + " overlap", mid, 0, clear, tag);
+          count++;
+        } else {
+          const need = Math.max(t.k1 * Math.max(A.d, B.d), dg + t.k2, t.minClear);
+          if (clear < need - t.tol) {
+            push("spacing", ents, nm + ": " + fmt(clear) + " mm clear, needs " + fmt(need) + " mm", mid, need, clear, tag);
+            count++;
+          }
+        }
+      }
+    }
+  }
+
+  /** All items of the document (every sheet, every view with an outline). */
+  function run(doc) {
+    const out = [];
+    if (!doc || !Array.isArray(doc.sheets)) { return out; }
+    doc.sheets.forEach(function (sheet) {
+      (sheet.views || []).forEach(function (view) {
+        try { checkView(doc, sheet, view, out); } catch (err) { if (typeof console !== "undefined") { console.error(err); } }
+      });
+    });
+    return out;
+  }
+
+  RS.checks = { run: run, RULES: RULES };
+})(window.RS);
+</script>
+<script>
+/* --- src/cad/geom2.js --- */
+/* cad/geom2.js: CAD geometry (RS.cad2): segments, intersections, trim, extend, offset, fillet, break, join and the
+   2x3 transforms. Pure functions on model mm (y up); nothing here touches the store or the DOM. */
+(function (RS) {
+  "use strict";
+
+  const EPS = 1e-9;
+  const MAX_EXTEND = 100000;          // extend reaches at most 100 m
+  const ARC_STEP = 10 * Math.PI / 180; // arc points at most 10 degrees apart
+
+  function sub(a, b) { return [a[0] - b[0], a[1] - b[1]]; }
+  function cross(a, b) { return a[0] * b[1] - a[1] * b[0]; }
+  function dot(a, b) { return a[0] * b[0] + a[1] * b[1]; }
+  function dist(a, b) { return Math.hypot(a[0] - b[0], a[1] - b[1]); }
+  function same(a, b, tol) { return dist(a, b) <= (tol === undefined ? 1e-6 : tol); }
+  function copyPts(p) { return p.map(function (q) { return [q[0], q[1]]; }); }
+  function area(pts) {
+    let s = 0;
+    for (let i = 0, n = pts.length; i < n; i++) { const a = pts[i], b = pts[(i + 1) % n]; s += a[0] * b[1] - b[0] * a[1]; }
+    return s / 2;
+  }
+  function inPoly(p, poly) {
+    let inside = false;
+    for (let i = 0, j = poly.length - 1; i < poly.length; j = i++) {
+      const a = poly[i], b = poly[j];
+      if ((a[1] > p[1]) !== (b[1] > p[1]) && p[0] < (b[0] - a[0]) * (p[1] - a[1]) / (b[1] - a[1]) + a[0]) { inside = !inside; }
+    }
+    return inside;
+  }
+
+  // ---------------------------------------------------------------- basics
+  /** The straight segments of a line / bar (vertices, plus the closing one when closed) or an outline (each ring closed). [{ a, b, ring, i }] */
+  function segsOf(e) {
+    const out = [];
+    if (!e) { return out; }
+    function ring(pts, closed, r) {
+      if (!Array.isArray(pts)) { return; }
+      const n = pts.length;
+      const m = closed ? n : n - 1;
+      for (let i = 0; i < m; i++) { out.push({ a: pts[i], b: pts[(i + 1) % n], ring: r, i: i }); }
+    }
+    if (e.type === "outline") {
+      ring(e.pts, true, 0);
+      (e.holes || []).forEach(function (h, k) { ring(h, true, k + 1); });
+    } else if (e.type === "line" || e.type === "bar") {
+      ring(e.pts, !!e.closed && e.pts.length > 2, 0);
+    }
+    return out;
+  }
+
+  /** Segment a-b against segment c-d: { p, t (along a-b), u (along c-d) } or null. */
+  function inter(a, b, c, d) {
+    const r = sub(b, a), s = sub(d, c);
+    const den = cross(r, s);
+    const scale = Math.hypot(r[0], r[1]) * Math.hypot(s[0], s[1]);
+    if (scale < EPS || Math.abs(den) <= 1e-12 * scale) { return null; }
+    const ca = sub(c, a);
+    const t = cross(ca, s) / den, u = cross(ca, r) / den;
+    const e = 1e-9;
+    if (t < -e || t > 1 + e || u < -e || u > 1 + e) { return null; }
+    const tc = Math.min(1, Math.max(0, t)), uc = Math.min(1, Math.max(0, u));
+    return { p: [a[0] + r[0] * tc, a[1] + r[1] * tc], t: tc, u: uc };
+  }
+
+  /** The infinite lines a-b and c-d: the crossing point or null when parallel. */
+  function interLines(a, b, c, d) {
+    const r = sub(b, a), s = sub(d, c);
+    const den = cross(r, s);
+    const scale = Math.hypot(r[0], r[1]) * Math.hypot(s[0], s[1]);
+    if (scale < EPS || Math.abs(den) <= 1e-12 * scale) { return null; }
+    const t = cross(sub(c, a), s) / den;
+    return [a[0] + r[0] * t, a[1] + r[1] * t];
+  }
+
+  // ---------------------------------------------------------------- polyline helpers
+  function cleanPts(pts, tol) {
+    const out = [];
+    pts.forEach(function (p) { if (!out.length || !same(out[out.length - 1], p, tol === undefined ? 1e-7 : tol)) { out.push([p[0], p[1]]); } });
+    return out;
+  }
+
+  /** Closest point of an open polyline to p: { s (index + fraction), p, d, i, t }. */
+  function nearest(pts, p, closed) {
+    const n = pts.length, m = closed ? n : n - 1;
+    let best = null;
+    for (let i = 0; i < m; i++) {
+      const a = pts[i], b = pts[(i + 1) % n];
+      const ab = sub(b, a), l2 = dot(ab, ab);
+      const t = l2 < EPS ? 0 : Math.min(1, Math.max(0, dot(sub(p, a), ab) / l2));
+      const q = [a[0] + ab[0] * t, a[1] + ab[1] * t];
+      const d = dist(p, q);
+      if (!best || d < best.d - 1e-12) { best = { s: i + t, p: q, d: d, i: i, t: t }; }
+    }
+    return best;
+  }
+
+  function pointAt(pts, s) {
+    const n = pts.length;
+    if (s <= 0) { return [pts[0][0], pts[0][1]]; }
+    if (s >= n - 1) { return [pts[n - 1][0], pts[n - 1][1]]; }
+    const i = Math.floor(s), t = s - i;
+    return [pts[i][0] + (pts[i + 1][0] - pts[i][0]) * t, pts[i][1] + (pts[i + 1][1] - pts[i][1]) * t];
+  }
+
+  /** The part of an open polyline between the parameters s0 <= s1 (empty list when shorter than 1e-6). */
+  function slicePts(pts, s0, s1) {
+    if (s1 < s0) { return []; }
+    const out = [pointAt(pts, s0)];
+    for (let j = Math.floor(s0) + 1; j < pts.length && j < s1; j++) { if (j > s0) { out.push([pts[j][0], pts[j][1]]); } }
+    out.push(pointAt(pts, s1));
+    const c = cleanPts(out);
+    return c.length >= 2 ? c : [];
+  }
+
+  function cutterSegs(list, skipEntity) {
+    const out = [];
+    (list || []).forEach(function (c) {
+      if (!c) { return; }
+      if (c === skipEntity) { return; }
+      if (c.type) { segsOf(c).forEach(function (s) { out.push(s); }); } else if (c.a && c.b) { out.push(c); }
+    });
+    return out;
+  }
+
+  // ---------------------------------------------------------------- trim / extend
+  function isOpenPath(e) {
+    return e && (e.type === "line" || e.type === "bar") && !e.closed && Array.isArray(e.pts) && e.pts.length >= 2;
+  }
+
+  /**
+   * Trim an open line/bar at the cutters (entities or { a, b } segments). The part around `pick`, between the nearest
+   * crossings on both sides (or the end), is removed. Returns { pieces: [pts...] } (0, 1 or 2 polylines) or null when
+   * nothing can be trimmed (closed object, outline, no crossing).
+   */
+  function trim(entity, pick, cutters) {
+    if (!isOpenPath(entity)) { return null; }
+    const pts = entity.pts, n = pts.length;
+    const segs = cutterSegs(cutters, entity);
+    const params = [];
+    for (let i = 0; i < n - 1; i++) {
+      segs.forEach(function (c) {
+        const r = inter(pts[i], pts[i + 1], c.a, c.b);
+        if (r) { params.push(i + r.t); }
+      });
+    }
+    if (!params.length) { return null; }
+    const sp = nearest(pts, pick, false).s;
+    let lo = null, hi = null;
+    params.forEach(function (s) {
+      if (s < sp - 1e-9 && (lo === null || s > lo)) { lo = s; }
+      if (s > sp + 1e-9 && (hi === null || s < hi)) { hi = s; }
+    });
+    if (lo === null && hi === null) { return null; }
+    const pieces = [];
+    if (lo !== null) { const a = slicePts(pts, 0, lo); if (a.length) { pieces.push(a); } }
+    if (hi !== null) { const b = slicePts(pts, hi, n - 1); if (b.length) { pieces.push(b); } }
+    return { pieces: pieces };
+  }
+
+  /** Extend the end of an open line/bar nearer to `pick` along its end segment to the first boundary hit (within 100 m). Returns the new points or null. */
+  function extend(entity, pick, boundaries) {
+    if (!isOpenPath(entity)) { return null; }
+    const pts = copyPts(entity.pts), n = pts.length;
+    const atEnd = dist(pick, pts[n - 1]) <= dist(pick, pts[0]);
+    const endI = atEnd ? n - 1 : 0;
+    let prevI = atEnd ? n - 2 : 1;
+    while (prevI >= 0 && prevI < n && same(pts[prevI], pts[endI], 1e-9)) { prevI += atEnd ? -1 : 1; }
+    if (prevI < 0 || prevI >= n) { return null; }
+    const e = pts[endI];
+    const dir = sub(e, pts[prevI]);
+    const dl = Math.hypot(dir[0], dir[1]);
+    const u = [dir[0] / dl, dir[1] / dl];
+    let best = null;
+    cutterSegs(boundaries, entity).forEach(function (c) {
+      const s = sub(c.b, c.a);
+      const den = cross(u, s);
+      if (Math.abs(den) < 1e-12 * Math.hypot(s[0], s[1])) { return; }
+      const ce = sub(c.a, e);
+      const lam = cross(ce, s) / den, w = cross(ce, u) / den;
+      if (lam > 1e-6 && lam <= MAX_EXTEND && w >= -1e-9 && w <= 1 + 1e-9 && (best === null || lam < best)) { best = lam; }
+    });
+    if (best === null) { return null; }
+    pts[endI] = [e[0] + u[0] * best, e[1] + u[1] * best];
+    return pts;
+  }
+
+  // ---------------------------------------------------------------- offset
+  /**
+   * Parallel copy of a polyline at distance |dist| on the side of sidePt (when sidePt is missing: left of the
+   * direction for dist > 0, right for dist < 0). Mitre joins, bevelled when the mitre is longer than 4 x dist.
+   * Returns [] when an inward offset of a closed ring collapses.
+   */
+  function offset(ptsIn, closed, distance, sidePt) {
+    const pts = cleanPts(ptsIn);
+    if (closed && pts.length > 1 && same(pts[0], pts[pts.length - 1])) { pts.pop(); }
+    const n = pts.length;
+    const D = Math.abs(distance);
+    if (n < 2 || D < EPS) { return copyPts(pts); }
+    let left = distance >= 0;
+    let inward = false;
+    if (sidePt) {
+      if (closed && n >= 3) {
+        const ccw = area(pts) > 0;
+        const inside = inPoly(sidePt, pts);
+        left = inside === ccw;
+        inward = inside;
+      } else {
+        const q = nearest(pts, sidePt, closed);
+        const a = pts[q.i], b = pts[(q.i + 1) % n];
+        left = cross(sub(b, a), sub(sidePt, a)) >= 0;
+      }
+    } else if (closed && n >= 3) {
+      inward = left === (area(pts) > 0);
+    }
+    const d = left ? D : -D;
+    const m = closed ? n : n - 1;
+    const U = [], N = [];
+    for (let i = 0; i < m; i++) {
+      const a = pts[i], b = pts[(i + 1) % n];
+      const l = dist(a, b);
+      const u = [(b[0] - a[0]) / l, (b[1] - a[1]) / l];
+      U.push(u);
+      N.push([-u[1], u[0]]);
+    }
+    function shifted(i, k) { const p = pts[i % n]; return [p[0] + N[k][0] * d, p[1] + N[k][1] * d]; }
+    const out = [];
+    if (!closed) { out.push(shifted(0, 0)); }
+    const from = closed ? 0 : 1, to = closed ? n : n - 1;
+    for (let i = from; i < to; i++) {
+      const k0 = (i - 1 + m) % m, k1 = i % m;
+      const a0 = shifted(i, k0), a1 = shifted(i, k1);
+      const p0 = pts[i];
+      const a0b = [a0[0] + U[k0][0], a0[1] + U[k0][1]], a1b = [a1[0] + U[k1][0], a1[1] + U[k1][1]];
+      const x = interLines(a0, a0b, a1, a1b);
+      if (!x) { out.push(a1); } else if (dist(x, p0) > 4 * D) { out.push(a0); out.push(a1); } else { out.push(x); }
+    }
+    if (!closed) { out.push(shifted(n - 1, m - 1)); }
+    if (closed && inward) {
+      const ok = out.every(function (p) { return inPoly(p, pts); }) && area(out) * area(pts) > 0 && Math.abs(area(out)) < Math.abs(area(pts));
+      if (!ok) { return []; }
+    }
+    return out;
+  }
+
+  // ---------------------------------------------------------------- fillet
+  function nearestSeg(pts, p) { return nearest(pts, p, false); }
+
+  /**
+   * Fillet the two open polylines at the segments nearest to the picks. Both are cut or extended to their corner; the
+   * parts on the picked sides are kept. r = 0: { a, b } (the corner). r > 0: { joined } (A, arc points, B as one
+   * polyline; the arc has a point at least every 10 degrees). null when the segments are parallel, a polyline is
+   * closed, or a kept segment is shorter than the tangent length.
+   */
+  function fillet(ptsA, ptsB, pickA, pickB, r) {
+    if (!Array.isArray(ptsA) || !Array.isArray(ptsB) || ptsA.length < 2 || ptsB.length < 2) { return null; }
+    const qa = nearestSeg(ptsA, pickA), qb = nearestSeg(ptsB, pickB);
+    const a0 = ptsA[qa.i], a1 = ptsA[qa.i + 1], b0 = ptsB[qb.i], b1 = ptsB[qb.i + 1];
+    const C = interLines(a0, a1, b0, b1);
+    if (!C) { return null; }
+    const da = sub(a1, a0), db = sub(b1, b0);
+    const sa = dot(sub(pickA, C), da) >= 0 ? 1 : -1;
+    const sb = dot(sub(pickB, C), db) >= 0 ? 1 : -1;
+    const la = Math.hypot(da[0], da[1]), lb = Math.hypot(db[0], db[1]);
+    const uA = [sa * da[0] / la, sa * da[1] / la], uB = [sb * db[0] / lb, sb * db[1] / lb];
+    const rad = r > 0 ? r : 0;
+    let TA = C, TB = C, arc = [];
+    if (rad > 0) {
+      const cosT = Math.max(-1, Math.min(1, dot(uA, uB)));
+      const theta = Math.acos(cosT);
+      if (theta < 1e-4 || theta > Math.PI - 1e-4) { return null; }
+      const tl = rad / Math.tan(theta / 2);
+      const farA = sa > 0 ? ptsA[qa.i + 1] : ptsA[qa.i];
+      const farB = sb > 0 ? ptsB[qb.i + 1] : ptsB[qb.i];
+      if (dist(C, farA) < tl - 1e-6 || dist(C, farB) < tl - 1e-6) { return null; }
+      TA = [C[0] + uA[0] * tl, C[1] + uA[1] * tl];
+      TB = [C[0] + uB[0] * tl, C[1] + uB[1] * tl];
+      const bis = [uA[0] + uB[0], uA[1] + uB[1]];
+      const bl = Math.hypot(bis[0], bis[1]);
+      const cd = rad / Math.sin(theta / 2);
+      const O = [C[0] + bis[0] / bl * cd, C[1] + bis[1] / bl * cd];
+      const a0ang = Math.atan2(TA[1] - O[1], TA[0] - O[0]);
+      let delta = Math.atan2(TB[1] - O[1], TB[0] - O[0]) - a0ang;
+      while (delta > Math.PI) { delta -= 2 * Math.PI; }
+      while (delta <= -Math.PI) { delta += 2 * Math.PI; }
+      const steps = Math.max(1, Math.ceil(Math.abs(delta) / ARC_STEP - 1e-9));
+      for (let k = 1; k < steps; k++) {
+        const an = a0ang + delta * k / steps;
+        arc.push([O[0] + rad * Math.cos(an), O[1] + rad * Math.sin(an)]);
+      }
+    }
+    // the kept polyline of A: corner at the start (sa > 0) or the end (sa < 0)
+    const A = sa > 0 ? [TA].concat(copyPts(ptsA.slice(qa.i + 1))) : copyPts(ptsA.slice(0, qa.i + 1)).concat([TA]);
+    const B = sb > 0 ? [TB].concat(copyPts(ptsB.slice(qb.i + 1))) : copyPts(ptsB.slice(0, qb.i + 1)).concat([TB]);
+    const Ac = cleanPts(A), Bc = cleanPts(B);
+    if (Ac.length < 2 || Bc.length < 2) { return null; }
+    if (rad === 0) { return { a: Ac, b: Bc }; }
+    const Aend = sa > 0 ? Ac.slice().reverse() : Ac;       // corner last
+    const Bsta = sb > 0 ? Bc : Bc.slice().reverse();       // corner first
+    return { joined: cleanPts(Aend.concat(arc, Bsta)) };
+  }
+
+  // ---------------------------------------------------------------- break / join
+  /**
+   * Break a polyline between the points p1 and p2 (p2 defaults to p1: break at a point). Returns [first, second]; a part
+   * shorter than 1e-6 is []. For a closed ring (4th argument true) the ring is opened and the result is [openedRing, []].
+   */
+  function breakAt(pts, p1, p2, closed) {
+    const q2 = p2 || p1;
+    if (closed) {
+      const ring = pts.concat([pts[0]]);
+      let s1 = nearest(ring, p1, false).s, s2 = nearest(ring, q2, false).s;
+      if (s1 > s2) { const t = s1; s1 = s2; s2 = t; }
+      const tail = slicePts(ring, s2, ring.length - 1), head = slicePts(ring, 0, s1);
+      return [cleanPts(tail.concat(head)), []];
+    }
+    let s1 = nearest(pts, p1, false).s, s2 = nearest(pts, q2, false).s;
+    if (s1 > s2) { const t = s1; s1 = s2; s2 = t; }
+    return [slicePts(pts, 0, s1), slicePts(pts, s2, pts.length - 1)];
+  }
+
+  /** Chain open polylines whose ends meet (within tol) into one. null when they do not all connect. A ring that closes on itself keeps its repeated last point. */
+  function join(list, tol) {
+    const t = tol === undefined ? 1 : tol;
+    if (!Array.isArray(list) || list.length < 1) { return null; }
+    const rest = list.slice(1).map(copyPts);
+    let chain = copyPts(list[0]);
+    let progress = true;
+    while (rest.length && progress) {
+      progress = false;
+      for (let k = 0; k < rest.length; k++) {
+        const p = rest[k];
+        const cs = chain[0], ce = chain[chain.length - 1], ps = p[0], pe = p[p.length - 1];
+        if (same(ce, ps, t)) { chain = chain.concat(p.slice(1)); }
+        else if (same(ce, pe, t)) { chain = chain.concat(p.slice().reverse().slice(1)); }
+        else if (same(cs, pe, t)) { chain = p.concat(chain.slice(1)); }
+        else if (same(cs, ps, t)) { chain = p.slice().reverse().concat(chain.slice(1)); }
+        else { continue; }
+        rest.splice(k, 1);
+        progress = true;
+        break;
+      }
+    }
+    return rest.length ? null : chain;
+  }
+
+  // ---------------------------------------------------------------- transforms
+  // A matrix is [[a, b, tx], [c, d, ty]]: x' = a x + b y + tx, y' = c x + d y + ty. Angles are in radians.
+  const M = {
+    translate: function (dx, dy) { return [[1, 0, dx], [0, 1, dy]]; },
+    rotate: function (c, ang) {
+      const co = Math.cos(ang), si = Math.sin(ang);
+      return [[co, -si, c[0] - co * c[0] + si * c[1]], [si, co, c[1] - si * c[0] - co * c[1]]];
+    },
+    mirror: function (a, b) {
+      const dx = b[0] - a[0], dy = b[1] - a[1];
+      const l2 = dx * dx + dy * dy;
+      if (l2 < EPS) { return [[1, 0, 0], [0, 1, 0]]; }
+      const c2 = (dx * dx - dy * dy) / l2, s2 = 2 * dx * dy / l2;
+      return [[c2, s2, a[0] - c2 * a[0] - s2 * a[1]], [s2, -c2, a[1] - s2 * a[0] + c2 * a[1]]];
+    },
+    scale: function (c, f) { return [[f, 0, c[0] * (1 - f)], [0, f, c[1] * (1 - f)]]; }
+  };
+
+  function mp(m, p) { return [m[0][0] * p[0] + m[0][1] * p[1] + m[0][2], m[1][0] * p[0] + m[1][1] * p[1] + m[1][2]]; }
+  function mv(m, v) { return [m[0][0] * v[0] + m[0][1] * v[1], m[1][0] * v[0] + m[1][1] * v[1]]; }
+
+  /**
+   * Transform a copy of any entity with matrix m (same id, same properties). Point fields are mapped; with the matrix's
+   * scale k: dim.off and dots.s are multiplied by k (dim.off also changes sign when mirrored); text.rot turns with the
+   * matrix; cut.flip toggles when mirrored; bar d and text height stay.
+   */
+  function apply(e, m) {
+    const o = JSON.parse(JSON.stringify(e));
+    const det = m[0][0] * m[1][1] - m[0][1] * m[1][0];
+    const k = Math.sqrt(Math.abs(det));
+    const mirrored = det < 0;
+    function pl(a) { return Array.isArray(a) ? a.map(function (p) { return mp(m, p); }) : a; }
+    if (Array.isArray(o.pts)) { o.pts = pl(o.pts); }
+    if (Array.isArray(o.holes)) { o.holes = o.holes.map(pl); }
+    ["a", "b", "at", "tip"].forEach(function (f) { if (Array.isArray(o[f])) { o[f] = mp(m, o[f]); } });
+    if (o.dist && Array.isArray(o.dist.a) && Array.isArray(o.dist.b)) { o.dist.a = mp(m, o.dist.a); o.dist.b = mp(m, o.dist.b); }
+    if (o.type === "dim" && typeof o.off === "number") { o.off = o.off * k * (mirrored ? -1 : 1); }
+    if (o.type === "dots" && typeof o.s === "number") { o.s = o.s * k; }
+    if (o.type === "text" && typeof o.rot === "number" && !mirrored) { o.rot = o.rot + Math.atan2(m[1][0], m[0][0]) * 180 / Math.PI; }
+    if (o.type === "cut" && mirrored) { o.flip = !o.flip; }
+    if (o.type === "joint" && Array.isArray(o.dir)) { o.dir = mv(m, o.dir); }
+    return o;
+  }
+
+  RS.cad2 = {
+    segsOf: segsOf, inter: inter, interLines: interLines,
+    trim: trim, extend: extend, offset: offset, fillet: fillet, breakAt: breakAt, join: join,
+    M: M, apply: apply,
+    // helpers shared with cad/commands.js
+    nearest: nearest, inPoly: inPoly
+  };
+})(window.RS);
+</script>
+<script>
+/* --- src/cad/commands.js --- */
+/* cad/commands.js: AutoCAD-style edit commands (RS.cad) as small state machines.
+   The canvas and the command line (ui/cmdline.js) drive them through start / point / pick / value / enter / cancel and
+   ask prompt(), wants() and preview(cursor) what to show. Geometry lives in cad/geom2.js (RS.cad2).
+
+   Coordinate convention of preview(): every prim is in MODEL mm of the active view (y up), not paper mm. The prim
+   shapes are those of RS.symbols (k: "line" | "poly" | "circle"): line { a, b }, poly { pts, closed }, circle { c, r };
+   pen widths w are in paper mm, radii r and points in model mm. The caller maps points with the view transform. */
+(function (RS) {
+  "use strict";
+
+  const GHOST = "#1a73c8";
+  const GHOST_W = 0.25;
+
+  let st = null;            // the running command: { spec, name, vid, ids, phase, d }
+  let msg = "";             // last information or error text for the status line
+  let lastOffset = null;    // remembered offset distance
+  let lastRadius = 0;       // remembered fillet radius
+
+  function S() { return RS.store; }
+  function G2() { return RS.cad2; }
+  function doc() { return S().doc(); }
+  function lookup(id) { return RS.model.find(doc(), id); }
+  function isNum(x) { return typeof x === "number" && isFinite(x); }
+  function pt(p) { return [p[0], p[1]]; }
+  function sub(a, b) { return [a[0] - b[0], a[1] - b[1]]; }
+  function ang(a, b) { return Math.atan2(b[1] - a[1], b[0] - a[0]); }
+
+  // ---------------------------------------------------------------- ghost prims
+  function line(a, b) { return { k: "line", a: pt(a), b: pt(b), w: GHOST_W, dash: null, color: GHOST }; }
+  function poly(pts, closed) { return { k: "poly", pts: pts.map(pt), closed: !!closed, w: GHOST_W, dash: null, color: GHOST, fill: null }; }
+  function circle(c, r) { return { k: "circle", c: pt(c), r: r, w: GHOST_W, color: GHOST, fill: null }; }
+  function cross(p, r) { return [line([p[0] - r, p[1]], [p[0] + r, p[1]]), line([p[0], p[1] - r], [p[0], p[1] + r])]; }
+
+  function ghostOf(e) {
+    switch (e.type) {
+      case "outline": return [poly(e.pts, true)].concat((e.holes || []).map(function (h) { return poly(h, true); }));
+      case "line": case "bar": return [poly(e.pts, !!e.closed)];
+      case "dots": {
+        const pos = RS.bars && RS.bars.dotPositions ? RS.bars.dotPositions(e) : [];
+        return pos.map(function (p) { return circle(p, (e.d || 16) / 2); });
+      }
+      case "dim": case "cut": return [line(e.a, e.b)];
+      case "label": return e.tip ? [line(e.at, e.tip)].concat(cross(e.at, 20)) : cross(e.at, 20);
+      case "text": return cross(e.at, 20);
+      case "joint": return cross(e.at, 20);
+      default: return [];
+    }
+  }
+
+  function ghosts(m) {
+    const out = [];
+    st.ids.forEach(function (id) {
+      const f = lookup(id);
+      if (f) { ghostOf(G2().apply(f.entity, m)).forEach(function (p) { out.push(p); }); }
+    });
+    return out;
+  }
+
+  // ---------------------------------------------------------------- edits
+  function newId() { return RS.util.uid("e"); }
+
+  /** Transform the selected entities by m, or copy them transformed (copies get new ids and lose src). One undo step. */
+  function transformSel(m, copy, label) {
+    const ids = st.ids.slice();
+    S().edit(function (d) {
+      ids.forEach(function (id) {
+        const f = RS.model.find(d, id);
+        if (!f) { return; }
+        const t = G2().apply(f.entity, m);
+        if (copy) { t.id = newId(); delete t.src; f.list.push(t); } else { f.list[f.index] = t; }
+      });
+    }, label);
+  }
+
+  function eraseIds(ids) {
+    S().edit(function (d) {
+      ids.forEach(function (id) {
+        const f = RS.model.find(d, id);
+        if (f) { f.list.splice(f.index, 1); }
+      });
+    }, "Erase");
+  }
+
+  function isPath(e) { return e && (e.type === "line" || e.type === "bar"); }
+  function isOpenPath(e) { return isPath(e) && !e.closed; }
+  function inActiveView(f) { return !!(f && f.view && f.view.id === st.vid); }
+
+  // ---------------------------------------------------------------- the command engine
+  function phaseDef() { return st ? st.spec.phases[st.phase] : null; }
+
+  function goto(name) {
+    st.phase = name;
+    const ph = phaseDef();
+    if (ph && ph.auto) { ph.auto(st); }
+  }
+
+  function done() { st = null; }
+
+  function selectPhase(promptText, min, accept) {
+    return {
+      prompt: promptText, wants: "object",
+      pick: function (s, id) {
+        const f = lookup(id);
+        if (!f || !accept(f)) { msg = "That object cannot be used here."; return; }
+        if (s.ids.indexOf(id) < 0) { s.ids.push(id); }
+        S().setSel(s.ids);
+      },
+      enter: function (s) {
+        if (s.ids.length < (min || 1)) { msg = min > 1 ? "Select at least " + min + " objects." : "Nothing selected."; done(); return; }
+        goto(s.spec.first);
+      }
+    };
+  }
+
+  function inSameView(f) { return inActiveView(f); }
+  function anywhere(f) { return !!f; }
+
+  const SPECS = [];
+  const BY_KEY = {};
+
+  function define(spec) {
+    SPECS.push(spec);
+    BY_KEY[spec.name] = spec;
+    spec.aliases.forEach(function (a) { BY_KEY[a] = spec; });
+    if (spec.sel) { spec.phases.select = selectPhase(spec.selPrompt || "Select objects:", spec.min || 1, spec.anyView ? anywhere : inSameView); }
+  }
+
+  // ---- MOVE
+  define({
+    name: "MOVE", aliases: ["M"], label: "Move", sel: true, first: "base",
+    phases: {
+      base: { prompt: "Specify base point:", wants: "point", point: function (s, p) { s.d.base = p; goto("second"); } },
+      second: {
+        prompt: "Specify second point or <use first point as displacement>:", wants: "point",
+        point: function (s, p) {
+          transformSel(G2().M.translate(p[0] - s.d.base[0], p[1] - s.d.base[1]), false, "Move"); done();
+        },
+        enter: function (s) { transformSel(G2().M.translate(s.d.base[0], s.d.base[1]), false, "Move"); done(); },
+        preview: function (s, c) {
+          return { prims: ghosts(G2().M.translate(c[0] - s.d.base[0], c[1] - s.d.base[1])).concat([line(s.d.base, c)]), from: s.d.base };
+        }
+      }
+    }
+  });
+
+  // ---- COPY (every placed copy is one undo step; Enter or Esc ends)
+  define({
+    name: "COPY", aliases: ["CO", "CP"], label: "Copy", sel: true, first: "base",
+    phases: {
+      base: { prompt: "Specify base point:", wants: "point", point: function (s, p) { s.d.base = p; s.d.n = 0; goto("second"); } },
+      second: {
+        prompt: function (s) {
+          return s.d.n ? "Specify second point or [Enter to end]:" : "Specify second point or <use first point as displacement>:";
+        },
+        wants: "point",
+        point: function (s, p) {
+          transformSel(G2().M.translate(p[0] - s.d.base[0], p[1] - s.d.base[1]), true, "Copy"); s.d.n += 1;
+        },
+        enter: function (s) {
+          if (!s.d.n) { transformSel(G2().M.translate(s.d.base[0], s.d.base[1]), true, "Copy"); }
+          done();
+        },
+        preview: function (s, c) {
+          return { prims: ghosts(G2().M.translate(c[0] - s.d.base[0], c[1] - s.d.base[1])).concat([line(s.d.base, c)]), from: s.d.base };
+        }
+      }
+    }
+  });
+
+  // ---- ROTATE (angle in degrees, counter-clockwise; a point gives the direction from the base point)
+  define({
+    name: "ROTATE", aliases: ["RO"], label: "Rotate", sel: true, first: "base",
+    phases: {
+      base: { prompt: "Specify base point:", wants: "point", point: function (s, p) { s.d.base = p; goto("angle"); } },
+      angle: {
+        prompt: "Specify rotation angle or point:", wants: "point-or-value",
+        point: function (s, p) {
+          if (Math.hypot(p[0] - s.d.base[0], p[1] - s.d.base[1]) < 1e-9) { return; }
+          transformSel(G2().M.rotate(s.d.base, ang(s.d.base, p)), false, "Rotate"); done();
+        },
+        value: function (s, v) { transformSel(G2().M.rotate(s.d.base, v * Math.PI / 180), false, "Rotate"); done(); },
+        preview: function (s, c) {
+          return { prims: ghosts(G2().M.rotate(s.d.base, ang(s.d.base, c))).concat([line(s.d.base, c)]), from: s.d.base };
+        }
+      }
+    }
+  });
+
+  // ---- MIRROR
+  define({
+    name: "MIRROR", aliases: ["MI"], label: "Mirror", sel: true, first: "p1",
+    phases: {
+      p1: { prompt: "Specify first point of mirror line:", wants: "point", point: function (s, p) { s.d.p1 = p; goto("p2"); } },
+      p2: {
+        prompt: "Specify second point of mirror line:", wants: "point",
+        point: function (s, p) {
+          if (Math.hypot(p[0] - s.d.p1[0], p[1] - s.d.p1[1]) < 1e-9) { return; }
+          s.d.p2 = p; goto("erase");
+        },
+        preview: function (s, c) {
+          return { prims: ghosts(G2().M.mirror(s.d.p1, c)).concat([line(s.d.p1, c)]), from: s.d.p1 };
+        }
+      },
+      erase: {
+        prompt: "Erase the source? [Y/N] <N>:", wants: "value",
+        value: function (s, v) { finishMirror(s, v === 1 || v === true); },
+        enter: function (s) { finishMirror(s, false); },
+        preview: function (s) { return { prims: ghosts(G2().M.mirror(s.d.p1, s.d.p2)).concat([line(s.d.p1, s.d.p2)]), from: null }; }
+      }
+    }
+  });
+  function finishMirror(s, eraseSource) {
+    transformSel(G2().M.mirror(s.d.p1, s.d.p2), !eraseSource, "Mirror");
+    done();
+  }
+
+  // ---- SCALE
+  define({
+    name: "SCALE", aliases: ["SC"], label: "Scale", sel: true, first: "base",
+    phases: {
+      base: { prompt: "Specify base point:", wants: "point", point: function (s, p) { s.d.base = p; goto("factor"); } },
+      factor: {
+        prompt: "Specify scale factor:", wants: "value",
+        value: function (s, v) {
+          if (!(isNum(v) && v > 0)) { msg = "The scale factor must be larger than 0."; return; }
+          transformSel(G2().M.scale(s.d.base, v), false, "Scale"); done();
+        },
+        preview: function (s, c) { return { prims: [line(s.d.base, c)], from: s.d.base }; }
+      }
+    }
+  });
+
+  // ---- TRIM and EXTEND share the edge selection
+  function edgeEntity(f) { return !!f && inActiveView(f) && (f.entity.type === "outline" || isPath(f.entity)); }
+
+  function edgesFor(entityId) {
+    const d = doc();
+    let list = [];
+    if (st.d.all) {
+      const v = RS.model.viewById(d, st.vid);
+      list = v ? v.entities.filter(function (e) { return e.type === "outline" || isPath(e); }) : [];
+    } else {
+      st.d.edges.forEach(function (id) { const f = lookup(id); if (f) { list.push(f.entity); } });
+    }
+    return list.filter(function (e) { return e.id !== entityId; });
+  }
+
+  function edgePhase(promptText) {
+    return {
+      prompt: promptText, wants: "object",
+      pick: function (s, id) {
+        const f = lookup(id);
+        if (!edgeEntity(f)) { msg = "That object cannot be used as an edge."; return; }
+        if (s.d.edges.indexOf(id) < 0) { s.d.edges.push(id); }
+        S().setSel(s.d.edges);
+      },
+      enter: function (s) { s.d.all = s.d.edges.length === 0; goto("target"); }
+    };
+  }
+
+  function defineTrimExtend(name, aliases, label, verb, edgesPrompt, targetPrompt, action) {
+    define({
+      name: name, aliases: aliases, label: label, sel: false, first: "edges",
+      phases: {
+        edges: Object.assign(edgePhase(edgesPrompt), { auto: function (s) { s.d.edges = []; s.d.all = false; } }),
+        target: {
+          prompt: targetPrompt, wants: "object",
+          pick: function (s, id, p) {
+            const f = lookup(id);
+            if (!inActiveView(f)) { msg = "Pick an object in the active view."; return; }
+            if (!isOpenPath(f.entity)) { msg = "Only open lines and bars can be " + verb + "."; return; }
+            action(s, f, id, p);
+          },
+          enter: function () { done(); }
+        }
+      }
+    });
+  }
+
+  defineTrimExtend("TRIM", ["TR"], "Trim", "trimmed", "Select cutting edges or <select all>:",
+    "Select object to trim or [Enter to end]:", function (s, f, id, p) {
+      const r = G2().trim(f.entity, p, edgesFor(id));
+      if (!r) { msg = "The object does not cross a cutting edge there."; return; }
+      msg = "";
+      S().edit(function (d) {
+        const g = RS.model.find(d, id);
+        if (!g) { return; }
+        if (r.pieces.length === 0) { g.list.splice(g.index, 1); return; }
+        const second = r.pieces.length > 1 ? JSON.parse(JSON.stringify(g.entity)) : null;
+        g.entity.pts = r.pieces[0];
+        if (second) { second.id = newId(); delete second.src; second.pts = r.pieces[1]; g.list.splice(g.index + 1, 0, second); }
+      }, "Trim");
+    });
+
+  defineTrimExtend("EXTEND", ["EX"], "Extend", "extended", "Select boundary edges or <select all>:",
+    "Select object to extend or [Enter to end]:", function (s, f, id, p) {
+      const pts = G2().extend(f.entity, p, edgesFor(id));
+      if (!pts) { msg = "The object does not reach a boundary edge."; return; }
+      msg = "";
+      S().edit(function (d) {
+        const g = RS.model.find(d, id);
+        if (g) { g.entity.pts = pts; }
+      }, "Extend");
+    });
+
+  // ---- OFFSET
+  function offsetDefault() {
+    if (isNum(lastOffset)) { return lastOffset; }
+    const v = S().activeViewObject();
+    const d = doc();
+    if (v && isNum(v.cover)) { return v.cover; }
+    return d && d.settings && isNum(d.settings.cover) ? d.settings.cover : 35;
+  }
+  function setOffset(s, v) {
+    if (!(isNum(v) && v > 0)) { msg = "The offset distance must be larger than 0."; return; }
+    lastOffset = v; s.d.dist = v; goto("object");
+  }
+  function doOffset(s, side) {
+    const f = lookup(s.d.id);
+    if (!inActiveView(f)) { goto("object"); return; }
+    const e = f.entity;
+    const closed = e.type === "outline" ? true : !!e.closed;
+    const res = G2().offset(e.pts, closed, s.d.dist, side);
+    if (!res.length) { msg = "The offset distance is too large for this object."; goto("object"); return; }
+    let ne;
+    if (e.type === "outline") { ne = RS.model.newEntity("line", { pts: res, closed: true }); } else {
+      ne = JSON.parse(JSON.stringify(e)); ne.id = newId(); delete ne.src; ne.pts = res;
+    }
+    msg = "";
+    S().edit(function (d) {
+      const v = RS.model.viewById(d, s.vid);
+      if (v) { v.entities.push(ne); }
+    }, "Offset");
+    goto("object");
+  }
+  function offsetPreview(s, c) {
+    const f = lookup(s.d.id);
+    if (!f) { return { prims: [], from: null }; }
+    const e = f.entity;
+    const res = G2().offset(e.pts, e.type === "outline" ? true : !!e.closed, s.d.dist, c);
+    return { prims: res.length ? [poly(res, e.type === "outline" ? true : !!e.closed)] : [], from: null };
+  }
+  define({
+    name: "OFFSET", aliases: ["O"], label: "Offset", sel: false, first: "dist",
+    phases: {
+      dist: {
+        prompt: function () { return "Specify offset distance <" + offsetDefault() + ">:"; }, wants: "point-or-value",
+        value: function (s, v) { setOffset(s, v); },
+        point: function (s, p) { s.d.p1 = p; goto("dist2"); },
+        enter: function (s) { setOffset(s, offsetDefault()); }
+      },
+      dist2: {
+        prompt: "Specify second point:", wants: "point",
+        point: function (s, p) { setOffset(s, Math.hypot(p[0] - s.d.p1[0], p[1] - s.d.p1[1])); },
+        preview: function (s, c) { return { prims: [line(s.d.p1, c)], from: s.d.p1 }; }
+      },
+      object: {
+        prompt: "Select object to offset or [Enter to exit]:", wants: "object",
+        pick: function (s, id) {
+          const f = lookup(id);
+          if (!inActiveView(f) || (f.entity.type !== "outline" && !isPath(f.entity))) { msg = "That object cannot be offset."; return; }
+          s.d.id = id; goto("side");
+        },
+        enter: function () { done(); }
+      },
+      side: {
+        prompt: "Specify point on side to offset:", wants: "point",
+        point: function (s, p) { doOffset(s, p); },
+        enter: function (s) { goto("object"); },
+        preview: offsetPreview
+      }
+    }
+  });
+
+  // ---- FILLET
+  define({
+    name: "FILLET", aliases: ["F"], label: "Fillet", sel: false, first: "radius",
+    phases: {
+      radius: {
+        prompt: function () { return "Specify fillet radius <" + lastRadius + ">:"; }, wants: "value",
+        value: function (s, v) {
+          if (!(isNum(v) && v >= 0)) { msg = "The radius must be 0 or larger."; return; }
+          lastRadius = v; s.d.r = v; goto("first");
+        },
+        enter: function (s) { s.d.r = lastRadius; goto("first"); }
+      },
+      first: {
+        prompt: "Select first object:", wants: "object",
+        pick: function (s, id, p) {
+          const f = lookup(id);
+          if (!inActiveView(f) || !isOpenPath(f.entity)) { msg = "Pick an open line or bar."; return; }
+          s.d.a = { id: id, p: p }; goto("second");
+        },
+        enter: function () { done(); }
+      },
+      second: {
+        prompt: "Select second object:", wants: "object",
+        pick: function (s, id, p) {
+          const fa = lookup(s.d.a.id), fb = lookup(id);
+          if (!inActiveView(fb) || !isOpenPath(fb.entity)) { msg = "Pick an open line or bar."; return; }
+          if (id === s.d.a.id) { msg = "Pick a different object."; return; }
+          const r = G2().fillet(fa.entity.pts, fb.entity.pts, s.d.a.p, p, s.d.r);
+          if (!r) { msg = "These two objects cannot be filleted."; goto("first"); return; }
+          msg = "";
+          const aid = s.d.a.id;
+          S().edit(function (d) {
+            const ga = RS.model.find(d, aid), gb = RS.model.find(d, id);
+            if (!ga || !gb) { return; }
+            if (r.joined) { ga.entity.pts = r.joined; gb.list.splice(gb.index, 1); } else { ga.entity.pts = r.a; gb.entity.pts = r.b; }
+          }, "Fillet");
+          done();
+        },
+        enter: function () { done(); }
+      }
+    }
+  });
+
+  // ---- BREAK
+  function doBreak(s, p2) {
+    const f = lookup(s.d.id);
+    if (!inActiveView(f)) { done(); return; }
+    const e = f.entity;
+    const res = G2().breakAt(e.pts, s.d.p1, p2 || s.d.p1, !!e.closed).filter(function (a) { return a.length >= 2; });
+    const id = s.d.id;
+    S().edit(function (d) {
+      const g = RS.model.find(d, id);
+      if (!g) { return; }
+      if (res.length === 0) { g.list.splice(g.index, 1); return; }
+      const second = res.length > 1 ? JSON.parse(JSON.stringify(g.entity)) : null;
+      g.entity.pts = res[0];
+      g.entity.closed = false;
+      if (second) { second.id = newId(); delete second.src; second.pts = res[1]; second.closed = false; g.list.splice(g.index + 1, 0, second); }
+    }, "Break");
+    done();
+  }
+  define({
+    name: "BREAK", aliases: ["BR"], label: "Break", sel: false, first: "object",
+    phases: {
+      object: {
+        prompt: "Select object to break:", wants: "object",
+        pick: function (s, id, p) {
+          const f = lookup(id);
+          if (!inActiveView(f) || !isPath(f.entity)) { msg = "Only lines and bars can be broken."; return; }
+          s.d.id = id; s.d.p1 = p; goto("second");
+        },
+        enter: function () { done(); }
+      },
+      second: {
+        prompt: "Specify second break point or [Enter = break at first point]:", wants: "point",
+        point: function (s, p) { doBreak(s, p); },
+        enter: function (s) { doBreak(s, null); },
+        preview: function (s, c) { return { prims: [line(s.d.p1, c)], from: s.d.p1 }; }
+      }
+    }
+  });
+
+  // ---- JOIN and ERASE (run at once on the selection)
+  define({
+    name: "JOIN", aliases: ["J"], label: "Join", sel: true, min: 2, first: "run", selPrompt: "Select objects to join:",
+    phases: {
+      run: {
+        auto: function (s) {
+          const list = s.ids.map(lookup).filter(Boolean).map(function (f) { return f.entity; });
+          const first = list[0];
+          const ok = list.length >= 2 && list.every(function (e) { return isOpenPath(e) && e.type === first.type; });
+          let res = ok ? G2().join(list.map(function (e) { return e.pts; }), 1) : null;
+          if (!res) { msg = "The selected objects cannot be joined."; done(); return; }
+          let closed = false;
+          if (res.length > 3 && Math.hypot(res[0][0] - res[res.length - 1][0], res[0][1] - res[res.length - 1][1]) <= 1) {
+            res = res.slice(0, -1); closed = true;
+          }
+          const keep = first.id, drop = s.ids.slice(1);
+          S().edit(function (d) {
+            const g = RS.model.find(d, keep);
+            if (!g) { return; }
+            g.entity.pts = res; g.entity.closed = closed;
+            drop.forEach(function (id) { const h = RS.model.find(d, id); if (h) { h.list.splice(h.index, 1); } });
+          }, "Join");
+          msg = "";
+          done();
+        }
+      }
+    }
+  });
+
+  define({
+    name: "ERASE", aliases: ["E"], label: "Erase", sel: true, anyView: true, first: "run", selPrompt: "Select objects to erase:",
+    phases: { run: { auto: function (s) { eraseIds(s.ids); done(); } } }
+  });
+
+  // ---- LINE (one line entity per segment, each one undo step)
+  define({
+    name: "LINE", aliases: ["L"], label: "Line", sel: false, first: "first",
+    phases: {
+      first: { prompt: "Specify first point:", wants: "point", point: function (s, p) { s.d.last = p; goto("next"); }, enter: function () { done(); } },
+      next: {
+        prompt: "Specify next point or [Enter to end]:", wants: "point",
+        point: function (s, p) {
+          if (Math.hypot(p[0] - s.d.last[0], p[1] - s.d.last[1]) < 1e-9) { return; }
+          const a = s.d.last;
+          S().edit(function (d) {
+            const v = RS.model.viewById(d, s.vid);
+            if (v) { v.entities.push(RS.model.newEntity("line", { pts: [a, p] })); }
+          }, "Line");
+          s.d.last = p;
+        },
+        enter: function () { done(); },
+        preview: function (s, c) { return { prims: [line(s.d.last, c)], from: s.d.last }; }
+      }
+    }
+  });
+
+  // ---------------------------------------------------------------- public interface
+  function start(name) {
+    const key = String(name === undefined || name === null ? "" : name).trim().toUpperCase();
+    cancel();
+    const spec = BY_KEY[key];
+    if (!spec) { msg = "Unknown command: " + name; return false; }
+    const vid = S().activeView();
+    if (!vid || !doc()) { msg = "There is no view to edit."; return false; }
+    msg = "";
+    st = { spec: spec, name: spec.name, vid: vid, ids: [], phase: null, d: {} };
+    if (spec.sel) {
+      const accept = spec.anyView ? anywhere : inSameView;
+      const ids = S().sel().filter(function (id) { return accept(lookup(id)); });
+      if (ids.length >= (spec.min || 1)) { st.ids = ids; goto(spec.first); } else { goto("select"); }
+    } else {
+      goto(spec.first);
+    }
+    return true;
+  }
+
+  function active() { return st ? st.name : null; }
+  function prompt() {
+    const ph = phaseDef();
+    if (!ph) { return ""; }
+    return typeof ph.prompt === "function" ? ph.prompt(st) : ph.prompt;
+  }
+  function wants() {
+    const ph = phaseDef();
+    return ph ? ph.wants || null : null;
+  }
+  function cancel() { st = null; }
+  function enter() {
+    const ph = phaseDef();
+    if (!ph) { return; }
+    if (ph.enter) { ph.enter(st); } else { cancel(); }
+  }
+  function sameView(viewId) { return !viewId || viewId === st.vid; }
+
+  function point(p, viewId) {
+    const ph = phaseDef();
+    if (!ph || !ph.point || !Array.isArray(p) || !sameView(viewId)) { return false; }
+    ph.point(st, pt(p));
+    return true;
+  }
+  function pick(entityId, p, viewId) {
+    const ph = phaseDef();
+    if (!ph || !sameView(viewId)) { return false; }
+    if (ph.pick) { ph.pick(st, entityId, Array.isArray(p) ? pt(p) : null); return true; }
+    if (ph.point && Array.isArray(p)) { ph.point(st, pt(p)); return true; }
+    return false;
+  }
+  function value(v) {
+    const ph = phaseDef();
+    if (!ph || !ph.value) { return false; }
+    ph.value(st, v);
+    return true;
+  }
+  function preview(cursor) {
+    const ph = phaseDef();
+    if (!ph || !ph.preview || !Array.isArray(cursor)) { return { prims: [], from: fromOf() }; }
+    const r = ph.preview(st, pt(cursor));
+    return { prims: r.prims || [], from: r.from === undefined ? fromOf() : r.from };
+  }
+  function fromOf() { return st && st.d.base ? st.d.base : null; }
+
+  function list() {
+    return SPECS.map(function (s) { return { name: s.name, aliases: s.aliases.slice(), label: s.label }; });
+  }
+  function message() { return msg; }
+
+  RS.cad = {
+    start: start, active: active, prompt: prompt, wants: wants, cancel: cancel, enter: enter,
+    point: point, pick: pick, value: value, preview: preview, list: list, message: message
+  };
 })(window.RS);
 </script>
 <script>
@@ -3774,23 +5068,24 @@ ol li { margin: 4px 0; }
   // ------------------------------------------------------------------ tool list (order = tool strip order)
   const TOOLS = [
     { id: "select", name: "Select", key: "V", hint: "Click to select (Shift adds), drag to move, drag a square handle to edit a point, Delete removes. Alt+click on a selected bar/outline segment adds a point, double-click a handle removes it." },
-    { id: "outline", name: "Outline", key: "O", hint: "Click the corners of the concrete outline; Enter, double-click or the first point closes it." },
+    { id: "outline", name: "Outline", key: "OU", hint: "Click the corners of the concrete outline; Enter, double-click or the first point closes it." },
     { id: "rect", name: "Rectangle", key: "R", hint: "Click two opposite corners of a rectangular concrete outline." },
     { id: "bar", name: "Bar", key: "B", hint: "Click the points of a bar (diameter and kind from the options); Enter or double-click ends it." },
     { id: "stirrup", name: "Stirrup", key: "S", hint: "Click inside an outline to place a closed stirrup at the concrete cover." },
-    { id: "edgebar", name: "Edge bar", key: "E", hint: "Click an outline edge for a bar along it at the cover; Shift+click the next edges for an L- or U-bar, Enter ends." },
+    { id: "edgebar", name: "Edge bar", key: "EB", hint: "Click an outline edge for a bar along it at the cover; Shift+click the next edges for an L- or U-bar, Enter ends." },
     { id: "dots", name: "Dots", key: "D", hint: "Click the first and then the last dot of a row of cut bars (count from the options)." },
     { id: "edgedots", name: "Edge dots", key: "G", hint: "Click an outline edge for a dot row inside the stirrup line (count from the options)." },
-    { id: "label", name: "Label", key: "L", hint: "Click a bar or dot row, then click where the label text goes." },
-    { id: "dim", name: "Dimension", key: "M", hint: "Click the two points to measure, then click the position of the dimension line." },
+    { id: "label", name: "Label", key: "LA", hint: "Click a bar or dot row, then click where the label text goes." },
+    { id: "dim", name: "Dimension", key: "DIM", hint: "Click the two points to measure, then click the position of the dimension line." },
     { id: "text", name: "Text", key: "T", hint: "Click where the text goes, type it and press Enter." },
-    { id: "cut", name: "Section cut", key: "C", hint: "Click the two ends of a section cut line; the letter counts up A, B, C..." },
-    { id: "joint", name: "Joint", key: "J", hint: "Click a point on a concrete edge to place a construction joint mark along that edge." },
+    { id: "cut", name: "Section cut", key: "CUT", hint: "Click the two ends of a section cut line; the letter counts up A, B, C..." },
+    { id: "joint", name: "Joint", key: "JO", hint: "Click a point on a concrete edge to place a construction joint mark along that edge." },
     { id: "view", name: "New view", key: "W", hint: "Click a point on the sheet to create a new view there (scale from the options)." },
     { id: "pan", name: "Pan", key: "H", hint: "Drag to move the sheet. The middle or right mouse button and Space + drag also pan; the wheel zooms." }
   ];
-  const KEY_TOOL = {};
-  TOOLS.forEach(function (t) { KEY_TOOL[t.key.toLowerCase()] = t.id; });
+  // tools are reached by typed codes (command line); the one-letter keys belong to the AutoCAD commands (M, L, E, O, J ...)
+  const CODE_TOOL = {};
+  TOOLS.forEach(function (t) { CODE_TOOL[t.key.toLowerCase()] = t.id; });
   const SNAP_TOOLS = { outline: 1, rect: 1, bar: 1, dots: 1, dim: 1, text: 1, cut: 1, joint: 1, label: 1 };
 
   // options edited by the options bar (ui/app.js); cover comes from doc.settings.cover
@@ -3825,6 +5120,15 @@ ol li { margin: 4px 0; }
   const listeners = [];                        // [target, type, fn, opts] for teardown
   let unsubs = [];
   let resizeObs = null;
+  let previewG = null;                         // CAD preview and overlay hooks (paper units, inside the world group)
+
+  // drafting aids: F8 ortho, F3 object snap, F9 grid snap
+  const aids = { ortho: false, osnap: true, grid: true };
+  const SNAP_MODES = ["endpoint", "midpoint", "intersection", "perpendicular", "nearest", "centre"];
+  const snapModes = { endpoint: true, midpoint: true, intersection: true, perpendicular: true, nearest: true, centre: true };
+  const aidListeners = [];
+  let cadFromPt = null;                        // "from" point of the running CAD command (model coords of the active view)
+  let cadPrev = null;                          // last RS.cad.preview() result
 
   // ------------------------------------------------------------------ small helpers
   function isPt(p) { return Array.isArray(p) && p.length >= 2 && isFinite(p[0]) && isFinite(p[1]); }
@@ -3952,6 +5256,100 @@ ol li { margin: 4px 0; }
     draw();
   }
 
+  // ------------------------------------------------------------------ CAD hooks (RS.cad is written by another module: every call is guarded)
+  function cadActive() {
+    try { return !!(RS.cad && typeof RS.cad.active === "function" && RS.cad.active()); } catch (err) { return false; }
+  }
+  function cadWants() {
+    let w = "";
+    try { w = RS.cad && typeof RS.cad.wants === "function" ? String(RS.cad.wants() || "") : ""; } catch (err) { w = ""; }
+    if (w) { return w; }
+    let pr = "";
+    try { pr = RS.cad && typeof RS.cad.prompt === "function" ? String(RS.cad.prompt() || "") : ""; } catch (err) { pr = ""; }
+    return /object|select/i.test(pr) ? "object" : "point";
+  }
+  /** Re-read the preview (and its "from" point) and let the command line show the new prompt. */
+  function cadSync(pt) {
+    cadPrev = null;
+    if (cadActive()) {
+      const q = isPt(pt) ? pt : (cur && (cur.model || cur.rawModel)) || [0, 0];
+      try { cadPrev = RS.cad.preview(q) || null; } catch (err) { cadPrev = null; }
+      cadFromPt = cadPrev && isPt(cadPrev.from) ? cp(cadPrev.from) : null;
+    } else {
+      cadFromPt = null;
+    }
+    if (RS.cmdline && typeof RS.cmdline.refresh === "function") { try { RS.cmdline.refresh(); } catch (err) { /* ignore */ } }
+    schedule();
+  }
+  function cadCancel() {
+    try { if (RS.cad && typeof RS.cad.cancel === "function") { RS.cad.cancel(); } } catch (err) { warn(String(err && err.message ? err.message : err)); }
+    cadSync();
+  }
+  function cadEnter() {
+    try { RS.cad.enter(); } catch (err) { warn(String(err && err.message ? err.message : err)); }
+    cadSync();
+    emitStatus();
+  }
+  function cadClick(c, e) {
+    if (!c.model) { warn("This sheet has no view."); return; }
+    const wants = cadWants();
+    if (wants === "object" && typeof RS.cad.pick === "function") {
+      const h = hitTest(c.paper, { filter: function () { return true; }, tolPx: 8 });
+      if (h && h.id !== undefined) {
+        const hv = h.vid !== undefined && h.vid !== null ? viewObj(h.vid) : null;
+        if (hv && RS.store.activeView() !== hv.id) { RS.store.setActiveView(hv.id); }
+        const m = hv ? toModel(hv, c.paper) : c.rawModel;
+        RS.cad.pick(h.id, [U.round(m[0], 3), U.round(m[1], 3)], hv ? hv.id : c.viewId);
+        cadSync(m);
+        return;
+      }
+    }
+    RS.cad.point(cp(c.model), c.viewId);
+    cadSync(c.model);
+  }
+
+  /** Display-list prims given in the model coords of view v -> paper prims. */
+  function toPaperPrims(v, prims) {
+    const T0 = RS.render.viewTransform(v), out = [];
+    (prims || []).forEach(function (p) {
+      if (!p) { return; }
+      const q = Object.assign({}, p);
+      if (p.k === "line") { if (!isPt(p.a) || !isPt(p.b)) { return; } q.a = T0.toPaper(p.a); q.b = T0.toPaper(p.b); }
+      else if (p.k === "poly") {
+        const pts = Array.isArray(p.pts) ? p.pts.filter(isPt) : [];
+        if (pts.length < 2) { return; }
+        q.pts = pts.map(T0.toPaper);
+      } else if (p.k === "circle") { if (!isPt(p.c) || !isFinite(p.r)) { return; } q.c = T0.toPaper(p.c); q.r = p.r / T0.s; }
+      else if (p.k === "text") { if (!isPt(p.at)) { return; } q.at = T0.toPaper(p.at); }
+      else { return; }
+      out.push(q);
+    });
+    return out;
+  }
+
+  /** CAD preview + the prims of RS.canvas.overlays, as paper prims. */
+  function overlayPrims(d) {
+    const out = [];
+    if (cadPrev && Array.isArray(cadPrev.prims) && cadPrev.prims.length) {
+      const av = RS.store.activeViewObject();
+      if (av) { out.push.apply(out, toPaperPrims(av, cadPrev.prims)); }
+    }
+    const fns = RS.canvas && Array.isArray(RS.canvas.overlays) ? RS.canvas.overlays : [];
+    const views = viewList();
+    fns.forEach(function (fn) {
+      if (typeof fn !== "function") { return; }
+      const run = function (v, first) {
+        let r = null;
+        try { r = fn({ view: v, doc: d, T: { z: T.z, ox: T.ox, oy: T.oy } }); } catch (err) { r = null; }
+        if (!r) { return; }
+        if (Array.isArray(r)) { if (v) { out.push.apply(out, toPaperPrims(v, r)); } }
+        else if (r.paper && Array.isArray(r.prims)) { if (first) { out.push.apply(out, r.prims.filter(Boolean)); } }
+      };
+      if (!views.length) { run(null, true); } else { views.forEach(function (v, i) { run(v, i === 0); }); }
+    });
+    return out;
+  }
+
   function inner(svgText) {
     return String(svgText).replace(/^\s*<svg[^>]*>/, "").replace(/<\/svg>\s*$/, "");
   }
@@ -3978,6 +5376,20 @@ ol li { margin: 4px 0; }
     paperShadow.setAttribute("width", pp[0]); paperShadow.setAttribute("height", pp[1]);
     paperRect.setAttribute("width", pp[0]); paperRect.setAttribute("height", pp[1]);
     contentG.innerHTML = body;
+    let ob = "";
+    if (d) {
+      try {
+        const op = overlayPrims(d).map(function (p) {
+          const q = Object.assign({}, p);
+          if (!q.color) { q.color = "#d81b60"; }
+          if (!(q.w >= minW)) { q.w = minW; }
+          delete q.id; delete q.vid; delete q.role;
+          return q;
+        });
+        if (op.length) { ob = inner(RS.io.toSVG(op, pp, { forScreen: true })); }
+      } catch (err) { ob = ""; if (typeof console !== "undefined") { console.error(err); } }
+    }
+    previewG.innerHTML = ob;
     world.setAttribute("transform", "translate(" + U.round(T.ox, 3) + " " + U.round(T.oy, 3) + ") scale(" + T.z + ")");
     drawOverlay();
   }
@@ -3988,17 +5400,28 @@ ol li { margin: 4px 0; }
       const q = toScreen(cur.snapPaper), x = q[0], y = q[1], r = 5;
       const st = ' fill="none" stroke="#e65100" stroke-width="1.6"';
       switch (cur.snap) {
-        case "vertex": s = '<circle cx="' + x + '" cy="' + y + '" r="' + r + '"' + st + "/>"; break;
+        case "endpoint": s = '<rect x="' + (x - r * 0.8) + '" y="' + (y - r * 0.8) + '" width="' + (r * 1.6) + '" height="' + (r * 1.6) + '"' + st + "/>"; break;
         case "midpoint":
           s = '<polygon points="' + x + "," + (y - r) + " " + (x + r) + "," + (y + r * 0.8) + " " + (x - r) + "," + (y + r * 0.8) + '"' + st + "/>"; break;
         case "intersection":
           s = '<path d="M' + (x - r) + " " + (y - r) + "L" + (x + r) + " " + (y + r) + "M" + (x + r) + " " + (y - r) + "L" + (x - r) + " " + (y + r) + '"' + st + "/>"; break;
-        case "edge":
-          s = '<rect x="' + (x - r * 0.8) + '" y="' + (y - r * 0.8) + '" width="' + (r * 1.6) + '" height="' + (r * 1.6) + '"' + st + "/>"; break;
+        case "perpendicular":
+          s = '<path d="M' + (x - r) + " " + (y - r) + "L" + (x - r) + " " + (y + r) + "L" + (x + r) + " " + (y + r) +
+            "M" + (x - r) + " " + (y + r - 4) + "L" + (x - r + 4) + " " + (y + r - 4) + "L" + (x - r + 4) + " " + (y + r) + '"' + st + "/>"; break;
+        case "nearest":
+          s = '<path d="M' + (x - r) + " " + (y - r) + "L" + (x + r) + " " + (y - r) + "L" + (x - r) + " " + (y + r) + "L" + (x + r) + " " + (y + r) + 'Z"' + st + "/>"; break;
+        case "centre": s = '<circle cx="' + x + '" cy="' + y + '" r="' + r + '"' + st + "/>"; break;
         default:
           s = '<path d="M' + (x - 3) + " " + y + "L" + (x + 3) + " " + y + "M" + x + " " + (y - 3) + "L" + x + " " + (y + 3) +
             '" fill="none" stroke="#e65100" stroke-opacity="0.55" stroke-width="1"/>';
       }
+    }
+    if (drag && drag.type === "box" && drag.moved) {
+      const a = toScreen(drag.startPaper), b = toScreen(drag.cur);
+      const crossing = drag.cur[0] < drag.startPaper[0];
+      const x0 = Math.min(a[0], b[0]), y0 = Math.min(a[1], b[1]), w = Math.abs(a[0] - b[0]), h = Math.abs(a[1] - b[1]);
+      s += '<rect data-rs="selbox" data-mode="' + (crossing ? "crossing" : "window") + '" x="' + x0 + '" y="' + y0 + '" width="' + w + '" height="' + h + '" ' +
+        (crossing ? 'fill="rgba(46,125,50,0.12)" stroke="#2e7d32" stroke-dasharray="6 4"' : 'fill="rgba(21,101,192,0.12)" stroke="#1565c0"') + ' stroke-width="1.2"/>';
     }
     overlayG.innerHTML = s;
   }
@@ -4033,6 +5456,7 @@ ol li { margin: 4px 0; }
   }
 
   function targetView(paper) {
+    if (cadActive()) { const av = RS.store.activeViewObject(); if (av) { return av; } }
     if (drawing && drawing.viewId) { const v = viewObj(drawing.viewId); if (v) { return v; } }
     if (drag && drag.viewId) { const v = viewObj(drag.viewId); if (v) { return v; } }
     return viewAt(paper) || RS.store.activeViewObject();
@@ -4142,61 +5566,74 @@ ol li { margin: 4px 0; }
   }
 
   // ------------------------------------------------------------------ snapping
-  function snapPoint(v, raw, excludeId) {
+  /**
+   * Object snap at model point raw in view v. from = the last point (for perpendicular), free = Alt held (no snapping at all).
+   * Returns { p, kind } with kind one of SNAP_MODES, "grid" or "free".
+   */
+  function snapPoint(v, raw, excludeId, from, free) {
     const sc = pos(v.scale, 1);
     const Rm = (RS.config.snap && RS.config.snap.px ? RS.config.snap.px : 10) / T.z * sc;   // radius in model mm
     const toPx = function (dm) { return dm / sc * T.z; };
-    const verts = [], segs = [];
-    function addPts(pts, closed, inter) {
-      if (!Array.isArray(pts)) { return; }
-      const good = pts.filter(isPt);
-      good.forEach(function (p) { verts.push(p); });
-      const n = good.length, cnt = closed ? n : n - 1;
-      for (let i = 0; i < cnt; i++) { if (n > 1) { segs.push({ a: good[i], b: good[(i + 1) % n], inter: inter }); } }
-    }
-    entList(v).forEach(function (e) {
-      if (e.id === excludeId) { return; }
-      switch (e.type) {
-        case "outline": addPts(e.pts, true, true); (Array.isArray(e.holes) ? e.holes : []).forEach(function (h) { addPts(h, true, true); }); break;
-        case "line": case "bar": addPts(e.pts, !!e.closed, true); break;
-        case "dots":
-          try { (RS.bars.dotPositions(e) || []).forEach(function (p) { if (isPt(p)) { verts.push(p); } }); } catch (err) { /* ignore */ }
-          break;
-        case "dim": case "cut": if (isPt(e.a)) { verts.push(e.a); } if (isPt(e.b)) { verts.push(e.b); } break;
-        case "joint": case "text": if (isPt(e.at)) { verts.push(e.at); } break;
-        default: break;
-      }
-    });
-    if (drawing && drawing.viewId === v.id && Array.isArray(drawing.pts)) { addPts(drawing.pts, false, false); }
-
     let best = null;
-    function consider(p, kind, dm, bias) {
-      if (dm > Rm) { return; }
-      const score = toPx(dm) + bias;
-      if (!best || score < best.score) { best = { p: p, kind: kind, score: score }; }
-    }
-    verts.forEach(function (p) { consider(p, "vertex", G.dist(p, raw), 0); });
-    const nearSegs = [];
-    segs.forEach(function (s) {
-      const r = G.closestOnSeg(raw, s.a, s.b);
-      if (r.d <= Rm) {
-        consider(r2(r.p), "edge", r.d, 5);
-        if (s.inter) { nearSegs.push(s); }
-      }
-      const mid = G.lerp(s.a, s.b, 0.5);
-      consider(r2(mid), "midpoint", G.dist(mid, raw), 2);
-    });
-    if (nearSegs.length > 1 && nearSegs.length <= 80) {
-      for (let i = 0; i < nearSegs.length; i++) {
-        for (let j = i + 1; j < nearSegs.length; j++) {
-          const h = G.segIntersect(nearSegs[i].a, nearSegs[i].b, nearSegs[j].a, nearSegs[j].b);
-          if (h) { consider(r2(h.p), "intersection", G.dist(h.p, raw), 0); }
+    if (aids.osnap && !free) {
+      const verts = [], segs = [];
+      const addPts = function (pts, closed, inter) {
+        if (!Array.isArray(pts)) { return; }
+        const good = pts.filter(isPt);
+        good.forEach(function (p) { verts.push({ p: p, k: "endpoint" }); });
+        const n = good.length, cnt = closed ? n : n - 1;
+        for (let i = 0; i < cnt; i++) { if (n > 1) { segs.push({ a: good[i], b: good[(i + 1) % n], inter: inter }); } }
+      };
+      entList(v).forEach(function (e) {
+        if (e.id === excludeId) { return; }
+        switch (e.type) {
+          case "outline": addPts(e.pts, true, true); (Array.isArray(e.holes) ? e.holes : []).forEach(function (h) { addPts(h, true, true); }); break;
+          case "line": case "bar": addPts(e.pts, !!e.closed, true); break;
+          case "dots":
+            try { (RS.bars.dotPositions(e) || []).forEach(function (p) { if (isPt(p)) { verts.push({ p: p, k: "centre" }); } }); } catch (err) { /* ignore */ }
+            break;
+          case "dim": case "cut": if (isPt(e.a)) { verts.push({ p: e.a, k: "endpoint" }); } if (isPt(e.b)) { verts.push({ p: e.b, k: "endpoint" }); } break;
+          case "joint": case "text": if (isPt(e.at)) { verts.push({ p: e.at, k: "endpoint" }); } break;
+          default: break;
+        }
+      });
+      if (drawing && drawing.viewId === v.id && Array.isArray(drawing.pts)) { addPts(drawing.pts, false, false); }
+
+      const consider = function (p, kind, dm, bias) {
+        if (dm > Rm || !snapModes[kind]) { return; }
+        const score = toPx(dm) + bias;
+        if (!best || score < best.score) { best = { p: p, kind: kind, score: score }; }
+      };
+      verts.forEach(function (o) { consider(o.p, o.k, G.dist(o.p, raw), 0); });
+      const nearSegs = [];
+      segs.forEach(function (sg) {
+        const r = G.closestOnSeg(raw, sg.a, sg.b);
+        if (r.d <= Rm) {
+          consider(r2(r.p), "nearest", r.d, 5);
+          if (sg.inter) { nearSegs.push(sg); }
+        }
+        const mid = G.lerp(sg.a, sg.b, 0.5);
+        consider(r2(mid), "midpoint", G.dist(mid, raw), 2);
+        if (isPt(from)) {
+          const f = G.closestOnSeg(from, sg.a, sg.b);                // foot of the perpendicular from the last point
+          if (f.d > 1e-6 && G.dist(f.p, sg.a) > 1e-6 && G.dist(f.p, sg.b) > 1e-6) { consider(r2(f.p), "perpendicular", G.dist(f.p, raw), 1); }
+        }
+      });
+      if (nearSegs.length > 1 && nearSegs.length <= 80) {
+        for (let i = 0; i < nearSegs.length; i++) {
+          for (let j = i + 1; j < nearSegs.length; j++) {
+            const h = G.segIntersect(nearSegs[i].a, nearSegs[i].b, nearSegs[j].a, nearSegs[j].b);
+            if (h) { consider(r2(h.p), "intersection", G.dist(h.p, raw), 0); }
+          }
         }
       }
     }
     if (best) { return { p: best.p, kind: best.kind }; }
-    const g = sc >= 50 ? 10 : 5;
-    return { p: [Math.round(raw[0] / g) * g + 0, Math.round(raw[1] / g) * g + 0], kind: "grid" };
+    if (aids.grid && !free) {
+      const g = sc >= 50 ? 10 : 5;
+      return { p: [Math.round(raw[0] / g) * g + 0, Math.round(raw[1] / g) * g + 0], kind: "grid" };
+    }
+    return { p: [U.round(raw[0], 1), U.round(raw[1], 1)], kind: "free" };
   }
 
   function refPoint() {
@@ -4222,7 +5659,7 @@ ol li { margin: 4px 0; }
   function updateCursor(e) {
     const pos0 = eventPos(e);
     const paper = screenToPaper(pos0[0], pos0[1]);
-    lastEvt = { clientX: e.clientX, clientY: e.clientY, shiftKey: !!e.shiftKey };
+    lastEvt = { clientX: e.clientX, clientY: e.clientY, shiftKey: !!e.shiftKey, altKey: !!e.altKey };
     const tool = RS.store.tool();
     const c = { px: pos0, paper: paper, viewId: null, model: null, rawModel: null, snap: "", snapPaper: null, show: false };
     const v = targetView(paper);
@@ -4231,11 +5668,13 @@ ol li { margin: 4px 0; }
       const raw = toModel(v, paper);
       c.rawModel = raw;
       const handleDrag = drag && drag.type === "handle";
-      if (snapActive(tool) || handleDrag) {
-        const s = snapPoint(v, raw, handleDrag ? drag.id : null);
+      const cadOn = cadActive();
+      if (snapActive(tool) || handleDrag || cadOn) {
+        const ref = handleDrag ? null : (cadOn ? cadFromPt : refPoint());
+        const s = snapPoint(v, raw, handleDrag ? drag.id : null, ref, !!e.altKey);
         let p = s.p;
-        const ref = handleDrag ? null : refPoint();
-        if (e.shiftKey && ref) { p = ortho(p, ref); }
+        // ortho: F8 (or Shift held); an object snap hit wins over the F8 toggle, Shift always constrains
+        if (ref && ((aids.ortho && (s.kind === "grid" || s.kind === "free")) || e.shiftKey)) { p = ortho(p, ref); }
         c.model = cp(p); c.snap = s.kind; c.snapPaper = toPaperPt(v, p); c.show = true;
       } else {
         c.model = [U.round(raw[0], 1), U.round(raw[1], 1)];
@@ -4834,7 +6273,50 @@ ol li { margin: 4px 0; }
     }
     const v = viewAt(c.paper);
     if (v && RS.store.activeView() !== v.id) { RS.store.setActiveView(v.id); }
+    const baseSel = e.shiftKey ? RS.store.sel() : [];
     if (!e.shiftKey && RS.store.sel().length) { RS.store.setSel([]); }
+    // empty space: a drag from here is a selection box (left to right = window, right to left = crossing)
+    drag = { type: "box", viewId: (v || RS.store.activeViewObject() || {}).id || null, startPaper: c.paper, cur: c.paper, startPx: c.px, moved: false, baseSel: baseSel };
+  }
+
+  function segTouchesRect(a, b, r) {
+    const inR = function (p) { return p[0] >= r[0] && p[0] <= r[2] && p[1] >= r[1] && p[1] <= r[3]; };
+    if (inR(a) || inR(b)) { return true; }
+    const c = [[r[0], r[1]], [r[2], r[1]], [r[2], r[3]], [r[0], r[3]]];
+    for (let i = 0; i < 4; i++) { if (G.segIntersect(a, b, c[i], c[(i + 1) % 4])) { return true; } }
+    return false;
+  }
+
+  /** Does the display prim touch the paper rectangle r = [x0, y0, x1, y1]? */
+  function primTouches(p, r) {
+    if (p.k === "line") { return segTouchesRect(p.a, p.b, r); }
+    if (p.k === "poly") {
+      const pts = p.pts, n = pts.length, cnt = p.closed ? n : n - 1;
+      for (let i = 0; i < cnt; i++) { if (segTouchesRect(pts[i], pts[(i + 1) % n], r)) { return true; } }
+      return false;
+    }
+    const bb = RS.render.primBBox([p]);
+    return !!bb && !(bb[2] < r[0] || bb[0] > r[2] || bb[3] < r[1] || bb[1] > r[3]);
+  }
+  function primInside(p, r) {
+    const bb = RS.render.primBBox([p]);
+    return !!bb && bb[0] >= r[0] && bb[2] <= r[2] && bb[1] >= r[1] && bb[3] <= r[3];
+  }
+
+  /** Entities selected by a finished box: window = fully inside, crossing = inside or touching. */
+  function boxIds(dr) {
+    const a = dr.startPaper, b = dr.cur, crossing = b[0] < a[0];
+    const r = [Math.min(a[0], b[0]), Math.min(a[1], b[1]), Math.max(a[0], b[0]), Math.max(a[1], b[1])];
+    const groups = [], at = {};
+    getHitPrims().forEach(function (p) {
+      if (!p || p.role !== "entity" || p.id === undefined) { return; }
+      if (dr.viewId && p.vid !== dr.viewId) { return; }
+      if (at[p.id] === undefined) { at[p.id] = groups.length; groups.push({ id: p.id, prims: [] }); }
+      groups[at[p.id]].prims.push(p);
+    });
+    return groups.filter(function (g) {
+      return crossing ? g.prims.some(function (p) { return primTouches(p, r); }) : g.prims.every(function (p) { return primInside(p, r); });
+    }).map(function (g) { return g.id; });
   }
 
   function startViewDrag(vid, c) {
@@ -4893,7 +6375,7 @@ ol li { margin: 4px 0; }
   }
 
   function restoreDrag() {
-    if (!drag) { return; }
+    if (!drag || drag.type === "box") { return; }
     const d = doc();
     if (drag.type === "view") {
       const v = RS.model.viewById(d, drag.id);
@@ -4912,8 +6394,9 @@ ol li { margin: 4px 0; }
 
   function moveDrag(e, c) {
     const dx = c.px[0] - drag.startPx[0], dy = c.px[1] - drag.startPx[1];
-    if (!drag.moved && Math.hypot(dx, dy) < (drag.type === "move" || drag.type === "view" ? 3 : 2)) { return; }
+    if (!drag.moved && Math.hypot(dx, dy) < (drag.type === "move" || drag.type === "view" || drag.type === "box" ? 3 : 2)) { return; }
     drag.moved = true;
+    if (drag.type === "box") { drag.cur = c.paper; schedule(); return; }
     if (drag.type === "view") {
       // paper mm, on a 5 mm step (Shift = free)
       const g = e.shiftKey ? 0 : 5;
@@ -4952,6 +6435,15 @@ ol li { margin: 4px 0; }
   function finishDrag() {
     const dr = drag;
     if (!dr) { return; }
+    if (dr.type === "box") {
+      drag = null;
+      if (dr.moved) {
+        const ids = boxIds(dr), keep = dr.baseSel || [];
+        RS.store.setSel(keep.concat(ids.filter(function (id) { return keep.indexOf(id) < 0; })));
+      }
+      schedule();
+      return;
+    }
     if (!dr.moved) {
       drag = null;
       if (dr.type === "move" && dr.collapse) { RS.store.setSel([dr.id]); }
@@ -5018,10 +6510,13 @@ ol li { margin: 4px 0; }
     const p = eventPos(e);
     const tool = RS.store.tool();
     const btn = e.button === undefined ? 0 : e.button;
-    if (btn === 1 || btn === 2 || (btn === 0 && (spaceDown || tool === "pan"))) { startPan(e, p); return; }
+    const cadOn = cadActive();
+    if (cadOn && btn === 2) { cadEnter(); return; }                // right click = Enter while a CAD command runs
+    if (btn === 1 || btn === 2 || (btn === 0 && (spaceDown || (tool === "pan" && !cadOn)))) { startPan(e, p); return; }
     if (btn !== 0) { return; }
     const c = updateCursor(e);
     transient = "";
+    if (cadOn) { cadClick(c, e); schedule(); emitStatus(); return; }
     if (tool === "select") { selectDown(e, c); }
     else if (IMPL[tool]) {
       if (tool !== "view" && !drawing && tool !== "label" && !c.viewId) { warn("This sheet has no view. Use the New view tool (W) first."); return; }
@@ -5035,7 +6530,7 @@ ol li { margin: 4px 0; }
 
   const onMove = safe(function (e) {
     if (!host) { return; }
-    lastEvt = { clientX: e.clientX, clientY: e.clientY, shiftKey: !!e.shiftKey };
+    lastEvt = { clientX: e.clientX, clientY: e.clientY, shiftKey: !!e.shiftKey, altKey: !!e.altKey };
     if (panning) {
       const p = eventPos(e);
       T.ox = panning.ox + (p[0] - panning.x);
@@ -5050,6 +6545,7 @@ ol li { margin: 4px 0; }
     }
     const c = updateCursor(e);
     if (drag) { moveDrag(e, c); }
+    else if (cadActive()) { cadSync(c.model || c.rawModel); }
     else if (RS.store.tool() === "select") {
       const h = hitTest(c.paper);
       const id = h && h.id !== undefined ? h.id : null;
@@ -5111,32 +6607,48 @@ ol li { margin: 4px 0; }
     return tag === "input" || tag === "select" || tag === "textarea" || t.isContentEditable === true;
   }
 
+  /** Esc: cancel the running CAD command, or the tool in progress / the tool itself / the selection. */
+  function doEscape() {
+    if (RS.cmdline && typeof RS.cmdline.clear === "function") { RS.cmdline.clear(); }
+    if (cadActive()) { cadCancel(); emitStatus(); return; }
+    if (drag) { cancelDrag(); }
+    drawing = null; chain = null; transient = "";
+    closeEditor(false);
+    if (RS.store.tool() !== "select") { RS.store.setTool("select"); }
+    else { if (RS.store.sel().length) { RS.store.setSel([]); } schedule(); emitStatus(); }
+  }
+
+  /** Enter with nothing typed: finish the CAD command / the tool in progress, else repeat the last command. */
+  function enterKey() {
+    if (cadActive()) { cadEnter(); return; }
+    const impl = IMPL[RS.store.tool()];
+    if (impl && impl.enter && (drawing || chain)) { impl.enter(); schedule(); emitStatus(); return; }
+    if (RS.cmdline && typeof RS.cmdline.repeat === "function") { RS.cmdline.repeat(); }
+  }
+
   const onKeyDown = safe(function (e) {
     if (!host) { return; }
-    if (isTyping(e.target) || isTyping(document.activeElement)) { return; }
+    const cl = RS.cmdline;
+    const isCmd = function (el) { return !!(cl && typeof cl.isInput === "function" && cl.isInput(el)); };
+    if (isCmd(e.target)) { return; }                               // the command line handles its own keys
+    if (isTyping(e.target) || (isTyping(document.activeElement) && !isCmd(document.activeElement))) { return; }
     if (e.ctrlKey || e.metaKey || e.altKey) { return; }
     if (document.querySelector && document.querySelector("dialog[open]")) { return; }
     const k = e.key;
+    if ((k === " " || k === "Spacebar") && cl && typeof cl.hasText === "function" && cl.hasText()) { e.preventDefault(); cl.type(" "); return; }
     if (k === " " || k === "Spacebar") {
       e.preventDefault();
       if (!spaceDown) { spaceDown = true; updateCursorStyle(); }
       return;
     }
     if (k === "Shift") { refreshCursor(true); return; }
-    if (k === "Escape") {
-      e.preventDefault();
-      if (drag) { cancelDrag(); }
-      drawing = null; chain = null; transient = "";
-      closeEditor(false);
-      if (RS.store.tool() !== "select") { RS.store.setTool("select"); }
-      else { if (RS.store.sel().length) { RS.store.setSel([]); } schedule(); emitStatus(); }
-      return;
-    }
+    if (k === "Escape") { e.preventDefault(); doEscape(); return; }
     if (k === "Enter") {
-      const impl = IMPL[RS.store.tool()];
-      if (impl && impl.enter) { e.preventDefault(); impl.enter(); schedule(); emitStatus(); }
+      e.preventDefault();
+      if (cl && typeof cl.submit === "function") { cl.submit(); } else { enterKey(); }
       return;
     }
+    if (k === "Backspace" && cl && typeof cl.hasText === "function" && cl.hasText()) { e.preventDefault(); cl.backspace(); return; }
     if (k === "Delete" || k === "Backspace") {
       if (RS.store.sel().length) { e.preventDefault(); deleteSelected(); }
       return;
@@ -5150,11 +6662,8 @@ ol li { margin: 4px 0; }
       nudge(dx, dy);
       return;
     }
-    if (k.length === 1) {
-      const lk = k.toLowerCase();
-      if (lk === "f") { e.preventDefault(); fit(); return; }
-      if (KEY_TOOL[lk]) { e.preventDefault(); RS.store.setTool(KEY_TOOL[lk]); }
-    }
+    if (k === "Home") { e.preventDefault(); fit(); return; }
+    if (k.length === 1 && cl && typeof cl.type === "function") { e.preventDefault(); cl.type(k); }   // printable keys go to the command line
   });
 
   const onKeyUp = safe(function (e) {
@@ -5177,7 +6686,7 @@ ol li { margin: 4px 0; }
     const t = RS.store.tool();
     if (drag && drag.type === "view") { host.style.cursor = "move"; return; }
     if (overTitle && t === "select" && !panning && !spaceDown) { host.style.cursor = "move"; return; }
-    host.style.cursor = panning ? "grabbing" : (spaceDown || t === "pan" ? "grab" : (t === "select" ? "default" : "crosshair"));
+    host.style.cursor = panning ? "grabbing" : (spaceDown || t === "pan" ? "grab" : (t === "select" && !cadActive() ? "default" : "crosshair"));
   }
 
   // ------------------------------------------------------------------ status and hints
@@ -5188,6 +6697,7 @@ ol li { margin: 4px 0; }
 
   function stepHint() {
     if (transient) { return transient; }
+    if (cadActive()) { try { return String(RS.cad.prompt() || ""); } catch (err) { return ""; } }
     const t = RS.store.tool(), d = drawing;
     if (d) {
       switch (t) {
@@ -5258,6 +6768,10 @@ ol li { margin: 4px 0; }
     contentG = document.createElementNS(NS, "g");
     contentG.setAttribute("data-rs", "content");
     world.appendChild(paperShadow); world.appendChild(paperRect); world.appendChild(contentG);
+    previewG = document.createElementNS(NS, "g");
+    previewG.setAttribute("pointer-events", "none");
+    previewG.setAttribute("data-rs", "preview");
+    world.appendChild(previewG);
     overlayG = document.createElementNS(NS, "g");
     overlayG.setAttribute("pointer-events", "none");
     svg.appendChild(world); svg.appendChild(overlayG);
@@ -5285,11 +6799,13 @@ ol li { margin: 4px 0; }
     unsubs.push(st.on("change", function () {
       hitDirty = true; bboxCache = null;
       hoverId = null;
+      if (cadPrev || cadFromPt || cadActive()) { cadSync(); }
       schedule();
     }));
     unsubs.push(st.on("select", function () { hitDirty = true; schedule(); }));
     unsubs.push(st.on("view", function () { schedule(); emitStatus(); }));
     unsubs.push(st.on("tool", function () {
+      if (st.tool() !== "select" && cadActive()) { cadCancel(); }       // choosing a drawing tool ends a CAD command
       drawing = null; chain = null; transient = ""; hoverId = null;
       if (drag) { cancelDrag(); }
       closeEditor(false);
@@ -5304,12 +6820,36 @@ ol li { margin: 4px 0; }
     emitStatus();
   }
 
+  function notifyAids() {
+    aidListeners.forEach(function (fn) { try { fn(aids, snapModes); } catch (err) { /* ignore */ } });
+    refreshCursor(lastEvt ? !!lastEvt.shiftKey : false);
+  }
+  /** Switch one drafting aid ("ortho", "osnap", "grid") on or off; returns the new state. */
+  function setAid(name, on) {
+    if (name !== "ortho" && name !== "osnap" && name !== "grid") { return false; }
+    aids[name] = !!on;
+    notifyAids();
+    return aids[name];
+  }
+  function setSnapMode(mode, on) {
+    if (SNAP_MODES.indexOf(mode) < 0) { return false; }
+    snapModes[mode] = !!on;
+    notifyAids();
+    return snapModes[mode];
+  }
+
   RS.canvas = {
     init: init, redraw: redraw, fit: fit, fitDrawing: fitDrawing, zoomBy: zoomBy,
     screenToPaper: screenToPaper, paperToScreen: paperToScreen, paperToClient: paperToClient,
     paperToModel: function (view, q) { return RS.render.viewTransform(view).toModel(q); },
     pickEntity: pickEntity, viewAt: viewAt, hitTest: hitTest, toolHint: toolHint,
     TOOLS: TOOLS, onStatus: function () {},
+    CODE_TOOL: CODE_TOOL, SNAP_MODES: SNAP_MODES,
+    overlays: [],                                  // fn({ view, doc, T }) -> prims (model coords of that view) or { paper: true, prims }
+    aids: aids, snapModes: snapModes,
+    setAid: setAid, toggleAid: function (n) { return setAid(n, !aids[n]); }, onAids: function (fn) { if (typeof fn === "function") { aidListeners.push(fn); } },
+    setSnapMode: setSnapMode, cadSync: cadSync, escape: doEscape, enterKey: enterKey, deleteSelected: deleteSelected,
+    cursorModel: function () { return cur ? (cur.model || cur.rawModel || null) : null; },
     setTransform: setTransform,
     _state: function () { return { drag: drag, drawing: drawing, cur: cur, hoverId: hoverId }; },
     getTransform: function () { return { z: T.z, ox: T.ox, oy: T.oy }; },
@@ -5438,10 +6978,16 @@ ol li { margin: 4px 0; }
       el = h("input", { type: "number", step: spec.type === "int" ? "1" : (spec.step || "any") });
       if (spec.min !== undefined) { el.setAttribute("min", spec.min); }
       if (spec.max !== undefined) { el.setAttribute("max", spec.max); }
+      if (spec.ph) { el.setAttribute("placeholder", spec.ph); }
       const show = function () { const v = cur(); el.value = typeof v === "number" ? String(RS.util.round(v, 3)) : ""; };
       show();
       el.addEventListener("change", function () {
         let v = parseFloat(String(el.value).replace(",", "."));
+        if (spec.blank && String(el.value).trim() === "") {       // blank = not set (the document's value applies)
+          if (cur() !== undefined) { writeVal(spec, undefined); }
+          show();
+          return;
+        }
         if (!isFinite(v)) { show(); return; }
         if (spec.type === "int") { v = Math.round(v); }
         if (spec.min !== undefined && v < spec.min) { v = spec.min; }
@@ -5851,6 +7397,7 @@ ol li { margin: 4px 0; }
       fld("Name", s("text", "name")),
       fld("Kind", s("select", "kind", { options: [["section", "section"], ["detail", "detail"], ["plan", "plan"], ["elevation", "elevation"], ["free", "free"]] })),
       fld("Scale 1:", s("num", "scale", { min: 0.01 })),
+      fld("Cover c_nom for this view [mm]", s("num", "cover", { min: 0, blank: true, ph: "document's" })),
       row("Title override", titleCtl),
       fld("X [mm]", s("num", "x", { label: "Move view" })),
       fld("Y [mm]", s("num", "y", { label: "Move view" })),
@@ -5934,6 +7481,7 @@ ol li { margin: 4px 0; }
       fld("Language", s("select", "lang", { options: [["da", "Dansk (da)"], ["en", "English (en)"]] })),
       fld("Bar prefix", s("text", "prefix", { ph: "Y" })),
       fld("Cover (mm)", s("num", "cover", { min: 0 })),
+      fld("Aggregate dg (mm)", s("num", "dg", { min: 1, blank: true, ph: String((RS.config.defaults && RS.config.defaults.dg) || 16) })),
       fld("Kind style", s("select", "kindStyle", { options: [["upper", "BJL / U-BJL / L-BJL"], ["title", "Bjl. / U-Bjl. / L-Bjl."] ] })));
   }
 
@@ -6341,6 +7889,620 @@ ol li { margin: 4px 0; }
 })(window.RS);
 </script>
 <script>
+/* --- src/ui/checks-ui.js --- */
+/* ui/checks-ui.js: the Check button (count), the side list of check items grouped by rule, red circles on the canvas */
+(function (RS) {
+  "use strict";
+
+  const DELAY = 300;
+  const RULE_TITLES = {
+    cover: "Cover", outside: "Outside the concrete", spacing: "Clear spacing", overlap: "Overlapping bars"
+  };
+  const RED = "#d32f2f", GREEN = "#2e7d32";
+
+  let items = [];
+  let btn = null;
+  let panel = null;
+  let open = false;
+  let timer = null;
+  let started = false;
+
+  const el = function (tag, text, style) {
+    const e = document.createElement(tag);
+    if (text !== undefined) { e.textContent = text; }
+    if (style) { e.style.cssText = style; }
+    return e;
+  };
+
+  // ---------------------------------------------------------------- compute
+  function recompute() {
+    if (timer !== null) { clearTimeout(timer); timer = null; }
+    const d = RS.store.doc();
+    try { items = d && RS.checks ? RS.checks.run(d) : []; } catch (err) { items = []; }
+    registerOverlay();
+    refreshButton();
+    renderList();
+    if (RS.canvas && typeof RS.canvas.redraw === "function") { try { RS.canvas.redraw(); } catch (err) { /* canvas not ready */ } }
+    return items;
+  }
+
+  function schedule() {
+    if (timer !== null) { clearTimeout(timer); }
+    timer = setTimeout(recompute, DELAY);
+  }
+
+  // ---------------------------------------------------------------- button
+  function refreshButton() {
+    if (!btn) { return; }
+    const n = items.length;
+    btn.textContent = n > 0 ? "Check (" + n + ")" : "Check ✓";
+    btn.style.color = "#fff";
+    btn.style.background = n > 0 ? RED : GREEN;
+    btn.style.borderColor = n > 0 ? RED : GREEN;
+    btn.setAttribute("data-count", String(n));
+  }
+
+  function attach(button) {
+    btn = button;
+    btn.id = "checkBtn";
+    if (!started) {
+      started = true;
+      RS.store.on("change", schedule);
+    }
+    recompute();
+  }
+
+  // ---------------------------------------------------------------- side list
+  function ensurePanel() {
+    if (panel && panel.isConnected) { return panel; }
+    panel = el("div", undefined,
+      "position:fixed;top:44px;right:8px;width:340px;max-height:70vh;overflow:auto;z-index:30;background:#fff;color:#222;" +
+      "border:1px solid #bbb;border-radius:6px;box-shadow:0 4px 16px rgba(0,0,0,.25);padding:8px;font-size:13px");
+    panel.id = "checkPanel";
+    document.body.appendChild(panel);
+    return panel;
+  }
+
+  function viewName(it) {
+    const v = RS.model.viewById(RS.store.doc(), it.view);
+    return v ? v.name : "";
+  }
+
+  function renderList() {
+    if (!open) { if (panel) { panel.style.display = "none"; } return; }
+    const p = ensurePanel();
+    p.style.display = "block";
+    p.innerHTML = "";
+    const head = el("div", undefined, "display:flex;justify-content:space-between;align-items:center;margin-bottom:6px");
+    head.appendChild(el("strong", items.length ? "Checks: " + items.length + " to look at" : "Checks: all fine"));
+    const x = el("button", "x", "border:0;background:none;cursor:pointer;font-size:16px");
+    x.type = "button";
+    x.title = "Close";
+    x.addEventListener("click", function () { toggle(false); });
+    head.appendChild(x);
+    p.appendChild(head);
+    if (!items.length) {
+      p.appendChild(el("div", "No problems found with cover, clear spacing, overlap or bars outside the concrete (views without an outline are not checked).", "color:#555"));
+      return;
+    }
+    RS.checks.RULES.forEach(function (rule) {
+      const group = items.filter(function (it) { return it.rule === rule; });
+      if (!group.length) { return; }
+      p.appendChild(el("div", RULE_TITLES[rule] + " (" + group.length + ")", "font-weight:600;margin:8px 0 3px;color:" + RED));
+      group.forEach(function (it) {
+        const b = el("button", (viewName(it) ? viewName(it) + ": " : "") + it.text,
+          "display:block;width:100%;text-align:left;border:1px solid #ddd;background:#fafafa;border-radius:4px;padding:4px 6px;margin:2px 0;cursor:pointer;font-size:12px");
+        b.type = "button";
+        b.setAttribute("data-check-id", it.id);
+        b.addEventListener("click", function () { show(it); });
+        p.appendChild(b);
+      });
+    });
+  }
+
+  function toggle(force) {
+    open = force === undefined ? !open : !!force;
+    if (open) { recompute(); } else { renderList(); }
+    return open;
+  }
+
+  // ---------------------------------------------------------------- go to an item
+  function entityPoints(view, e, out) {
+    ["pts", "a", "b", "at", "tip"].forEach(function (k) {
+      const v = e[k];
+      if (!v) { return; }
+      if (typeof v[0] === "number") { out.push(v); } else if (Array.isArray(v)) { v.forEach(function (q) { if (q && typeof q[0] === "number") { out.push(q); } }); }
+    });
+    if (e.type === "dots") { RS.bars.dotPositions(e).forEach(function (q) { out.push(q); }); }
+  }
+
+  function zoomTo(view, it) {
+    const pts = [it.at];
+    it.ents.forEach(function (id) {
+      const f = RS.model.find(RS.store.doc(), id);
+      if (f) { entityPoints(view, f.entity, pts); }
+    });
+    const T = RS.render.viewTransform(view);
+    let x0 = Infinity, y0 = Infinity, x1 = -Infinity, y1 = -Infinity;
+    pts.forEach(function (m) {
+      const q = T.toPaper(m);
+      x0 = Math.min(x0, q[0]); x1 = Math.max(x1, q[0]); y0 = Math.min(y0, q[1]); y1 = Math.max(y1, q[1]);
+    });
+    const host = document.getElementById("canvas");
+    const C = RS.canvas;
+    if (!C || typeof C.setTransform !== "function" || !host || host.clientWidth < 20 || host.clientHeight < 20) {
+      if (C && typeof C.fitDrawing === "function") { C.fitDrawing(); }
+      return;
+    }
+    const w = Math.max(x1 - x0, 40), h = Math.max(y1 - y0, 40), m = 20;       // at least 40 mm of paper, 20 mm margin
+    const z = Math.min(host.clientWidth / (w + 2 * m), host.clientHeight / (h + 2 * m));
+    const cx = (x0 + x1) / 2, cy = (y0 + y1) / 2;
+    C.setTransform(z, host.clientWidth / 2 - cx * z, host.clientHeight / 2 - cy * z);
+  }
+
+  /** Activate the item's sheet and view, select its entities and zoom to them. */
+  function show(it) {
+    const d = RS.store.doc();
+    const si = d.sheets.findIndex(function (s) { return s.id === it.sheet; });
+    if (si >= 0 && si !== d.active) { RS.store.edit(function (dd) { dd.active = si; }, "Switch sheet"); }
+    const view = RS.model.viewById(RS.store.doc(), it.view);
+    if (!view) { return; }
+    RS.store.setActiveView(view.id);
+    RS.store.setSel(it.ents.filter(function (id) { return !!RS.model.find(RS.store.doc(), id); }));
+    try { zoomTo(view, it); } catch (err) { /* zoom is a convenience */ }
+    if (RS.canvas && typeof RS.canvas.redraw === "function") { RS.canvas.redraw(); }
+  }
+
+  // ---------------------------------------------------------------- canvas overlay: a red circle at every item of the view
+  function overlay(ctx) {
+    if (!ctx || !ctx.view) { return []; }
+    const T = RS.render.viewTransform(ctx.view);
+    const prims = [];
+    items.forEach(function (it) {
+      if (it.view !== ctx.view.id) { return; }
+      prims.push(RS.symbols.circle(T.toPaper(it.at), 2.5, 0.35, RED, null));
+    });
+    return prims.length ? { paper: true, prims: prims } : [];
+  }
+
+  function registerOverlay() {
+    if (RS.canvas && Array.isArray(RS.canvas.overlays) && RS.canvas.overlays.indexOf(overlay) < 0) { RS.canvas.overlays.push(overlay); }
+  }
+
+  RS.checksUI = {
+    attach: attach, toggle: toggle, recompute: recompute, show: show, overlay: overlay,
+    items: function () { return items.slice(); }, isOpen: function () { return open; }
+  };
+})(window.RS);
+</script>
+<script>
+/* --- src/ui/cmdline.js --- */
+/* ui/cmdline.js: the command line (AutoCAD style): command names and aliases, drawing-tool codes, coordinate entry
+   (x,y  @dx,dy  @L<ang  a distance), the ORTHO / OSNAP / GRID strip (F8 / F3 / F9) and the Edit group in the tool strip.
+   RS.cad (cad/commands.js) does the editing; this file only feeds it. Every RS.cad call is guarded. */
+(function (RS) {
+  "use strict";
+
+  // AutoCAD commands and their aliases (the canonical name goes to RS.cad.start)
+  const CAD_COMMANDS = [
+    ["MOVE", ["M"]], ["COPY", ["CO", "CP"]], ["ROTATE", ["RO"]], ["MIRROR", ["MI"]], ["SCALE", ["SC"]],
+    ["TRIM", ["TR"]], ["EXTEND", ["EX"]], ["OFFSET", ["O"]], ["FILLET", ["F"]], ["BREAK", ["BR"]],
+    ["JOIN", ["J"]], ["ERASE", ["E"]], ["LINE", ["L"]]
+  ];
+  // the Edit group of the tool strip when RS.cad.list() is not available
+  const EDIT_FIXED = ["MOVE", "COPY", "ROTATE", "MIRROR", "SCALE", "TRIM", "EXTEND", "OFFSET", "FILLET", "BREAK", "JOIN", "ERASE"];
+
+  const CAD_MAP = {};
+  CAD_COMMANDS.forEach(function (c) {
+    CAD_MAP[c[0]] = c[0];
+    c[1].forEach(function (a) { CAD_MAP[a] = c[0]; });
+  });
+
+  let inputEl = null, promptEl = null, toolsObs = null;
+  const aidEls = {};
+  let msg = "", msgErr = false, msgTimer = 0;
+  let lastCmd = "";
+  const history = [];
+  let histPos = -1;
+
+  const $ = function (id) { return document.getElementById(id); };
+  const isNum = function (v) { return typeof v === "number" && isFinite(v); };
+  const r3 = function (v) { return Math.round(v * 1000) / 1000; };
+
+  // ------------------------------------------------------------------ guarded RS.cad access
+  function haveCad() { return !!(RS.cad && typeof RS.cad.start === "function"); }
+  function cadActive() {
+    try { return RS.cad && typeof RS.cad.active === "function" ? RS.cad.active() : null; } catch (err) { return null; }
+  }
+  function cadWants() {
+    let w = "";
+    try { w = RS.cad && typeof RS.cad.wants === "function" ? String(RS.cad.wants() || "") : ""; } catch (err) { w = ""; }
+    if (w) { return w.toLowerCase(); }
+    let pr = "";
+    try { pr = RS.cad && typeof RS.cad.prompt === "function" ? String(RS.cad.prompt() || "") : ""; } catch (err) { pr = ""; }
+    if (/object|select/i.test(pr)) { return "object"; }
+    if (/distance|angle|radius|factor|value|scale|\[y\/n\]/i.test(pr)) { return "value"; }
+    return "point";
+  }
+  function cursorPt() {
+    const c = RS.canvas && typeof RS.canvas.cursorModel === "function" ? RS.canvas.cursorModel() : null;
+    return Array.isArray(c) ? c : null;
+  }
+  function fromPt() {
+    try {
+      const r = RS.cad.preview(cursorPt() || [0, 0]);
+      return r && Array.isArray(r.from) && isNum(r.from[0]) && isNum(r.from[1]) ? [r.from[0], r.from[1]] : null;
+    } catch (err) { return null; }
+  }
+  function sync(pt) {
+    if (RS.canvas && typeof RS.canvas.cadSync === "function") { RS.canvas.cadSync(pt); }
+    else { refresh(); }
+  }
+
+  // ------------------------------------------------------------------ messages and prompt
+  function show(text, isErr) {
+    msg = String(text); msgErr = !!isErr;
+    if (msgTimer) { clearTimeout(msgTimer); }
+    msgTimer = setTimeout(function () { msg = ""; msgErr = false; msgTimer = 0; refresh(); }, 4500);
+    refresh();
+  }
+
+  function promptText() {
+    if (msg) { return msg; }
+    if (cadActive()) {
+      let p = "";
+      try { p = String(RS.cad.prompt() || ""); } catch (err) { p = ""; }
+      return p || String(cadActive());
+    }
+    const t = RS.store && RS.store.tool ? RS.store.tool() : "select";
+    if (t && t !== "select" && RS.canvas && RS.canvas.TOOLS) {
+      const tool = RS.canvas.TOOLS.filter(function (x) { return x.id === t; })[0];
+      if (tool) { return "Command: " + tool.name + " tool (" + tool.key + ")"; }
+    }
+    return "Command:";
+  }
+
+  // a message of the running command ("The selected objects cannot be joined.") is shown once
+  let lastCadMsg = "";
+  function checkNotice() {
+    let m = "";
+    try { m = RS.cad && typeof RS.cad.message === "function" ? String(RS.cad.message() || "") : ""; } catch (err) { m = ""; }
+    if (m && m !== lastCadMsg) {
+      lastCadMsg = m; msg = m; msgErr = true;
+      if (msgTimer) { clearTimeout(msgTimer); }
+      msgTimer = setTimeout(function () { msg = ""; msgErr = false; msgTimer = 0; refresh(); }, 4500);
+    } else if (!m) { lastCadMsg = ""; }
+  }
+
+  function refresh() {
+    if (!promptEl) { return; }
+    checkNotice();
+    promptEl.textContent = promptText();
+    promptEl.classList.toggle("err", !!msg && msgErr);
+    promptEl.classList.toggle("busy", !msg && !!cadActive());
+    const act = String(cadActive() || "").toUpperCase();
+    Array.prototype.forEach.call(document.querySelectorAll("#tools button.etool"), function (b) {
+      b.classList.toggle("on", !!act && b.getAttribute("data-cad").toUpperCase() === act);
+    });
+  }
+
+  // ------------------------------------------------------------------ input handling
+  function hasText() { return !!(inputEl && inputEl.value.length); }
+  function clear() { if (inputEl) { inputEl.value = ""; } histPos = -1; }
+  function isInput(el) { return !!el && el === inputEl; }
+  function type(ch) {
+    if (!inputEl) { return; }
+    try { inputEl.focus(); } catch (err) { /* ignore */ }
+    inputEl.value += ch;
+    histPos = -1;
+  }
+  function backspace() { if (inputEl) { inputEl.value = inputEl.value.slice(0, -1); } }
+
+  function norm(t) { return String(t).toLowerCase().replace(/[\s_\-]+/g, ""); }
+
+  function toolFor(word) {
+    const w = norm(word);
+    const tools = (RS.canvas && RS.canvas.TOOLS) || [];
+    for (let i = 0; i < tools.length; i++) {
+      const t = tools[i];
+      if (w === t.key.toLowerCase() || w === t.id || w === norm(t.name)) { return t; }
+    }
+    if (w === "rectangle") { return tools.filter(function (t) { return t.id === "rect"; })[0] || null; }
+    return null;
+  }
+
+  function startCad(name) {
+    if (!haveCad()) { show("CAD commands are not available in this build.", true); return false; }
+    try {
+      if (cadActive()) { RS.cad.cancel(); }
+      if (RS.store.tool() !== "select") { RS.store.setTool("select"); }
+      lastCadMsg = "";
+      if (RS.cad.start(name) === false) { show(String((RS.cad.message && RS.cad.message()) || "Cannot start " + name), true); sync(); return false; }
+    } catch (err) { show(String(err && err.message ? err.message : err), true); sync(); return false; }
+    sync();
+    if (RS.canvas && typeof RS.canvas.redraw === "function") { RS.canvas.redraw(); }
+    return true;
+  }
+
+  function useTool(t) {
+    try { if (cadActive()) { RS.cad.cancel(); sync(); } } catch (err) { /* ignore */ }
+    RS.store.setTool(t.id);
+    refresh();
+    return true;
+  }
+
+  const MODE_WORDS = { end: "endpoint", mid: "midpoint", int: "intersection", per: "perpendicular", nea: "nearest", cen: "centre" };
+
+  /** ORTHO / OSNAP / GRID [ON|OFF], OSNAP with mode words (END MID INT PER NEA CEN) toggles those modes. */
+  function aidCommand(name, args) {
+    const C = RS.canvas;
+    if (!C || !C.aids) { return false; }
+    const key = name.toLowerCase();
+    let handled = false;
+    if (key === "osnap") {
+      args.forEach(function (a) {
+        const w = a.toLowerCase();
+        if (w === "all" || w === "none") { C.SNAP_MODES.forEach(function (m) { C.setSnapMode(m, w === "all"); }); handled = true; }
+        else if (MODE_WORDS[w.slice(0, 3)] && w.length >= 3) { const m = MODE_WORDS[w.slice(0, 3)]; C.setSnapMode(m, !C.snapModes[m]); handled = true; }
+      });
+    }
+    if (!handled) {
+      const a = (args[0] || "").toLowerCase();
+      if (a === "on") { C.setAid(key, true); } else if (a === "off") { C.setAid(key, false); } else { C.toggleAid(key); }
+    }
+    const modes = key === "osnap" ? " (" + C.SNAP_MODES.filter(function (m) { return C.snapModes[m]; }).join(", ") + ")" : "";
+    show(key.toUpperCase() + " " + (C.aids[key] ? "on" : "off") + modes, false);
+    return true;
+  }
+
+  // ------------------------------------------------------------------ coordinate entry while a command waits
+  const NUM = "[-+]?(?:\\d+\\.?\\d*|\\.\\d+)";
+  const RE_ABS = new RegExp("^(" + NUM + ")\\s*,\\s*(" + NUM + ")$");
+  const RE_REL = new RegExp("^@\\s*(" + NUM + ")\\s*,\\s*(" + NUM + ")$");
+  const RE_POL = new RegExp("^@\\s*(" + NUM + ")\\s*<\\s*(" + NUM + ")$");
+  const RE_NUM = new RegExp("^(" + NUM + ")$");
+
+  /**
+   * Turn typed text into { point: [x, y] } or { value: n } for the running command (null when the text is neither).
+   * Throws an Error with a message for a number or point that cannot be used now.
+   */
+  function parseEntry(text) {
+    const t = String(text).trim();
+    let m;
+    if ((m = RE_ABS.exec(t))) { return { point: [r3(+m[1]), r3(+m[2])] }; }
+    if ((m = RE_REL.exec(t))) {
+      const f = fromPt();
+      if (!f) { throw new Error("There is no base point yet: type x,y or click."); }
+      return { point: [r3(f[0] + +m[1]), r3(f[1] + +m[2])] };
+    }
+    if ((m = RE_POL.exec(t))) {
+      const f = fromPt();
+      if (!f) { throw new Error("There is no base point yet: type x,y or click."); }
+      const a = +m[2] * Math.PI / 180, L = +m[1];
+      return { point: [r3(f[0] + L * Math.cos(a)), r3(f[1] + L * Math.sin(a))] };
+    }
+    if ((m = RE_NUM.exec(t))) {
+      const n = +m[1], w = cadWants();
+      if (w.indexOf("value") >= 0) { return { value: n }; }
+      if (w.indexOf("point") >= 0) {                                   // direct distance entry towards the cursor
+        const f = fromPt(), c = cursorPt();
+        if (!f) { throw new Error("Type a point as x,y, or click one."); }
+        if (!c) { throw new Error("Move the cursor into the drawing to give the direction."); }
+        const dx = c[0] - f[0], dy = c[1] - f[1], len = Math.hypot(dx, dy);
+        if (len < 1e-9) { throw new Error("Move the cursor away from the last point to give the direction."); }
+        return { point: [r3(f[0] + n * dx / len), r3(f[1] + n * dy / len)] };
+      }
+      throw new Error("A number is not wanted now: " + promptText());
+    }
+    return null;
+  }
+
+  function feed(text) {
+    let r = null;
+    try { r = parseEntry(text); } catch (err) { show(err.message, true); return true; }
+    if (!r) {
+      const y = /^(y|yes)$/i.test(text.trim()), n = /^(n|no)$/i.test(text.trim());
+      if ((y || n) && cadWants().indexOf("value") >= 0) { r = { value: y ? 1 : 0 }; }
+    }
+    if (!r) { return false; }
+    try {
+      if (r.point) { RS.cad.point(r.point, RS.store.activeView()); sync(r.point); }
+      else { RS.cad.value(r.value); sync(); }
+    } catch (err) { show(String(err && err.message ? err.message : err), true); sync(); }
+    if (RS.canvas && RS.canvas.redraw) { RS.canvas.redraw(); }
+    return true;
+  }
+
+  // ------------------------------------------------------------------ running a line
+  /** Run one typed line. Returns true when it was understood. */
+  function run(text, repeating) {
+    const raw = String(text === undefined || text === null ? "" : text).trim();
+    if (!raw) { repeat(); return true; }
+    if (!repeating) {
+      if (history[history.length - 1] !== raw) { history.push(raw); if (history.length > 60) { history.shift(); } }
+      histPos = -1;
+    }
+    msg = "";
+    if (cadActive() && feed(raw)) { return true; }
+    const tok = raw.split(/\s+/), word = tok[0], args = tok.slice(1), up = word.toUpperCase();
+    let ok = false;
+    if (up === "ORTHO" || up === "OSNAP" || up === "GRID") { ok = aidCommand(up, args); }
+    else if (up === "FIT" || up === "ZE" || up === "ZOOM") { if (RS.canvas && RS.canvas.fit) { RS.canvas.fit(); } ok = true; }
+    else if (up === "UNDO" || up === "U") { RS.store.undo(); ok = true; }
+    else if (up === "REDO") { RS.store.redo(); ok = true; }
+    else if (CAD_MAP[up]) { ok = startCad(CAD_MAP[up]); if (ok) { lastCmd = raw; } return ok; }
+    else {
+      const t = toolFor(raw) || toolFor(word);
+      if (t) { ok = useTool(t); if (ok) { lastCmd = raw; } return ok; }
+    }
+    if (ok) { refresh(); return true; }
+    show("Unknown command: " + raw, true);
+    return false;
+  }
+
+  function repeat() {
+    if (!lastCmd) { show("No previous command to repeat. Type a command such as M (move) or R (rectangle).", false); return false; }
+    return run(lastCmd, true);
+  }
+
+  /** Enter on the command line: run the text, or (empty) finish / repeat. */
+  function submit() {
+    const text = inputEl ? inputEl.value : "";
+    clear();
+    if (text.trim()) { run(text); }
+    else if (RS.canvas && typeof RS.canvas.enterKey === "function") { RS.canvas.enterKey(); }
+    else { repeat(); }
+    if (inputEl && !cadActive() && document.activeElement === inputEl) { inputEl.blur(); }
+    refresh();
+  }
+
+  // ------------------------------------------------------------------ Edit group in the tool strip
+  function label(name) { const s = String(name); return s.charAt(0).toUpperCase() + s.slice(1).toLowerCase(); }
+
+  function editNames() {
+    let list = null;
+    try { list = RS.cad && typeof RS.cad.list === "function" ? RS.cad.list() : null; } catch (err) { list = null; }
+    const out = [];
+    if (Array.isArray(list)) {
+      list.forEach(function (it) {
+        const n = typeof it === "string" ? it : (it && (it.name || it.id || it.title));
+        if (n && out.indexOf(String(n)) < 0) { out.push(String(n)); }
+      });
+    }
+    return out.length ? out : EDIT_FIXED.slice();
+  }
+
+  function aliasOf(name) {
+    const up = String(name).toUpperCase();
+    for (let i = 0; i < CAD_COMMANDS.length; i++) { if (CAD_COMMANDS[i][0] === up) { return CAD_COMMANDS[i][1][0]; } }
+    return "";
+  }
+
+  function buildEditGroup(toolsEl) {
+    const g = document.createElement("div");
+    g.className = "egroup";
+    g.setAttribute("data-edit-group", "1");
+    const title = document.createElement("div");
+    title.className = "egroup-title";
+    title.textContent = "Edit";
+    g.appendChild(title);
+    editNames().forEach(function (name) {
+      const a = aliasOf(name);
+      const b = document.createElement("button");
+      b.type = "button";
+      b.className = "etool";
+      b.setAttribute("data-cad", name);
+      b.title = label(name) + (a ? " (" + a + ")" : "") + ": type " + (a || name) + " + Enter, or click here";
+      const nm = document.createElement("span");
+      nm.className = "nm"; nm.textContent = label(name);
+      b.appendChild(nm);
+      if (a) { const k = document.createElement("kbd"); k.textContent = a; b.appendChild(k); }
+      b.addEventListener("click", function () { startCad(name); });
+      g.appendChild(b);
+    });
+    toolsEl.appendChild(g);
+  }
+
+  function ensureEditGroup() {
+    const el = $("tools");
+    if (!el || el.querySelector("[data-edit-group]")) { return; }
+    if (!el.children.length) { return; }                        // the tool buttons are not built yet
+    buildEditGroup(el);
+    refresh();
+  }
+
+  // ------------------------------------------------------------------ drafting aids strip
+  function syncAids() {
+    const C = RS.canvas;
+    if (!C || !C.aids) { return; }
+    Object.keys(aidEls).forEach(function (k) {
+      aidEls[k].classList.toggle("on", !!C.aids[k]);
+      aidEls[k].setAttribute("aria-pressed", C.aids[k] ? "true" : "false");
+    });
+    if (aidEls.osnap) {
+      aidEls.osnap.title = "Object snap (F3): " + C.SNAP_MODES.filter(function (m) { return C.snapModes[m]; }).join(", ") +
+        ". Type OSNAP END MID INT PER NEA CEN to switch single modes.";
+    }
+  }
+
+  // ------------------------------------------------------------------ keys
+  function onInputKey(e) {
+    const k = e.key;
+    if (k === "F3" || k === "F8" || k === "F9") { return; }       // the document listener does these
+    if (k === "Enter") { e.preventDefault(); e.stopPropagation(); submit(); return; }
+    if (k === "Escape") {
+      e.preventDefault(); e.stopPropagation();
+      clear();
+      if (RS.canvas && typeof RS.canvas.escape === "function") { RS.canvas.escape(); } else if (cadActive()) { RS.cad.cancel(); sync(); }
+      if (inputEl) { inputEl.blur(); }
+      refresh();
+      return;
+    }
+    if (k === "ArrowUp" || k === "ArrowDown") {
+      if (!history.length) { return; }
+      e.preventDefault();
+      if (k === "ArrowUp") { histPos = histPos < 0 ? history.length - 1 : Math.max(0, histPos - 1); }
+      else { histPos = histPos < 0 ? -1 : histPos + 1; if (histPos >= history.length) { histPos = -1; } }
+      inputEl.value = histPos < 0 ? "" : history[histPos];
+      return;
+    }
+    if ((e.ctrlKey || e.metaKey) && !e.altKey && !inputEl.value) {
+      const lk = String(k).toLowerCase();
+      if (lk === "z" && !e.shiftKey) { e.preventDefault(); RS.store.undo(); return; }
+      if (lk === "y" || (lk === "z" && e.shiftKey)) { e.preventDefault(); RS.store.redo(); return; }
+    }
+    if (k === "Delete" && !inputEl.value && RS.canvas && typeof RS.canvas.deleteSelected === "function") {
+      e.preventDefault(); RS.canvas.deleteSelected();
+    }
+  }
+
+  function onDocKey(e) {
+    const k = e.key;
+    if (k !== "F3" && k !== "F8" && k !== "F9") { return; }
+    if (e.ctrlKey || e.altKey || e.metaKey) { return; }
+    e.preventDefault();
+    if (!RS.canvas || !RS.canvas.toggleAid) { return; }
+    RS.canvas.toggleAid(k === "F3" ? "osnap" : (k === "F8" ? "ortho" : "grid"));
+  }
+
+  // ------------------------------------------------------------------ start
+  function init() {
+    inputEl = $("cmdinput");
+    promptEl = $("cmdprompt");
+    if (!inputEl || !promptEl) { return; }
+    inputEl.addEventListener("keydown", onInputKey);
+    Array.prototype.forEach.call(document.querySelectorAll("#cmdline [data-aid]"), function (b) {
+      const k = b.getAttribute("data-aid");
+      aidEls[k] = b;
+      b.addEventListener("click", function () { if (RS.canvas && RS.canvas.toggleAid) { RS.canvas.toggleAid(k); } });
+    });
+    document.addEventListener("keydown", onDocKey);
+    if (RS.canvas && typeof RS.canvas.onAids === "function") { RS.canvas.onAids(syncAids); }
+    if (RS.store && typeof RS.store.on === "function") {
+      RS.store.on("tool", refresh);
+      RS.store.on("change", refresh);
+      RS.store.on("select", refresh);
+    }
+    const tools = $("tools");
+    if (tools && typeof MutationObserver === "function") {
+      toolsObs = new MutationObserver(ensureEditGroup);
+      toolsObs.observe(tools, { childList: true });
+    }
+    ensureEditGroup();
+    syncAids();
+    refresh();
+  }
+
+  RS.cmdline = {
+    run: run, submit: submit, repeat: repeat, type: type, clear: clear, hasText: hasText, backspace: backspace,
+    isInput: isInput, refresh: refresh, startCad: startCad, editNames: editNames, parseEntry: parseEntry,
+    CAD_COMMANDS: CAD_COMMANDS, last: function () { return lastCmd; }
+  };
+
+  if (document.readyState === "loading") { document.addEventListener("DOMContentLoaded", init); } else { init(); }
+})(window.RS);
+</script>
+<script>
 /* --- src/ui/app.js --- */
 /* ui/app.js: application shell: start-up, top bar, tool strip, options bar, status bar, dialogs, keyboard, export */
 (function (RS) {
@@ -6349,7 +8511,7 @@ ol li { margin: 4px 0; }
   let toastTimer = null;
   let toolButtons = {};
   let optFields = {};
-  let undoBtn = null, redoBtn = null, sheetLabel = null, fileInput = null;
+  let checkBtn = null, undoBtn = null, redoBtn = null, sheetLabel = null, fileInput = null;
   let statusEls = {};
   let started = false;
 
@@ -6482,20 +8644,24 @@ ol li { margin: 4px 0; }
     const mouse = [
       ["Wheel", "zoom at the cursor"],
       ["Middle or right button drag, or Space + drag", "pan the sheet"],
-      ["F", "fit the sheet in the window"],
+      ["Type a code or command, Enter", "start a tool (V, R, B, S, D, G, LA, DIM, T, CUT, JO, W, H, OU, EB) or an edit command (M, CO, RO, MI, SC, TR, EX, O, F, BR, J, E, L); Enter on an empty line repeats the last"],
+      ["x,y  @dx,dy  @L<angle  or a number", "type a point or a distance while a command asks for one"],
+      ["F3 / F8 / F9", "object snap / ortho / grid on and off (Alt while clicking: place freely)"],
+      ["Drag a box left to right / right to left", "select what is fully inside / what it touches"],
+      ["FIT, Enter", "fit the sheet in the window"],
       ["Click / Shift+click", "select / add to the selection"],
       ["Drag a selected object", "move it; drag a square handle to move one point"],
       ["Delete, arrow keys", "delete the selection, nudge it 1 mm (Shift: 10 mm)"],
-      ["Esc", "cancel the running tool, back to Select"],
+      ["Esc", "cancel the running command or tool, back to Select"],
       ["Ctrl+Z / Ctrl+Y (Ctrl+Shift+Z)", "undo / redo"],
       ["Ctrl+S / Ctrl+O", "save / open a .rdraw.json file"]
     ].map(function (r) { return h("tr", null, h("td", { class: "n wide", text: r[0] }), h("td", { text: r[1] })); });
     const steps = [
-      "Pick the Rectangle tool (R) and click two corners: this is the concrete outline. The view is 1:20 by default; change the scale in the panel (nothing selected).",
+      "Pick the Rectangle tool (R, Enter) and click two corners: this is the concrete outline. The view is 1:20 by default; change the scale in the panel (nothing selected).",
       "Set the link diameter in the options bar, pick the Stirrup tool (S) and click inside the outline: a closed stirrup appears at the concrete cover.",
       "Choose the bar diameter and count, pick Edge dots (G) and click the bottom (and top) edge of the outline: a row of cut bars appears inside the stirrup.",
-      "Pick Label (L), click a bar or dot row, then click where the text should stand: the text (\"BJL Y10/150\", \"4 Y20\") is made automatically. In the panel you can add a distribution line.",
-      "Pick Dimension (M), click two points, then the position of the dimension line. Use Section cut (C) and Joint (J) for markers.",
+      "Pick Label (LA), click a bar or dot row, then click where the text should stand: the text (\"BJL Y10/150\", \"4 Y20\") is made automatically. In the panel you can add a distribution line.",
+      "Pick Dimension (DIM), click two points, then the position of the dimension line. Use Section cut (CUT) and Joint (JO) for markers. Edit with the AutoCAD commands: Move, Copy, Trim, Offset, Fillet … (the Edit group, or type them).",
       "Fill in the title block and notes in the panel (nothing selected), then Export PDF, SVG or DXF in the top bar."
     ].map(function (t) { return h("li", { text: t }); });
     openDialog("Help", [
@@ -6567,7 +8733,7 @@ ol li { margin: 4px 0; }
     undoBtn = btn("Undo", doUndo, "Undo (Ctrl+Z)");
     redoBtn = btn("Redo", doRedo, "Redo (Ctrl+Y)");
     sheetLabel = h("span", { class: "sheetname" });
-    bar.appendChild(h("span", { class: "brand", text: "Rebar Drawing Studio" }));
+    bar.appendChild(h("span", { class: "brand", text: window.RS_EMBED ? "Details · SOFiSTiK model" : "Rebar Drawing Studio" }));
     bar.appendChild(btn("New...", guard(newDialog), "Start a new drawing from a template"));
     bar.appendChild(btn("Open...", doOpen, "Open a .rdraw.json file (Ctrl+O)"));
     bar.appendChild(btn("Save", doSave, "Save as .rdraw.json (Ctrl+S)"));
@@ -6580,6 +8746,10 @@ ol li { margin: 4px 0; }
     bar.appendChild(btn("Export SVG", doSVG));
     bar.appendChild(btn("Export DXF", doDXF));
     bar.appendChild(btn("Print", doPrint, "Print the active sheet"));
+    bar.appendChild(h("span", { class: "sep" }));
+    checkBtn = btn("Check", guard(function () { if (RS.checksUI) { RS.checksUI.toggle(); } }), "Engineering checks: cover per bar, clear spacing, bars overlapping or outside the concrete");
+    bar.appendChild(checkBtn);
+    if (RS.checksUI) { RS.checksUI.attach(checkBtn); }
     bar.appendChild(h("span", { class: "sep" }));
     bar.appendChild(btn("Help", guard(helpDialog), "Tools, shortcuts and a short walkthrough"));
     bar.appendChild(h("span", { class: "grow" }));
